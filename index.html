@@ -287,7 +287,7 @@ nav button.on span{filter:none;opacity:1}
   </div>
 
   <!-- 4. Todos los puestos -->
-  <div class="seccion" style="padding-bottom:6px;padding-top:8px"><h2>Todos los puestos</h2></div>
+  <div class="seccion" style="padding-bottom:6px;padding-top:8px"><h2>Todos los puestos <span id="badge-vivo" style="display:none;font-family:Nunito;font-size:10.5px;font-weight:800;background:#DFF5EC;color:#007453;border:2px solid var(--tinta);border-radius:999px;padding:2px 9px;vertical-align:middle">🟢 rubros en vivo</span></h2></div>
   <div class="chips" id="chips-rubros"></div>
   <div class="grilla" id="grilla-puestos"></div>
 
@@ -421,14 +421,18 @@ nav button.on span{filter:none;opacity:1}
 </div>
 <script>
 // ================== DATOS ==================
-const RUBROS = {
-  artesanias:{nombre:"Artesanías", emoji:"🎨", toldo:"t-rosa", clase:"rc1", cupo:null},
-  plantas:{nombre:"Plantas", emoji:"🌿", toldo:"t-verde", clase:"rc2", cupo:null},
-  comidas:{nombre:"Comidas", emoji:"🧁", toldo:"t-naranja", clase:"rc3", cupo:null},
-  ropa:{nombre:"Ropa", emoji:"👕", toldo:"t-celeste", clase:"rc4", cupo:3},
-  mates:{nombre:"Mates y bombillas", emoji:"🧉", toldo:"t-amarillo", clase:"rc5", cupo:3},
-  deco:{nombre:"Deco & aromas", emoji:"🕯️", toldo:"t-rosa", clase:"rc6", cupo:3},
+// Datos locales de respaldo; al cargar, se reemplazan por los rubros EN VIVO de Supabase
+let RUBROS = {
+  marroquineria:{nombre:"Marroquinería", emoji:"🧵", color:"#E91E8C", clase:"rc1", cupo:null},
+  plantas_suculentas:{nombre:"Plantas y suculentas", emoji:"🌵", color:"#00A878", clase:"rc2", cupo:null},
+  gastronomia:{nombre:"Gastronomía", emoji:"🧁", color:"#FF7A00", clase:"rc3", cupo:null},
+  ropa_circular:{nombre:"Ropa circular / Feria americana", emoji:"♻️", color:"#2D9CDB", clase:"rc4", cupo:null},
+  mate_termo:{nombre:"Mates y termos", emoji:"🧉", color:"#FFC93C", clase:"rc5", cupo:3},
+  velas:{nombre:"Velas", emoji:"🕯️", color:"#B07CE8", clase:"rc6", cupo:3},
+  tejidos:{nombre:"Tejidos", emoji:"🧶", color:"#E91E8C", clase:"rc1", cupo:null},
 };
+
+const rubroDe = clave => RUBROS[clave] || {nombre:clave, emoji:"🎪", color:"#E91E8C", clase:"rc1"};
 
 const FERIAS = [
   {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1", ordenFecha:18},
@@ -438,40 +442,40 @@ const FERIAS = [
 ];
 
 const FERIANTES = [
-  {id:1, nombre:"Cueros del Sur", emoji:"🧵", rubro:"artesanias", plan:"pro", pines:["fundador","embajador","presente"],
+  {id:1, nombre:"Cueros del Sur", emoji:"🧵", rubro:"marroquineria", plan:"pro", pines:["fundador","embajador","presente"],
    confirmado:{feriaId:"plaza", texto:"Sáb 18"},
    redes:{instagram:"cuerosdelsur", tiktok:"cuerosdelsur.ok", facebook:"CuerosDelSurOficial"},
    bio:"Marroquinería artesanal hecha a mano: billeteras, cintos y bolsos en cuero genuino. 12 años feriando. Envíos a todo el país.",
    ferias:["plaza","parque","artesanal"],
    productos:[{n:"Billetera clásica",e:"👛",p:"$28.500"},{n:"Cinto trenzado",e:"🪢",p:"$19.900"},{n:"Bolso bandolera",e:"👜",p:"$52.000"},{n:"Llavero grabado",e:"🔑",p:"$6.500"}]},
-  {id:2, nombre:"Suculentas Mora", emoji:"🌵", rubro:"plantas", pines:["fundador"],
+  {id:2, nombre:"Suculentas Mora", emoji:"🌵", rubro:"plantas_suculentas", pines:["fundador"],
    redes:{instagram:"suculentas.mora", web:"suculentasmora.com.ar"},
    bio:"Suculentas, cactus y macetas pintadas a mano. Armamos regalos y souvenirs para eventos.",
    ferias:["parque","anden"],
    productos:[{n:"Suculenta mini",e:"🪴",p:"$3.500"},{n:"Combo x3 + maceta",e:"🌵",p:"$12.000"},{n:"Terrario chico",e:"🫙",p:"$18.000"}]},
-  {id:3, nombre:"Dulce Rosario", emoji:"🍰", rubro:"comidas",
+  {id:3, nombre:"Dulce Rosario", emoji:"🍰", rubro:"gastronomia",
    confirmado:{feriaId:"plaza", texto:"Dom 19"},
    bio:"Tortas, budines y alfajores artesanales. Tomamos pedidos con 48 hs de anticipación.",
    ferias:["plaza"],
    productos:[{n:"Budín de limón",e:"🍋",p:"$8.000"},{n:"Alfajores x6",e:"🍪",p:"$7.500"},{n:"Torta por kilo",e:"🎂",p:"$22.000"}]},
-  {id:4, nombre:"Vintage Lú", emoji:"👗", rubro:"ropa",
+  {id:4, nombre:"Vintage Lú", emoji:"👗", rubro:"ropa_circular",
    bio:"Ropa vintage seleccionada y prendas recicladas únicas. Talles del S al XXL.",
    ferias:["anden","artesanal"],
    productos:[{n:"Camisa retro",e:"👔",p:"$15.000"},{n:"Campera denim",e:"🧥",p:"$32.000"},{n:"Vestido floreado",e:"👗",p:"$24.000"}]},
-  {id:5, nombre:"El Matero", emoji:"🧉", rubro:"mates", plan:"pro", pines:["fundador","fiel","rapido"],
+  {id:5, nombre:"El Matero", emoji:"🧉", rubro:"mate_termo", plan:"pro", pines:["fundador","fiel","rapido"],
    confirmado:{feriaId:"anden", texto:"Dom 19"},
    bio:"Mates imperiales, camioneros y bombillas de alpaca. Grabados personalizados en el día.",
    ferias:["plaza","parque","anden","artesanal"],
    productos:[{n:"Mate imperial",e:"🧉",p:"$45.000"},{n:"Bombilla alpaca",e:"🥄",p:"$14.000"},{n:"Set matero completo",e:"🎒",p:"$78.000"}]},
-  {id:6, nombre:"Velas Luz de Luna", emoji:"🕯️", rubro:"deco",
+  {id:6, nombre:"Velas Luz de Luna", emoji:"🕯️", rubro:"velas",
    bio:"Velas de soja con aromas naturales, sahumerios y difusores artesanales.",
    ferias:["anden"],
    productos:[{n:"Vela de soja 200g",e:"🕯️",p:"$9.500"},{n:"Sahumerios x10",e:"🪵",p:"$4.000"},{n:"Difusor de caña",e:"🫗",p:"$13.500"}]},
-  {id:7, nombre:"Tejidos de la Abuela", emoji:"🧶", rubro:"artesanias", plan:"plus",
+  {id:7, nombre:"Tejidos de la Abuela", emoji:"🧶", rubro:"tejidos", plan:"plus",
    bio:"Tejidos a mano en lana de oveja: ruanas, gorros y medias. Encargos a medida.",
    ferias:["parque"],
    productos:[{n:"Gorro de lana",e:"🧢",p:"$11.000"},{n:"Ruana clásica",e:"🧣",p:"$48.000"}]},
-  {id:8, nombre:"Panes del Valle", emoji:"🥖", rubro:"comidas",
+  {id:8, nombre:"Panes del Valle", emoji:"🥖", rubro:"gastronomia",
    bio:"Panadería de masa madre: panes de campo, focaccias y facturas de manteca.",
    ferias:["parque","artesanal"],
    productos:[{n:"Pan de campo",e:"🍞",p:"$6.000"},{n:"Focaccia",e:"🫓",p:"$7.500"},{n:"Facturas x12",e:"🥐",p:"$9.000"}]},
@@ -488,6 +492,32 @@ const PINES = {
 
 const feriaPorId = id => FERIAS.find(f=>f.id===id);
 
+// ================== CONEXIÓN A SUPABASE ==================
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+
+async function cargarRubrosEnVivo(){
+  try{
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rubros?select=clave,nombre,emoji,color,cupo,orden&order=orden`, {
+      headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if(!resp.ok) throw new Error("HTTP " + resp.status);
+    const datos = await resp.json();
+    if(Array.isArray(datos) && datos.length){
+      RUBROS = {};
+      datos.forEach((d,i)=>{
+        RUBROS[d.clave] = { nombre:d.nombre, emoji:d.emoji, color:d.color, cupo:d.cupo, clase:"rc"+(i%6+1) };
+      });
+      renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid();
+      const b = document.getElementById('badge-vivo');
+      if(b){ b.style.display = "inline-block"; }
+      console.log(`🟢 ${datos.length} rubros cargados en vivo desde Supabase`);
+    }
+  }catch(err){
+    console.warn("Sin conexión a Supabase; usando rubros locales de respaldo.", err);
+  }
+}
+
 // ================== NAVEGACIÓN ==================
 function ir(id){
   document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));
@@ -501,7 +531,7 @@ function tab(btn){ ir(btn.dataset.p); }
 let filtroActivo = "todos";
 
 function cardPuesto(f){
-  const r = RUBROS[f.rubro];
+  const r = rubroDe(f.rubro);
   const primera = feriaPorId(f.ferias[0]).nombre;
   const extra = f.ferias.length - 1;
   const badge = f.confirmado
@@ -510,7 +540,7 @@ function cardPuesto(f){
   const sello = f.plan==="pro" ? `<span class="sello-destacado">⭐ Destacado</span>` : "";
   return `<div class="puesto ${f.plan==="pro"?"destacado":""}" onclick="verPerfil(${f.id})">
     ${sello}
-    <div class="toldo ${r.toldo}"></div>
+    <div class="toldo" style="background:repeating-linear-gradient(45deg,${r.color} 0 10px,#FFFFFF 10px 20px)"></div>
     <div class="foto">${f.emoji}</div>
     <div class="pinfo">
       <div class="pnombre">${f.nombre}</div>
@@ -538,7 +568,7 @@ function renderGrilla(){
   const c = document.getElementById('contador-puestos');
   if(filtroActivo==="todos") c.textContent = `Paseá entre ${FERIANTES.length} puestos, como un domingo cualquiera.`;
   else if(filtroActivo==="finde") c.textContent = `${lista.length} puestos confirmaron que van este finde 🔥`;
-  else c.textContent = `${lista.length} puesto${lista.length!==1?"s":""} de ${RUBROS[filtroActivo].nombre.toLowerCase()}.`;
+  else c.textContent = `${lista.length} puesto${lista.length!==1?"s":""} de ${rubroDe(filtroActivo).nombre.toLowerCase()}.`;
 }
 
 function renderChips(){
@@ -562,8 +592,10 @@ function filtrar(rubro){
 function verPerfil(id){
   perfilActualId = id;
   const f = FERIANTES.find(x=>x.id===id);
-  const r = RUBROS[f.rubro];
-  document.getElementById('perfil-toldo').className = "toldo-grande toldo "+r.toldo;
+  const r = rubroDe(f.rubro);
+  const pt = document.getElementById('perfil-toldo');
+  pt.className = "toldo-grande toldo";
+  pt.style.background = `repeating-linear-gradient(45deg,${r.color} 0 10px,#FFFFFF 10px 20px)`;
   document.getElementById('perfil-emoji').textContent = f.emoji;
   document.getElementById('perfil-nombre').textContent = f.nombre;
   document.getElementById('perfil-badges').innerHTML =
@@ -620,7 +652,7 @@ function buscarTexto(q){
   if(!q){ res.style.display="none"; rub.style.display="block"; return; }
   const lista = FERIANTES.filter(f=>
     f.nombre.toLowerCase().includes(q) ||
-    RUBROS[f.rubro].nombre.toLowerCase().includes(q) ||
+    rubroDe(f.rubro).nombre.toLowerCase().includes(q) ||
     f.productos.some(p=>p.n.toLowerCase().includes(q)) ||
     f.ferias.some(fid=>feriaPorId(fid).nombre.toLowerCase().includes(q))
   );
@@ -792,6 +824,7 @@ function arrastrable(el){
 
 // ================== INIT ==================
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+cargarRubrosEnVivo();
 </script>
 </body>
 </html>
