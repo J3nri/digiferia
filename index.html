@@ -58,6 +58,85 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .fl3{background:linear-gradient(135deg,#7FE0BC,#2FBF8F)}
 .fl4{background:linear-gradient(135deg,#8FD0F5,#4FA8E0)}
 .flyer.tu-feria{background:var(--blanco);display:flex;flex-direction:column}
+.flyer.fijo{min-width:auto;margin:0 18px 18px;cursor:pointer}
+/* fila horizontal de puestos destacados */
+.destacados-row{display:flex;gap:14px;overflow-x:auto;padding:2px 18px 18px;scroll-snap-type:x proximity;scrollbar-width:none}
+.destacados-row::-webkit-scrollbar{display:none}
+.destacados-row .puesto{min-width:46%;scroll-snap-align:start}
+.puesto.destacado{border-color:#B8860B;border-width:3px;box-shadow:4px 4px 0 #B8860B;position:relative;background:#FFFDF4}
+.sello-destacado{
+  position:absolute;top:6px;right:6px;z-index:2;font-size:10.5px;font-weight:800;
+  background:var(--amarillo);border:2px solid var(--tinta);border-radius:999px;padding:2px 8px
+}
+/* próximas fechas: lista simple (lo orgánico, sin pagar) */
+.prox-item{display:flex;align-items:center;gap:12px;margin:0 18px 10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:9px 13px}
+.prox-dia{width:46px;height:46px;border-radius:12px;border:2px solid var(--tinta);background:#FFF0D6;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;flex-shrink:0}
+.prox-dia small{font-size:9px;font-weight:800;text-transform:uppercase}
+.prox-dia b{font-size:17px}
+.prox-info{flex:1}
+.prox-info b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px;display:block}
+.prox-info small{font-size:12px;color:#7A6A55;font-weight:700}
+.chip-dest{font-size:10.5px;font-weight:800;background:var(--amarillo);border:2px solid var(--tinta);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.btn-prox{width:100%;text-align:left;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;padding:14px 18px;border-radius:14px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9);color:var(--tinta)}
+.btn-prox:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
+/* contador fundadores */
+.fundadores{display:flex;align-items:center;gap:10px;margin-top:10px;background:#FFFDF4;border:2px dashed #B8860B;border-radius:12px;padding:9px 12px}
+.fundadores .num{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#B8860B;line-height:1}
+.fundadores small{font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.35}
+/* links del panel del feriante */
+.link-row{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;margin:0 18px 10px}
+.link-row .ic{font-size:18px}
+.link-row b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;display:block}
+.link-row small{font-size:12px;color:#7A6A55;font-weight:700;line-height:1.35;display:block}
+/* arrastre con mouse en filas horizontales (escritorio) */
+.chips,.destacados-row,.carrusel{cursor:grab}
+.arrastrando{cursor:grabbing !important;scroll-snap-type:none !important}
+.arrastrando *{user-select:none;pointer-events:none}
+/* cupos por rubro */
+.cupo-lleno,.cupo-ultimo{font-family:'Nunito',sans-serif;font-size:10.5px;font-weight:800;border:2px solid var(--tinta);border-radius:999px;padding:2px 8px;align-self:flex-start}
+.cupo-lleno{background:#EFE6D5;color:#5C4F3E}
+.cupo-ultimo{background:var(--amarillo)}
+/* marca del feriante en Mi Puesto */
+.mi-marca{display:flex;align-items:center;gap:12px;margin:12px 0 4px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:10px 14px;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.mi-logo{width:52px;height:52px;border-radius:50%;background:#FDF1DC;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.mi-marca b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16.5px;display:block}
+.mi-marca small{font-size:12.5px;color:#7A6A55;font-weight:700;font-style:italic}
+/* pines / insignias con tooltip */
+.pines{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.pin{position:relative;width:40px;height:40px;border-radius:50%;background:var(--blanco);border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.pin .tooltip{
+  position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) scale(.9);
+  background:var(--tinta);color:#FFF8EC;font-size:12px;font-weight:700;line-height:1.35;
+  padding:8px 11px;border-radius:10px;width:170px;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:40
+}
+.pin .tooltip b{color:var(--amarillo);display:block;font-size:12.5px}
+.pin .tooltip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--tinta)}
+.pin:hover .tooltip,.pin.abierto .tooltip{opacity:1;transform:translateX(-50%) scale(1)}
+.pin.abierto{background:var(--amarillo)}
+/* seguir + newsletter */
+.btn-seguir{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;padding:9px 18px;border-radius:999px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.btn-seguir.on{background:var(--amarillo)}
+.btn-seguir:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.seguir-mini{margin-left:auto;flex-shrink:0;width:36px;height:36px;border-radius:50%;border:2px solid var(--tinta);background:var(--blanco);font-size:16px;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.seguir-mini.on{background:var(--amarillo)}
+.news-card{margin:0 18px 18px;background:linear-gradient(135deg,#FDE7F2,#FFF0D6);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px}
+.news-card h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px}
+.news-card p{font-size:13px;color:#5C4F3E;font-weight:700;margin-top:4px}
+.news-form{display:flex;gap:8px;margin-top:12px}
+.news-form input{flex:1;min-width:0;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco)}
+.news-form button{border:2px solid var(--tinta);border-radius:12px;background:var(--fucsia);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+/* modal de email */
+.velo{position:fixed;inset:0;background:rgba(43,33,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+.velo.on{display:flex}
+.modal{background:var(--fondo);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:6px 6px 0 rgba(43,33,24,.9);padding:20px;max-width:340px;width:100%}
+.modal h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px}
+.modal p{font-size:13.5px;color:#5C4F3E;margin-top:6px;line-height:1.45}
+.modal input{width:100%;margin-top:12px;border:2px solid var(--tinta);border-radius:12px;padding:11px 12px;font-family:'Nunito',sans-serif;font-size:14px}
+.modal .acciones{display:flex;gap:8px;margin-top:12px}
+.modal .acciones button{flex:1;border:2px solid var(--tinta);border-radius:12px;padding:11px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer}
+.m-ok{background:var(--verde);color:#fff}
+.m-no{background:var(--blanco)}
 .flyer.tu-feria .flyer-body{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .puntos{display:flex;gap:6px;justify-content:center;padding-bottom:4px}
 .puntos i{width:8px;height:8px;border-radius:50%;background:#DCCFB6;transition:background .2s,transform .2s}
@@ -69,6 +148,22 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .chip.on{background:var(--tinta);color:var(--amarillo)}
 .grilla{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 18px 24px}
 .vacio{grid-column:1/-1;text-align:center;color:#9A8B76;font-weight:700;padding:30px 10px}
+/* puesto vacío: invitación al feriante */
+.puesto.invita{
+  border-style:dashed;background:#FFFDF6;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:18px 12px;min-height:210px
+}
+.puesto.invita .mas{
+  width:46px;height:46px;border-radius:50%;background:var(--amarillo);
+  border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:800;margin-bottom:10px
+}
+.puesto.invita b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;line-height:1.25}
+.puesto.invita small{font-size:12px;color:#7A6A55;font-weight:700;margin-top:5px}
+.puesto.invita .cta-mini{
+  margin-top:10px;font-size:12.5px;font-weight:800;color:#fff;background:var(--fucsia);
+  border:2px solid var(--tinta);border-radius:999px;padding:6px 14px
+}
 .puesto{background:var(--blanco);border-radius:var(--radius);overflow:hidden;border:2px solid var(--tinta);box-shadow:4px 4px 0 rgba(43,33,24,.9);cursor:pointer;transition:transform .12s}
 .puesto:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
 .toldo{height:14px}
@@ -171,16 +266,62 @@ nav button.on span{filter:none;opacity:1}
     <h1>¡La feria está abierta! 🎪</h1>
     <p class="sub" id="contador-puestos"></p>
   </div>
+
+  <!-- 1. Puestos destacados (plan Pro) -->
+  <div class="carrusel-label"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
+  <div class="destacados-row" id="destacados-row"></div>
+
+  <!-- 2. Ferias destacadas (flyers pagos) -->
   <div class="carrusel-wrap">
     <div class="carrusel-label">
-      <h2>Ferias que te esperan 🎉</h2>
-      <small>Espacio de ferias</small>
+      <h2>Ferias destacadas 🎉</h2>
+      <small>Espacio pago</small>
     </div>
     <div class="carrusel" id="carrusel-flyers"></div>
     <div class="puntos" id="carrusel-puntos"></div>
   </div>
+
+  <!-- 3. Botón a próximas ferias (lo orgánico no compite con lo destacado) -->
+  <div style="padding:0 18px 20px">
+    <button class="btn-prox" onclick="ir('p-ferias')">📅 Ver próximas ferias <span style="float:right">→</span></button>
+  </div>
+
+  <!-- 4. Todos los puestos -->
+  <div class="seccion" style="padding-bottom:6px;padding-top:8px"><h2>Todos los puestos</h2></div>
   <div class="chips" id="chips-rubros"></div>
   <div class="grilla" id="grilla-puestos"></div>
+
+  <!-- Newsletter -->
+  <div class="news-card">
+    <h3>📬 Que la feria te busque a vos</h3>
+    <p>Dejanos tu email y enterate cada semana qué puestos confirmaron, qué ferias vienen y qué hay de nuevo en tus rubros favoritos.</p>
+    <div class="news-form">
+      <input type="email" id="news-email" placeholder="tu@email.com">
+      <button onclick="suscribirGeneral()">¡Anotarme!</button>
+    </div>
+  </div>
+
+  <!-- 5. Sumate (al final del paseo) -->
+  <div class="flyer tu-feria fijo" onclick="ir('p-mipuesto')">
+    <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="flyer-body">
+      <h3>¿Sos feriante? 🛍️</h3>
+      <p style="font-size:13.5px;color:#7A6A55;font-weight:700">Armá tu puesto virtual gratis y recibí pedidos por WhatsApp.</p>
+      <span class="flyer-fecha" style="background:var(--fucsia);color:#fff">🎪 Sumá tu puesto gratis</span>
+      <div class="fundadores">
+        <div class="num">3<span style="font-size:13px;color:#9A8B76">/20</span></div>
+        <small>🌱 Puestos Fundadores ocupados — quedan 17<br>Voto de confianza: 6 meses de Plus gratis + insignia única</small>
+      </div>
+    </div>
+  </div>
+  <div class="flyer tu-feria fijo" onclick="ir('p-mipuesto')">
+    <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="flyer-body">
+      <h3>¿Organizás una feria? 📣</h3>
+      <p style="font-size:13.5px;color:#7A6A55;font-weight:700">Publicá tu flyer destacado y llegá a todos los visitantes.</p>
+      <span class="flyer-fecha" style="background:var(--amarillo)">✨ Sumá tu feria</span>
+    </div>
+  </div>
 </section>
 
 <!-- PERFIL -->
@@ -192,8 +333,10 @@ nav button.on span{filter:none;opacity:1}
       <div class="avatar-grande" id="perfil-emoji"></div>
       <h1 style="font-size:23px" id="perfil-nombre"></h1>
       <div class="badges" id="perfil-badges"></div>
+      <div class="pines" id="perfil-pines"></div>
       <p class="bio" id="perfil-bio"></p>
       <div class="redes" id="perfil-redes"></div>
+      <div><button class="btn-seguir" id="btn-seguir-puesto" onclick="seguirActual(event)">🔔 Seguir este puesto</button></div>
     </div>
   </div>
   <div class="seccion" style="padding-bottom:10px"><h2>📅 ¿Dónde encontrarlo?</h2></div>
@@ -227,16 +370,46 @@ nav button.on span{filter:none;opacity:1}
 <section class="pantalla" id="p-mipuesto">
   <div class="seccion">
     <h1>Mi puesto 🎪</h1>
+    <div class="mi-marca">
+      <div class="mi-logo">🐻</div>
+      <div>
+        <b>Pardo y Copito</b>
+        <small>"Fragancias que cuentan historias"</small>
+      </div>
+    </div>
     <p class="sub">Armá tu puesto virtual en 5 minutos. Cargá TODAS las ferias donde participás, con sus días y frecuencia.</p>
   </div>
   <div class="feria-item" style="flex-direction:column;align-items:flex-start;gap:8px">
     <h3 style="font-family:'Fredoka';font-weight:600">Todavía no tenés puesto</h3>
     <p style="font-size:14px;color:#7A6A55">Subí tu foto, contá qué vendés, cargá productos y marcá tus ferias (podés elegir varias). Es gratis para arrancar.</p>
   </div>
+  <div class="seccion" style="padding-bottom:8px"><h2>Tu panel va a incluir 🔑</h2></div>
+  <div class="link-row">
+    <span class="ic">🔗</span>
+    <div><b>Link de tu puesto</b><small>digiferia.app/puesto/tu-nombre — compartilo con tus clientes por WhatsApp e Instagram</small></div>
+  </div>
+  <div class="link-row">
+    <span class="ic">🤝</span>
+    <div><b>Link de invitación a feriantes</b><small>Por cada feriante que sumes y complete su primer mes activo: si sos Gratis ganás 1 mes de Plus, si sos Plus ganás 1 mes de Pro, y si sos Pro tenés 1 mes sin pagar la suscripción</small></div>
+  </div>
+  <div class="seccion" style="padding-bottom:8px"><h2>Colección de pines 📌</h2></div>
+  <div id="coleccion-pines"></div>
   <button class="cta-wsp" style="background:var(--fucsia)">✨ Abrir mi puesto gratis</button>
 </section>
 
 </main>
+
+<div class="velo" id="velo">
+  <div class="modal">
+    <h3 id="modal-titulo">🔔 ¡Buenísimo!</h3>
+    <p id="modal-texto">Dejanos tu email y te avisamos cada vez que haya novedades.</p>
+    <input type="email" id="modal-email" placeholder="tu@email.com">
+    <div class="acciones">
+      <button class="m-no" onclick="cerrarModal()">Ahora no</button>
+      <button class="m-ok" onclick="confirmarEmail()">¡Avisame!</button>
+    </div>
+  </div>
+</div>
 
 <nav>
   <button class="on" data-p="p-home" onclick="tab(this)"><span>🎪</span>La Feria</button>
@@ -249,29 +422,29 @@ nav button.on span{filter:none;opacity:1}
 <script>
 // ================== DATOS ==================
 const RUBROS = {
-  artesanias:{nombre:"Artesanías", emoji:"🎨", toldo:"t-rosa", clase:"rc1"},
-  plantas:{nombre:"Plantas", emoji:"🌿", toldo:"t-verde", clase:"rc2"},
-  comidas:{nombre:"Comidas", emoji:"🧁", toldo:"t-naranja", clase:"rc3"},
-  ropa:{nombre:"Ropa", emoji:"👕", toldo:"t-celeste", clase:"rc4"},
-  mates:{nombre:"Mates y bombillas", emoji:"🧉", toldo:"t-amarillo", clase:"rc5"},
-  deco:{nombre:"Deco & aromas", emoji:"🕯️", toldo:"t-rosa", clase:"rc6"},
+  artesanias:{nombre:"Artesanías", emoji:"🎨", toldo:"t-rosa", clase:"rc1", cupo:null},
+  plantas:{nombre:"Plantas", emoji:"🌿", toldo:"t-verde", clase:"rc2", cupo:null},
+  comidas:{nombre:"Comidas", emoji:"🧁", toldo:"t-naranja", clase:"rc3", cupo:null},
+  ropa:{nombre:"Ropa", emoji:"👕", toldo:"t-celeste", clase:"rc4", cupo:3},
+  mates:{nombre:"Mates y bombillas", emoji:"🧉", toldo:"t-amarillo", clase:"rc5", cupo:3},
+  deco:{nombre:"Deco & aromas", emoji:"🕯️", toldo:"t-rosa", clase:"rc6", cupo:3},
 };
 
 const FERIAS = [
-  {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1"},
-  {id:"parque", nombre:"Feria del Parque", lugar:"Parque central · 9 a 14 hs", frec:"2° y 4° sábado del mes", dia:"Sáb", num:"25", fd:"fd2"},
-  {id:"anden", nombre:"Feria del Andén", lugar:"Estación vieja · 11 a 20 hs", frec:"1° y 3° domingo del mes", dia:"Dom", num:"19", fd:"fd3"},
-  {id:"artesanal", nombre:"Paseo Artesanal Municipal", lugar:"Peatonal · 17 a 22 hs", frec:"Último finde del mes", dia:"Dom", num:"26", fd:"fd1"},
+  {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1", ordenFecha:18},
+  {id:"parque", nombre:"Feria del Parque", lugar:"Parque central · 9 a 14 hs", frec:"2° y 4° sábado del mes", dia:"Sáb", num:"25", fd:"fd2", ordenFecha:25},
+  {id:"anden", nombre:"Feria del Andén", lugar:"Estación vieja · 11 a 20 hs", frec:"1° y 3° domingo del mes", dia:"Dom", num:"19", fd:"fd3", ordenFecha:19},
+  {id:"artesanal", nombre:"Paseo Artesanal Municipal", lugar:"Peatonal · 17 a 22 hs", frec:"Último finde del mes", dia:"Dom", num:"26", fd:"fd1", ordenFecha:26},
 ];
 
 const FERIANTES = [
-  {id:1, nombre:"Cueros del Sur", emoji:"🧵", rubro:"artesanias",
+  {id:1, nombre:"Cueros del Sur", emoji:"🧵", rubro:"artesanias", plan:"pro", pines:["fundador","embajador","presente"],
    confirmado:{feriaId:"plaza", texto:"Sáb 18"},
    redes:{instagram:"cuerosdelsur", tiktok:"cuerosdelsur.ok", facebook:"CuerosDelSurOficial"},
    bio:"Marroquinería artesanal hecha a mano: billeteras, cintos y bolsos en cuero genuino. 12 años feriando. Envíos a todo el país.",
    ferias:["plaza","parque","artesanal"],
    productos:[{n:"Billetera clásica",e:"👛",p:"$28.500"},{n:"Cinto trenzado",e:"🪢",p:"$19.900"},{n:"Bolso bandolera",e:"👜",p:"$52.000"},{n:"Llavero grabado",e:"🔑",p:"$6.500"}]},
-  {id:2, nombre:"Suculentas Mora", emoji:"🌵", rubro:"plantas",
+  {id:2, nombre:"Suculentas Mora", emoji:"🌵", rubro:"plantas", pines:["fundador"],
    redes:{instagram:"suculentas.mora", web:"suculentasmora.com.ar"},
    bio:"Suculentas, cactus y macetas pintadas a mano. Armamos regalos y souvenirs para eventos.",
    ferias:["parque","anden"],
@@ -285,7 +458,7 @@ const FERIANTES = [
    bio:"Ropa vintage seleccionada y prendas recicladas únicas. Talles del S al XXL.",
    ferias:["anden","artesanal"],
    productos:[{n:"Camisa retro",e:"👔",p:"$15.000"},{n:"Campera denim",e:"🧥",p:"$32.000"},{n:"Vestido floreado",e:"👗",p:"$24.000"}]},
-  {id:5, nombre:"El Matero", emoji:"🧉", rubro:"mates",
+  {id:5, nombre:"El Matero", emoji:"🧉", rubro:"mates", plan:"pro", pines:["fundador","fiel","rapido"],
    confirmado:{feriaId:"anden", texto:"Dom 19"},
    bio:"Mates imperiales, camioneros y bombillas de alpaca. Grabados personalizados en el día.",
    ferias:["plaza","parque","anden","artesanal"],
@@ -294,7 +467,7 @@ const FERIANTES = [
    bio:"Velas de soja con aromas naturales, sahumerios y difusores artesanales.",
    ferias:["anden"],
    productos:[{n:"Vela de soja 200g",e:"🕯️",p:"$9.500"},{n:"Sahumerios x10",e:"🪵",p:"$4.000"},{n:"Difusor de caña",e:"🫗",p:"$13.500"}]},
-  {id:7, nombre:"Tejidos de la Abuela", emoji:"🧶", rubro:"artesanias",
+  {id:7, nombre:"Tejidos de la Abuela", emoji:"🧶", rubro:"artesanias", plan:"plus",
    bio:"Tejidos a mano en lana de oveja: ruanas, gorros y medias. Encargos a medida.",
    ferias:["parque"],
    productos:[{n:"Gorro de lana",e:"🧢",p:"$11.000"},{n:"Ruana clásica",e:"🧣",p:"$48.000"}]},
@@ -303,6 +476,15 @@ const FERIANTES = [
    ferias:["parque","artesanal"],
    productos:[{n:"Pan de campo",e:"🍞",p:"$6.000"},{n:"Focaccia",e:"🫓",p:"$7.500"},{n:"Facturas x12",e:"🥐",p:"$9.000"}]},
 ];
+
+const PINES = {
+  fundador:  {emoji:"🌱", nombre:"Puesto Fundador",   detalle:"Estuvo entre los primeros 20 puestos de La Digi Feria · Permanente, nunca se pierde"},
+  fiel:      {emoji:"🎪", nombre:"Feriante Fiel",     detalle:"Más de 6 meses en la app con actividad · Se suspende tras 60 días inactivo"},
+  embajador: {emoji:"🤝", nombre:"Embajador",         detalle:"5 o más feriantes invitados y activos · Revisión bimestral"},
+  gran_embajador: {emoji:"🌟", nombre:"Gran Embajador", detalle:"15 feriantes sumados en su historial total · Permanente, nunca se pierde"},
+  presente:  {emoji:"🔥", nombre:"Siempre Presente",  detalle:"8 fines de semana seguidos confirmando asistencia · Se pierde al cortar la racha"},
+  rapido:    {emoji:"⚡", nombre:"Respuesta Rápida",  detalle:"Responde consultas en el día · Se revalida cada mes"},
+};
 
 const feriaPorId = id => FERIAS.find(f=>f.id===id);
 
@@ -325,7 +507,9 @@ function cardPuesto(f){
   const badge = f.confirmado
     ? `<div><span class="este-finde">🔥 ${feriaPorId(f.confirmado.feriaId).nombre.replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>`
     : "";
-  return `<div class="puesto" onclick="verPerfil(${f.id})">
+  const sello = f.plan==="pro" ? `<span class="sello-destacado">⭐ Destacado</span>` : "";
+  return `<div class="puesto ${f.plan==="pro"?"destacado":""}" onclick="verPerfil(${f.id})">
+    ${sello}
     <div class="toldo ${r.toldo}"></div>
     <div class="foto">${f.emoji}</div>
     <div class="pinfo">
@@ -337,11 +521,18 @@ function cardPuesto(f){
   </div>`;
 }
 
+function renderDestacados(){
+  const lista = FERIANTES.filter(f=>f.plan==="pro");
+  document.getElementById('destacados-row').innerHTML = lista.map(cardPuesto).join("");
+}
+
 function renderGrilla(){
   let lista;
   if(filtroActivo==="todos") lista = FERIANTES;
   else if(filtroActivo==="finde") lista = FERIANTES.filter(f=>f.confirmado);
   else lista = FERIANTES.filter(f=>f.rubro===filtroActivo);
+  const rango = f => f.plan==="pro" ? 2 : f.plan==="plus" ? 1 : 0;
+  lista = [...lista].sort((a,b)=>rango(b)-rango(a));
   const g = document.getElementById('grilla-puestos');
   g.innerHTML = lista.length ? lista.map(cardPuesto).join("") : `<div class="vacio">Todavía no hay puestos acá 🙈</div>`;
   const c = document.getElementById('contador-puestos');
@@ -369,6 +560,7 @@ function filtrar(rubro){
 
 // ================== PERFIL ==================
 function verPerfil(id){
+  perfilActualId = id;
   const f = FERIANTES.find(x=>x.id===id);
   const r = RUBROS[f.rubro];
   document.getElementById('perfil-toldo').className = "toldo-grande toldo "+r.toldo;
@@ -377,6 +569,11 @@ function verPerfil(id){
   document.getElementById('perfil-badges').innerHTML =
     `<span class="badge">${r.emoji} ${r.nombre}</span><span class="badge" style="background:#DFF5EC">🎪 ${f.ferias.length} feria${f.ferias.length>1?"s":""}</span>`
     + (f.confirmado ? `<span class="este-finde" style="margin-top:0">🔥 Este finde: ${feriaPorId(f.confirmado.feriaId).nombre} · ${f.confirmado.texto}</span>` : "");
+  document.getElementById('perfil-pines').innerHTML = (f.pines||[]).map(k=>{
+    const p = PINES[k];
+    return `<span class="pin" onclick="event.stopPropagation();togglePin(this)">${p.emoji}
+      <span class="tooltip"><b>${p.emoji} ${p.nombre}</b>${p.detalle}</span></span>`;
+  }).join("");
   document.getElementById('perfil-bio').textContent = f.bio;
   const REDES_CFG = {
     instagram:{icono:"📸", clase:"ig", url:u=>`https://instagram.com/${u}`},
@@ -396,6 +593,7 @@ function verPerfil(id){
   document.getElementById('perfil-productos').innerHTML = f.productos.map(p=>
     `<div class="prod"><div class="foto">${p.e}</div><div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`
   ).join("");
+  actualizarBtnPerfil(id);
   ir('p-perfil');
 }
 
@@ -404,7 +602,14 @@ function renderRubrosGrid(){
   const cont = document.getElementById('rubros-grid');
   cont.innerHTML = Object.entries(RUBROS).map(([k,r])=>{
     const n = FERIANTES.filter(f=>f.rubro===k).length;
-    return `<div class="rubro-card ${r.clase}" onclick="filtrar('${k}')"><span>${r.emoji}</span>${r.nombre}<small>${n} puesto${n!==1?"s":""}</small></div>`;
+    let cupoTxt = `${n} puesto${n!==1?"s":""}`;
+    let sello = "";
+    if(r.cupo){
+      cupoTxt = `${n}/${r.cupo} cupos`;
+      if(n >= r.cupo) sello = `<span class="cupo-lleno">🔒 Cupo completo</span>`;
+      else if(n === r.cupo-1) sello = `<span class="cupo-ultimo">⏳ ¡Último cupo!</span>`;
+    }
+    return `<div class="rubro-card ${r.clase}" onclick="filtrar('${k}')"><span>${r.emoji}</span>${r.nombre}<small>${cupoTxt}</small>${sello}</div>`;
   }).join("");
 }
 
@@ -435,6 +640,7 @@ function renderFerias(){
         <span class="frec">🔁 ${fe.frec}</span>
         <div class="puestos-n">🎪 ${n} puestos en la Digi Feria</div>
       </div>
+      <button class="seguir-mini ${siguiendo.has('feria:'+fe.id)?'on':''}" onclick="event.stopPropagation();seguir('feria','${fe.id}','${fe.nombre}',this)" style="align-self:flex-start">🔔</button>
     </div>`;
   }).join("");
 }
@@ -462,19 +668,10 @@ function renderCarrusel(){
       </div>
     </div>`;
   }).join("");
-  // último slide: gancho comercial para organizadores
-  html += `<div class="flyer tu-feria" onclick="ir('p-mipuesto')">
-    <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="flyer-body">
-      <h3>¿Organizás una feria? 🎪</h3>
-      <p style="font-size:13.5px;color:#7A6A55;font-weight:700">Publicá tu flyer acá y llegá a todos los visitantes de la app.</p>
-      <span class="flyer-fecha" style="background:var(--amarillo)">✨ Quiero aparecer</span>
-    </div>
-  </div>`;
   cont.innerHTML = html;
 
   // puntos indicadores
-  const total = FLYERS.length + 1;
+  const total = FLYERS.length;
   document.getElementById('carrusel-puntos').innerHTML =
     Array.from({length:total},(_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
 
@@ -493,8 +690,108 @@ function renderCarrusel(){
   cont.addEventListener('mousedown', ()=>clearInterval(auto), {once:true});
 }
 
+// ================== PINES ==================
+function togglePin(el){
+  const abierto = el.classList.contains('abierto');
+  document.querySelectorAll('.pin.abierto').forEach(p=>p.classList.remove('abierto'));
+  if(!abierto) el.classList.add('abierto');
+}
+document.addEventListener('click', ()=>document.querySelectorAll('.pin.abierto').forEach(p=>p.classList.remove('abierto')));
+
+// ================== SEGUIR / NEWSLETTER ==================
+let emailVisitante = null;
+const siguiendo = new Set();
+let pendiente = null;   // seguimiento en espera de email
+
+function seguir(tipo, id, nombre, boton){
+  const clave = tipo + ":" + id;
+  if(siguiendo.has(clave)){
+    siguiendo.delete(clave);
+    if(boton) boton.classList.remove('on');
+    if(tipo==='puesto') actualizarBtnPerfil(id);
+    return;
+  }
+  if(!emailVisitante){
+    pendiente = {tipo, id, nombre, boton};
+    document.getElementById('modal-texto').textContent =
+      `Dejanos tu email y te avisamos las novedades de ${nombre}: fechas confirmadas, productos nuevos y más.`;
+    document.getElementById('velo').classList.add('on');
+    return;
+  }
+  siguiendo.add(clave);
+  if(boton) boton.classList.add('on');
+  if(tipo==='puesto') actualizarBtnPerfil(id);
+}
+
+function confirmarEmail(){
+  const em = document.getElementById('modal-email').value.trim();
+  if(!em || !em.includes('@')){ document.getElementById('modal-email').style.borderColor = '#E91E8C'; return; }
+  emailVisitante = em;
+  cerrarModal();
+  if(pendiente){ seguir(pendiente.tipo, pendiente.id, pendiente.nombre, pendiente.boton); pendiente = null; }
+  renderFerias();
+}
+
+function cerrarModal(){ document.getElementById('velo').classList.remove('on'); }
+
+let perfilActualId = null;
+function seguirActual(ev){
+  const f = FERIANTES.find(x=>x.id===perfilActualId);
+  if(f) seguir('puesto', f.id, f.nombre, null);
+}
+function actualizarBtnPerfil(id){
+  const b = document.getElementById('btn-seguir-puesto');
+  const on = siguiendo.has('puesto:'+id);
+  b.classList.toggle('on', on);
+  b.textContent = on ? '✓ Siguiendo este puesto' : '🔔 Seguir este puesto';
+}
+
+function suscribirGeneral(){
+  const em = document.getElementById('news-email').value.trim();
+  if(!em || !em.includes('@')){ document.getElementById('news-email').style.borderColor = '#E91E8C'; return; }
+  emailVisitante = em;
+  siguiendo.add('general:digiferia');
+  const card = document.querySelector('.news-card');
+  card.innerHTML = '<h3>🎉 ¡Listo!</h3><p>Cada semana te va a llegar lo mejor de La Digi Feria. Podés seguir también puestos, ferias o rubros puntuales con la campanita 🔔.</p>';
+}
+
+// ================== COLECCIÓN DE PINES ==================
+document.getElementById('coleccion-pines').innerHTML = Object.values(PINES).map(p=>
+  `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
+).join("");
+
+// ================== ARRASTRE CON MOUSE (escritorio) ==================
+function arrastrable(el){
+  let apretado=false, seMovio=false, x0=0, scroll0=0;
+  el.addEventListener('mousedown', e=>{
+    apretado=true; seMovio=false; x0=e.pageX; scroll0=el.scrollLeft;
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!apretado) return;
+    const dx = e.pageX - x0;
+    if(Math.abs(dx) > 6 && !seMovio){ seMovio=true; el.classList.add('arrastrando'); }
+    if(seMovio) el.scrollLeft = scroll0 - dx;
+  });
+  window.addEventListener('mouseup', ()=>{
+    apretado=false;
+    if(seMovio) setTimeout(()=>{ el.classList.remove('arrastrando'); }, 50);
+  });
+  // si hubo arrastre, que soltar no dispare el click del elemento
+  el.addEventListener('click', e=>{
+    if(seMovio){ e.stopPropagation(); e.preventDefault(); seMovio=false; }
+  }, true);
+  // rueda del mouse: desplaza en horizontal
+  el.addEventListener('wheel', e=>{
+    if(e.deltaY){ e.preventDefault(); el.scrollLeft += e.deltaY; }
+  }, {passive:false});
+}
+['chips-rubros','destacados-row','carrusel-flyers'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) arrastrable(el);
+});
+
 // ================== INIT ==================
-renderChips(); renderGrilla(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 </script>
 </body>
 </html>
