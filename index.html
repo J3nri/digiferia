@@ -268,7 +268,7 @@ nav button.on span{filter:none;opacity:1}
   </div>
 
   <!-- 1. Puestos destacados (plan Pro) -->
-  <div class="carrusel-label"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
+  <div class="carrusel-label" id="label-destacados"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
   <div class="destacados-row" id="destacados-row"></div>
 
   <!-- 2. Ferias destacadas (flyers pagos) -->
@@ -343,7 +343,7 @@ nav button.on span{filter:none;opacity:1}
   <div class="agenda" id="perfil-agenda"></div>
   <div class="seccion" style="padding-bottom:10px"><h2>Sus productos</h2></div>
   <div class="grilla-prod" id="perfil-productos"></div>
-  <button class="cta-wsp">💬 Pedir por WhatsApp</button>
+  <button class="cta-wsp" id="btn-wsp">💬 Pedir por WhatsApp</button>
 </section>
 
 <!-- BUSCAR -->
@@ -434,14 +434,14 @@ let RUBROS = {
 
 const rubroDe = clave => RUBROS[clave] || {nombre:clave, emoji:"🎪", color:"#E91E8C", clase:"rc1"};
 
-const FERIAS = [
+let FERIAS = [
   {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1", ordenFecha:18},
   {id:"parque", nombre:"Feria del Parque", lugar:"Parque central · 9 a 14 hs", frec:"2° y 4° sábado del mes", dia:"Sáb", num:"25", fd:"fd2", ordenFecha:25},
   {id:"anden", nombre:"Feria del Andén", lugar:"Estación vieja · 11 a 20 hs", frec:"1° y 3° domingo del mes", dia:"Dom", num:"19", fd:"fd3", ordenFecha:19},
   {id:"artesanal", nombre:"Paseo Artesanal Municipal", lugar:"Peatonal · 17 a 22 hs", frec:"Último finde del mes", dia:"Dom", num:"26", fd:"fd1", ordenFecha:26},
 ];
 
-const FERIANTES = [
+let FERIANTES = [
   {id:1, nombre:"Cueros del Sur", emoji:"🧵", rubro:"marroquineria", plan:"pro", pines:["fundador","embajador","presente"],
    confirmado:{feriaId:"plaza", texto:"Sáb 18"},
    redes:{instagram:"cuerosdelsur", tiktok:"cuerosdelsur.ok", facebook:"CuerosDelSurOficial"},
@@ -518,6 +518,89 @@ async function cargarRubrosEnVivo(){
   }
 }
 
+// ---------- Puestos, ferias y flyers en vivo ----------
+const DIAS_ES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+function fechaCorta(iso){
+  if(!iso) return {dia:"—", num:"🎪", texto:""};
+  const d = new Date(iso + "T12:00:00");
+  return { dia: DIAS_ES[d.getDay()], num: String(d.getDate()), texto: DIAS_ES[d.getDay()] + " " + d.getDate() };
+}
+
+async function cargarFeriaYPuestosEnVivo(){
+  const cab = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+  try{
+    // 1. Ferias
+    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha&order=proxima_fecha.asc.nullslast`, {headers:cab});
+    const ferias = rf.ok ? await rf.json() : [];
+
+    // 2. Puestos publicados, con todo embebido
+    const sel = "id,nombre,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`, {headers:cab});
+    const puestos = rp.ok ? await rp.json() : [];
+
+    // 3. Flyers activos
+    const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`, {headers:cab});
+    const flyers = rfl.ok ? await rfl.json() : [];
+
+    if(!puestos.length) { console.warn("Aún no hay puestos publicados en la base; se muestran los de ejemplo."); return; }
+
+    // ---- Mapear ferias ----
+    if(ferias.length){
+      FERIAS = ferias.map(f=>{
+        const fc = fechaCorta(f.proxima_fecha);
+        return { id:f.id, nombre:f.nombre,
+          lugar:(f.lugar||"") + (f.horario ? " · " + f.horario : ""),
+          frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1",
+          ordenFecha: f.proxima_fecha ? new Date(f.proxima_fecha).getTime() : 9e15 };
+      });
+    }
+
+    // ---- Mapear puestos ----
+    const hoy = new Date(); const en7 = new Date(); en7.setDate(hoy.getDate()+7);
+    FERIANTES = puestos.map(p=>{
+      const asis = (p.asistencias||[]).map(a=>({...a, d:new Date(a.fecha+"T12:00:00")}))
+        .filter(a=>a.d >= new Date(hoy.toDateString()) && a.d <= en7)
+        .sort((a,b)=>a.d-b.d)[0];
+      const fdet = (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({
+        id:x.ferias.id, nombre:x.ferias.nombre, frec:x.frecuencia||x.ferias.frecuencia||"" }));
+      const feriaAsis = asis ? fdet.find(x=>x.id===asis.feria_id) : null;
+      const esUrl = p.foto_url && p.foto_url.startsWith("http");
+      return {
+        id: p.id, nombre: p.nombre, bio: p.bio||"",
+        emoji: (!esUrl && p.foto_url) ? p.foto_url : "🎪",
+        foto: esUrl ? p.foto_url : null,
+        rubro: p.rubros ? p.rubros.clave : null,
+        plan: p.plan==="gratis" ? null : p.plan,
+        whatsapp: p.whatsapp || null,
+        redes: (p.redes && Object.keys(p.redes).length) ? p.redes : null,
+        ferias: fdet.map(x=>x.id), feriasDetalle: fdet,
+        productos: (p.productos||[]).filter(x=>x.visible!==false)
+          .sort((a,b)=>(a.orden||0)-(b.orden||0))
+          .map(x=>({ n:x.nombre, p:"$"+Number(x.precio).toLocaleString("es-AR"),
+                     foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,
+                     e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️" })),
+        pinesDB: (p.puesto_insignia||[]).filter(x=>x.vigente!==false && x.insignias).map(x=>x.insignias),
+        confirmado: asis ? { nombre: feriaAsis ? feriaAsis.nombre : "", texto: fechaCorta(asis.fecha).texto } : null
+      };
+    });
+
+    // ---- Mapear flyers ----
+    FLYERS = flyers.filter(fl=>FERIAS.some(fe=>fe.id===fl.feria_id))
+      .map((fl,i)=>{
+        const fe = FERIAS.find(x=>x.id===fl.feria_id);
+        return { feriaId: fl.feria_id, estilo: "fl"+(i%4+1),
+                 fecha: (fe.dia!=="—" ? fe.dia+" "+fe.num : "Próximamente") };
+      });
+
+    renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+    const b = document.getElementById('badge-vivo');
+    if(b){ b.style.display = "inline-block"; b.textContent = "🟢 datos en vivo"; }
+    console.log(`🟢 ${puestos.length} puesto(s), ${ferias.length} feria(s) y ${flyers.length} flyer(s) en vivo desde Supabase`);
+  }catch(err){
+    console.warn("No se pudieron cargar puestos en vivo; se muestran los de ejemplo.", err);
+  }
+}
+
 // ================== NAVEGACIÓN ==================
 function ir(id){
   document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));
@@ -530,18 +613,32 @@ function tab(btn){ ir(btn.dataset.p); }
 // ================== HOME: GRILLA + FILTRO ==================
 let filtroActivo = "todos";
 
+function nombreFeriaDe(f, idx){
+  if(f.feriasDetalle && f.feriasDetalle[idx]) return f.feriasDetalle[idx].nombre;
+  const fe = feriaPorId(f.ferias[idx]);
+  return fe ? fe.nombre : "—";
+}
+function nombreFeriaConfirmada(f){
+  if(f.confirmado.nombre) return f.confirmado.nombre;
+  const fe = feriaPorId(f.confirmado.feriaId);
+  return fe ? fe.nombre : "";
+}
+
 function cardPuesto(f){
   const r = rubroDe(f.rubro);
-  const primera = feriaPorId(f.ferias[0]).nombre;
+  const primera = nombreFeriaDe(f, 0);
   const extra = f.ferias.length - 1;
   const badge = f.confirmado
-    ? `<div><span class="este-finde">🔥 ${feriaPorId(f.confirmado.feriaId).nombre.replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>`
+    ? `<div><span class="este-finde">🔥 ${nombreFeriaConfirmada(f).replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>`
     : "";
   const sello = f.plan==="pro" ? `<span class="sello-destacado">⭐ Destacado</span>` : "";
-  return `<div class="puesto ${f.plan==="pro"?"destacado":""}" onclick="verPerfil(${f.id})">
+  const foto = f.foto
+    ? `<div class="foto" style="background-image:url('${f.foto}');background-size:cover;background-position:center"></div>`
+    : `<div class="foto">${f.emoji}</div>`;
+  return `<div class="puesto ${f.plan==="pro"?"destacado":""}" onclick="verPerfil('${f.id}')">
     ${sello}
     <div class="toldo" style="background:repeating-linear-gradient(45deg,${r.color} 0 10px,#FFFFFF 10px 20px)"></div>
-    <div class="foto">${f.emoji}</div>
+    ${foto}
     <div class="pinfo">
       <div class="pnombre">${f.nombre}</div>
       <div class="prubro">${r.nombre}</div>
@@ -554,6 +651,8 @@ function cardPuesto(f){
 function renderDestacados(){
   const lista = FERIANTES.filter(f=>f.plan==="pro");
   document.getElementById('destacados-row').innerHTML = lista.map(cardPuesto).join("");
+  const lbl = document.getElementById('label-destacados');
+  if(lbl) lbl.style.display = lista.length ? "" : "none";
 }
 
 function renderGrilla(){
@@ -591,7 +690,7 @@ function filtrar(rubro){
 // ================== PERFIL ==================
 function verPerfil(id){
   perfilActualId = id;
-  const f = FERIANTES.find(x=>x.id===id);
+  const f = FERIANTES.find(x=>String(x.id)===String(id));
   const r = rubroDe(f.rubro);
   const pt = document.getElementById('perfil-toldo');
   pt.className = "toldo-grande toldo";
@@ -600,11 +699,12 @@ function verPerfil(id){
   document.getElementById('perfil-nombre').textContent = f.nombre;
   document.getElementById('perfil-badges').innerHTML =
     `<span class="badge">${r.emoji} ${r.nombre}</span><span class="badge" style="background:#DFF5EC">🎪 ${f.ferias.length} feria${f.ferias.length>1?"s":""}</span>`
-    + (f.confirmado ? `<span class="este-finde" style="margin-top:0">🔥 Este finde: ${feriaPorId(f.confirmado.feriaId).nombre} · ${f.confirmado.texto}</span>` : "");
-  document.getElementById('perfil-pines').innerHTML = (f.pines||[]).map(k=>{
-    const p = PINES[k];
+    + (f.confirmado ? `<span class="este-finde" style="margin-top:0">🔥 Este finde: ${nombreFeriaConfirmada(f)} · ${f.confirmado.texto}</span>` : "");
+  const listaPines = f.pinesDB && f.pinesDB.length ? f.pinesDB : (f.pines||[]).map(k=>PINES[k]).filter(Boolean);
+  document.getElementById('perfil-pines').innerHTML = listaPines.map(p=>{
+    const det = p.detalle + (p.regla ? " · " + p.regla : "");
     return `<span class="pin" onclick="event.stopPropagation();togglePin(this)">${p.emoji}
-      <span class="tooltip"><b>${p.emoji} ${p.nombre}</b>${p.detalle}</span></span>`;
+      <span class="tooltip"><b>${p.emoji} ${p.nombre}</b>${det}</span></span>`;
   }).join("");
   document.getElementById('perfil-bio').textContent = f.bio;
   const REDES_CFG = {
@@ -618,13 +718,25 @@ function verPerfil(id){
     const c = REDES_CFG[k];
     return c ? `<a class="red ${c.clase}" href="${c.url(v)}" target="_blank" rel="noopener" title="${k}: ${v}">${c.icono}</a>` : "";
   }).join("") : "";
-  document.getElementById('perfil-agenda').innerHTML = f.ferias.map(fid=>{
-    const fe = feriaPorId(fid);
-    return `<div class="agenda-item"><div class="ic">📍</div><div><b>${fe.nombre}</b><small>${fe.frec}</small></div></div>`;
-  }).join("");
-  document.getElementById('perfil-productos').innerHTML = f.productos.map(p=>
-    `<div class="prod"><div class="foto">${p.e}</div><div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`
+  const agenda = f.feriasDetalle
+    ? f.feriasDetalle.map(fd=>({nombre:fd.nombre, frec:fd.frec}))
+    : f.ferias.map(fid=>{ const fe = feriaPorId(fid); return fe ? {nombre:fe.nombre, frec:fe.frec} : null; }).filter(Boolean);
+  document.getElementById('perfil-agenda').innerHTML = agenda.map(a=>
+    `<div class="agenda-item"><div class="ic">📍</div><div><b>${a.nombre}</b><small>${a.frec||""}</small></div></div>`
   ).join("");
+  document.getElementById('perfil-productos').innerHTML = f.productos.map(p=>{
+    const foto = p.foto
+      ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>`
+      : `<div class="foto">${p.e||"🛍️"}</div>`;
+    return `<div class="prod">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
+  }).join("");
+  const btnW = document.getElementById('btn-wsp');
+  if(f.whatsapp){
+    btnW.onclick = ()=>window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent("Hola "+f.nombre+"! 👋 Vi tu puesto en La Digi Feria y quería consultarte.")}`,"_blank");
+  } else { btnW.onclick = null; }
+  const av = document.getElementById('perfil-emoji');
+  if(f.foto){ av.style.backgroundImage = `url('${f.foto}')`; av.style.backgroundSize="cover"; av.style.backgroundPosition="center"; av.textContent=""; }
+  else { av.style.backgroundImage=""; av.textContent = f.emoji; }
   actualizarBtnPerfil(id);
   ir('p-perfil');
 }
@@ -678,7 +790,7 @@ function renderFerias(){
 }
 
 // ================== CARRUSEL DE FLYERS (ferias patrocinadas) ==================
-const FLYERS = [
+let FLYERS = [
   {feriaId:"plaza",     estilo:"fl1", fecha:"Sáb 18 y Dom 19 · 10 a 19 hs"},
   {feriaId:"anden",     estilo:"fl2", fecha:"Dom 19 · 11 a 20 hs"},
   {feriaId:"parque",    estilo:"fl3", fecha:"Sáb 25 · 9 a 14 hs"},
@@ -686,6 +798,9 @@ const FLYERS = [
 ];
 
 function renderCarrusel(){
+  const wrap = document.querySelector('.carrusel-wrap');
+  if(!FLYERS.length){ if(wrap) wrap.style.display = "none"; return; }
+  if(wrap) wrap.style.display = "";
   const cont = document.getElementById('carrusel-flyers');
   let html = FLYERS.map(fl=>{
     const fe = feriaPorId(fl.feriaId);
@@ -768,7 +883,7 @@ function cerrarModal(){ document.getElementById('velo').classList.remove('on'); 
 
 let perfilActualId = null;
 function seguirActual(ev){
-  const f = FERIANTES.find(x=>x.id===perfilActualId);
+  const f = FERIANTES.find(x=>String(x.id)===String(perfilActualId));
   if(f) seguir('puesto', f.id, f.nombre, null);
 }
 function actualizarBtnPerfil(id){
@@ -824,7 +939,7 @@ function arrastrable(el){
 
 // ================== INIT ==================
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
-cargarRubrosEnVivo();
+cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo);
 </script>
 </body>
 </html>
