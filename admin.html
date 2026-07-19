@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin — La Digi Feria</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
+  --verde:#00A878; --celeste:#2D9CDB; --tinta:#2B2118;
+  --fondo:#FFF8EC; --blanco:#FFFFFF; --radius:18px;
+  --wsp:#25D366;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);min-height:100vh}
+.app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--fondo);display:flex;flex-direction:column;box-shadow:0 0 40px rgba(43,33,24,.15)}
+.banderines{display:flex;height:18px;overflow:hidden}
+.banderines span{flex:1;min-width:20px;clip-path:polygon(0 0,100% 0,50% 100%)}
+.banderines span:nth-child(5n+1){background:var(--fucsia)}
+.banderines span:nth-child(5n+2){background:var(--amarillo)}
+.banderines span:nth-child(5n+3){background:var(--verde)}
+.banderines span:nth-child(5n+4){background:var(--naranja)}
+.banderines span:nth-child(5n+5){background:var(--celeste)}
+header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--amarillo)}
+.logo span{color:var(--blanco)}
+.badge-admin{font-size:11px;font-weight:800;background:var(--fucsia);color:#fff;border-radius:999px;padding:3px 10px}
+/* login */
+.login{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:16px}
+.login h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px}
+.login input{width:100%;border:2px solid var(--tinta);border-radius:12px;padding:12px 14px;font-family:'Nunito',sans-serif;font-size:15px;background:var(--blanco);outline:none}
+.login input:focus{border-color:var(--fucsia)}
+.login .btn{width:100%;padding:14px;background:var(--fucsia);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;border:2px solid var(--tinta);border-radius:12px;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
+.login .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
+.login .error{font-size:13px;font-weight:800;color:var(--fucsia)}
+/* panel */
+.panel{display:none;flex:1;flex-direction:column}
+.panel.on{display:flex}
+.panel-header{padding:16px 18px 8px;display:flex;align-items:center;justify-content:space-between}
+.panel-header h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px}
+.contador{font-size:13px;font-weight:800;background:#FDE7F2;border:2px solid var(--tinta);border-radius:999px;padding:3px 12px;color:var(--fucsia)}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--tinta);margin:0 18px}
+.tab{flex:1;padding:10px;text-align:center;font-weight:800;font-size:13px;cursor:pointer;color:#9A8B76;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--fucsia);border-bottom-color:var(--fucsia)}
+.lista{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
+/* tarjeta de puesto pendiente */
+.card{background:var(--blanco);border:2px solid var(--tinta);border-radius:var(--radius);overflow:hidden;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
+.card-head{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}
+.card-emoji{font-size:32px;width:52px;height:52px;background:#FDF1DC;border:2px solid var(--tinta);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-titulo{flex:1}
+.card-titulo b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;display:block}
+.card-titulo small{font-size:12px;font-weight:800;color:var(--fucsia);text-transform:uppercase}
+.card-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px}
+.dato{font-size:13px;font-weight:700;color:#5C4F3E;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.dato .ic{width:18px;flex-shrink:0;text-align:center}
+.redes-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.red-chip{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;border:1.5px solid var(--tinta);background:#F0E4CE;display:flex;align-items:center;gap:5px}
+.ferias-chip{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;border:1.5px solid var(--tinta);background:#DFF5EC;color:#007453}
+.card-acciones{display:flex;gap:8px;padding:0 14px 14px}
+.btn-aprobar{flex:1;padding:12px;background:var(--verde);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;border:2px solid var(--tinta);border-radius:12px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9);display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-aprobar:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.btn-aprobar:disabled{background:#DCCFB6;color:#9A8B76;box-shadow:none;cursor:not-allowed;transform:none}
+.btn-rechazar{padding:12px 14px;background:var(--blanco);color:var(--tinta);font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;border:2px solid var(--tinta);border-radius:12px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.btn-rechazar:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.card.aprobado{border-color:var(--verde);opacity:.7}
+.card.aprobado .card-head{background:#DFF5EC}
+.tag-aprobado{font-size:11px;font-weight:800;background:var(--verde);color:#fff;border-radius:999px;padding:2px 10px}
+/* vacío */
+.vacio{text-align:center;padding:40px 20px;color:#9A8B76;font-weight:700;font-size:15px}
+.vacio span{font-size:40px;display:block;margin-bottom:12px}
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#FFF8EC;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;padding:12px 22px;border-radius:12px;box-shadow:4px 4px 0 rgba(43,33,24,.5);opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;white-space:nowrap}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="banderines" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+<header>
+  <div class="logo">La <em style="font-style:normal">Digi</em> <span>Feria</span></div>
+  <span class="badge-admin">🔑 Panel Admin</span>
+</header>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div style="font-size:48px">🔐</div>
+  <h2>Acceso al panel</h2>
+  <input type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')entrar()">
+  <button class="btn" onclick="entrar()">Entrar</button>
+  <span class="error" id="login-error" style="display:none">Contraseña incorrecta</span>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <h2>Puestos para revisar</h2>
+    <span class="contador" id="contador">0 pendientes</span>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="cambiarTab('pendientes',this)">⏳ Pendientes</div>
+    <div class="tab" onclick="cambiarTab('aprobados',this)">✅ Aprobados</div>
+  </div>
+  <div class="lista" id="lista"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+// Contraseña simple de admin (no es la de Supabase)
+const PWD_ADMIN = "digiferia2026";
+
+let tabActual = "pendientes";
+let puestos = [];
+
+function entrar(){
+  const v = document.getElementById('pwd').value;
+  if(v === PWD_ADMIN){
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('panel').classList.add('on');
+    cargarPuestos();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+async function cargarPuestos(){
+  const sel = "id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,rubros(nombre,emoji),puesto_feria(ferias(nombre)),suscriptores:redes->whatsapp_personal";
+  // traemos publicado true y false
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`, {headers:cab});
+  puestos = resp.ok ? await resp.json() : [];
+  renderLista();
+}
+
+function cambiarTab(tab, el){
+  tabActual = tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderLista();
+}
+
+function renderLista(){
+  const pendientes = puestos.filter(p=>!p.publicado);
+  const aprobados  = puestos.filter(p=>p.publicado);
+  const lista = tabActual === 'pendientes' ? pendientes : aprobados;
+
+  document.getElementById('contador').textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''}`;
+
+  const cont = document.getElementById('lista');
+  if(!lista.length){
+    cont.innerHTML = `<div class="vacio"><span>${tabActual==='pendientes'?'🎉':'🎪'}</span>${tabActual==='pendientes'?'¡No hay puestos pendientes! Todo al día.':'Todavía no hay puestos aprobados.'}</div>`;
+    return;
+  }
+  cont.innerHTML = lista.map(p=>cardPuesto(p)).join("");
+}
+
+function cardPuesto(p){
+  const rubro = p.rubros ? `${p.rubros.emoji} ${p.rubros.nombre}` : '—';
+  const ferias = (p.puesto_feria||[]).map(pf=>pf.ferias?.nombre).filter(Boolean);
+  const redes = p.redes || {};
+  const wsp = p.whatsapp || '';
+  const wspPersonal = redes.whatsapp_personal || '';
+  const fecha = new Date(p.creado_en).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const redesHtml = Object.entries(redes)
+    .filter(([k])=>k!=='whatsapp_personal')
+    .map(([k,v])=>{
+      const iconos = {instagram:'<i class="fa-brands fa-instagram"></i>',tiktok:'<i class="fa-brands fa-tiktok"></i>',facebook:'<i class="fa-brands fa-facebook-f"></i>',web:'<i class="fa-solid fa-globe"></i>'};
+      return `<span class="red-chip">${iconos[k]||'🔗'} ${v}</span>`;
+    }).join("");
+
+  const feriasHtml = ferias.map(f=>`<span class="ferias-chip">📍 ${f}</span>`).join("");
+
+  const acciones = p.publicado
+    ? `<div class="card-acciones"><span class="tag-aprobado">✅ Publicado</span></div>`
+    : `<div class="card-acciones">
+        <button class="btn-aprobar" id="btn-${p.id}" onclick="aprobar('${p.id}','${p.nombre}','${wsp}')">
+          <i class="fa-solid fa-check"></i> Aprobar y publicar
+        </button>
+        <button class="btn-rechazar" onclick="rechazar('${p.id}')">✕</button>
+       </div>`;
+
+  return `<div class="card ${p.publicado?'aprobado':''}" id="card-${p.id}">
+    <div class="card-head">
+      <div class="card-emoji">${p.foto_url||'🎪'}</div>
+      <div class="card-titulo">
+        <b>${p.nombre}</b>
+        <small>${rubro}</small>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="dato"><span class="ic">📝</span>${p.bio||'—'}</div>
+      ${wsp ? `<div class="dato"><span class="ic">💬</span><a href="https://wa.me/${wsp}" target="_blank" style="color:var(--verde);font-weight:800">${wsp}</a></div>` : ''}
+      ${wspPersonal ? `<div class="dato"><span class="ic">📞</span>Personal: <a href="https://wa.me/${wspPersonal}" target="_blank" style="color:var(--verde);font-weight:800">${wspPersonal}</a></div>` : ''}
+      ${redesHtml ? `<div class="dato"><span class="ic">🔗</span><div class="redes-row">${redesHtml}</div></div>` : ''}
+      ${feriasHtml ? `<div class="dato"><span class="ic">📅</span><div class="redes-row">${feriasHtml}</div></div>` : ''}
+      <div class="dato"><span class="ic">🕐</span>Solicitado: ${fecha}</div>
+    </div>
+    ${acciones}
+  </div>`;
+}
+
+async function aprobar(id, nombre, wsp){
+  const btn = document.getElementById('btn-'+id);
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Publicando...';
+
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
+    method:'PATCH',
+    headers:{...cab, Prefer:'return=minimal'},
+    body: JSON.stringify({publicado: true})
+  });
+
+  if(resp.ok){
+    // Actualizar local
+    const p = puestos.find(x=>x.id===id);
+    if(p) p.publicado = true;
+    renderLista();
+    toast(`✅ ${nombre} está publicado en la feria`);
+    // Abrir WhatsApp con mensaje de bienvenida
+    if(wsp){
+      const msg = encodeURIComponent(`¡Hola! 🎪 Te damos la bienvenida a *La Digi Feria*. Tu puesto *${nombre}* ya está publicado y los visitantes pueden encontrarte. ¡Mucho éxito!`);
+      window.open(`https://wa.me/${wsp}?text=${msg}`, '_blank');
+    }
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Aprobar y publicar';
+    toast('❌ Hubo un error. Intentá de nuevo.');
+  }
+}
+
+async function rechazar(id){
+  if(!confirm('¿Rechazar y eliminar este puesto?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
+    method:'DELETE', headers:cab
+  });
+  puestos = puestos.filter(p=>p.id!==id);
+  renderLista();
+  toast('🗑️ Puesto eliminado');
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 3000);
+}
+</script>
+</body>
+</html>
