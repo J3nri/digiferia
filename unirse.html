@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sumate a La Digi Feria 🎪</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
+  --verde:#00A878; --celeste:#2D9CDB; --tinta:#2B2118;
+  --fondo:#FFF8EC; --blanco:#FFFFFF; --radius:18px;
+  --wsp:#25D366; --ig-from:#F58529; --ig-to:#DD2A7B; --fb:#1877F2; --tk:#000000;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);min-height:100vh}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--fondo);display:flex;flex-direction:column;box-shadow:0 0 40px rgba(43,33,24,.15)}
+.banderines{display:flex;height:22px;overflow:hidden}
+.banderines span{flex:1;min-width:26px;clip-path:polygon(0 0,100% 0,50% 100%)}
+.banderines span:nth-child(5n+1){background:var(--fucsia)}
+.banderines span:nth-child(5n+2){background:var(--amarillo)}
+.banderines span:nth-child(5n+3){background:var(--verde)}
+.banderines span:nth-child(5n+4){background:var(--naranja)}
+.banderines span:nth-child(5n+5){background:var(--celeste)}
+header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14px 18px 12px;display:flex;align-items:center;gap:12px}
+.logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px}
+.logo em{font-style:normal;color:var(--fucsia)}
+.logo .fer{color:var(--naranja)}
+.hero{padding:22px 18px 10px;text-align:center}
+.hero-emoji{font-size:52px;margin-bottom:10px;display:block}
+.hero h1{font-family:'Fredoka',sans-serif;font-weight:700;font-size:27px;line-height:1.15;color:var(--tinta)}
+.hero p{font-size:14.5px;color:#5C4F3E;font-weight:700;margin-top:8px;line-height:1.5}
+.seccion{padding:18px}
+.seccion h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.campo{margin-bottom:14px}
+.campo label{display:block;font-size:13px;font-weight:800;color:#5C4F3E;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.campo input,.campo textarea,.campo select{
+  width:100%;border:2px solid var(--tinta);border-radius:12px;
+  padding:12px 14px;font-family:'Nunito',sans-serif;font-size:15px;
+  background:var(--blanco);color:var(--tinta);outline:none;
+  transition:border-color .15s
+}
+.campo input:focus,.campo textarea:focus,.campo select:focus{border-color:var(--fucsia)}
+.campo textarea{resize:vertical;min-height:90px}
+.campo select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%232B2118' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+.campo .hint{font-size:12px;color:#9A8B76;font-weight:700;margin-top:5px;line-height:1.4}
+.campo.error input,.campo.error textarea,.campo.error select{border-color:var(--fucsia)}
+.campo .msg-error{font-size:12px;color:var(--fucsia);font-weight:800;margin-top:5px;display:none}
+.campo.error .msg-error{display:block}
+.divisor{height:2px;background:#F0E4CE;margin:4px 0 18px}
+/* preview rubro */
+.rubro-preview{display:none;align-items:center;gap:12px;margin-top:10px;background:#FFF0D6;border:2px solid var(--tinta);border-radius:12px;padding:10px 14px}
+.rubro-preview.on{display:flex}
+.rubro-preview .rp-emoji{font-size:28px}
+.rubro-preview .rp-nombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px}
+/* ferias checkboxes */
+.ferias-lista{display:flex;flex-direction:column;gap:10px}
+.feria-check{display:flex;align-items:flex-start;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.feria-check input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--fucsia);flex-shrink:0;cursor:pointer}
+.feria-check .fc-info{flex:1}
+.feria-check .fc-info b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;display:block}
+.feria-check .fc-info small{font-size:12.5px;color:#7A6A55;font-weight:700}
+.feria-check:has(input:checked){border-color:var(--fucsia);background:#FEF0F7}
+/* feria destacada */
+.feria-check.destacada{border-color:#B8860B;background:#FFFDF4}
+.feria-check.destacada:has(input:checked){border-color:var(--fucsia);background:#FEF0F7}
+.badge-dest{display:inline-flex;align-items:center;gap:4px;margin-top:5px;
+  font-size:11px;font-weight:800;background:var(--amarillo);
+  border:1.5px solid var(--tinta);border-radius:999px;padding:2px 9px;color:var(--tinta)}
+/* localidad chips */
+.loc-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.loc-chip{font-weight:800;font-size:13px;padding:8px 14px;border-radius:999px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .12s}
+.loc-chip.on{background:var(--tinta);color:var(--amarillo)}
+/* redes sociales con íconos reales */
+.red-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.red-ic{
+  width:40px;height:40px;border-radius:10px;border:2px solid var(--tinta);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;color:#fff
+}
+.red-ic.wsp{ background:var(--wsp) }
+.red-ic.wsp-personal{ background:#128C7E }
+.red-ic.ig{ background:linear-gradient(135deg,#F58529,#DD2A7B,#8134AF) }
+.red-ic.tk{ background:#000 }
+.red-ic.fb{ background:var(--fb) }
+.red-ic.web{ background:var(--celeste) }
+.red-row input{flex:1}
+/* botón enviar */
+.btn-enviar{
+  display:block;width:calc(100% - 36px);margin:8px 18px 32px;
+  padding:16px;text-align:center;
+  background:var(--fucsia);color:#fff;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px;
+  border-radius:14px;border:2px solid var(--tinta);
+  box-shadow:4px 4px 0 rgba(43,33,24,.9);cursor:pointer;
+  transition:transform .1s,box-shadow .1s
+}
+.btn-enviar:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
+.btn-enviar:disabled{background:#DCCFB6;color:#9A8B76;box-shadow:none;cursor:not-allowed;transform:none}
+/* pantalla de éxito */
+.exito{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;flex:1}
+.exito.on{display:flex}
+.form-wrap{flex:1;display:flex;flex-direction:column}
+.form-wrap.oculto{display:none}
+.exito-emoji{font-size:64px;margin-bottom:16px}
+.exito h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:var(--tinta)}
+.exito p{font-size:15px;color:#5C4F3E;font-weight:700;margin-top:10px;line-height:1.55}
+.exito .volver-link{display:inline-block;margin-top:24px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;color:var(--fucsia);text-decoration:none;border:2px solid var(--tinta);border-radius:12px;padding:12px 24px;background:var(--blanco);box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+/* nota de revisión */
+.nota-revision{margin:0 18px 18px;background:#FFF0D6;border:2px solid var(--tinta);border-radius:14px;padding:12px 14px}
+.nota-revision p{font-size:13px;font-weight:700;color:#5C4F3E;line-height:1.5}
+.nota-revision strong{color:var(--naranja)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="banderines" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<header>
+  <div class="logo">La <em>Digi</em> <span class="fer">Feria</span></div>
+</header>
+
+<div class="hero">
+  <span class="hero-emoji">🛍️</span>
+  <h1>¡Sumate a la feria!</h1>
+  <p>Armá tu puesto virtual gratis y empezá a recibir consultas por WhatsApp desde el primer día.</p>
+</div>
+
+<div class="nota-revision">
+  <p>✋ <strong>Revisamos cada puesto antes de publicarlo.</strong> Una vez que envíes el formulario, te contactamos por WhatsApp para confirmar y darte la bienvenida.</p>
+</div>
+
+<!-- FORMULARIO -->
+<div class="form-wrap" id="form-wrap">
+
+  <div class="seccion">
+    <h2>👤 Tus datos</h2>
+
+    <div class="campo" id="c-nombre">
+      <label>Tu nombre</label>
+      <input type="text" id="f-nombre" placeholder="Ej: María García" autocomplete="given-name">
+      <span class="msg-error">Por favor ingresá tu nombre</span>
+    </div>
+
+    <div class="campo" id="c-localidad">
+      <label>Localidad</label>
+      <div class="loc-chips">
+        <button type="button" class="loc-chip" onclick="elegirLoc(this,'Juan María Gutiérrez')">Juan María Gutiérrez</button>
+        <button type="button" class="loc-chip" onclick="elegirLoc(this,'Berazategui')">Berazategui</button>
+        <button type="button" class="loc-chip" onclick="elegirLoc(this,'Otra')">Otra</button>
+      </div>
+      <input type="text" id="f-localidad-otra" placeholder="¿De dónde sos?" style="display:none;margin-top:10px">
+      <span class="msg-error">Por favor elegí tu localidad</span>
+    </div>
+
+    <div class="campo" id="c-email">
+      <label>Tu email</label>
+      <input type="email" id="f-email" placeholder="tu@email.com" autocomplete="email">
+      <span class="hint">Para crear tu acceso al panel más adelante</span>
+      <span class="msg-error">Por favor ingresá un email válido</span>
+    </div>
+  </div>
+
+  <div class="divisor"></div>
+
+  <div class="seccion">
+    <h2>🎪 Tu puesto</h2>
+
+    <div class="campo" id="c-puesto">
+      <label>Nombre del puesto</label>
+      <input type="text" id="f-puesto" placeholder="Ej: Tejidos de la Abuela">
+      <span class="msg-error">Por favor ingresá el nombre de tu puesto</span>
+    </div>
+
+    <div class="campo" id="c-rubro">
+      <label>Rubro</label>
+      <select id="f-rubro" onchange="actualizarRubro()">
+        <option value="">— Elegí tu rubro —</option>
+      </select>
+      <div class="rubro-preview" id="rubro-preview">
+        <span class="rp-emoji" id="rp-emoji"></span>
+        <span class="rp-nombre" id="rp-nombre">Este emoji va a representar tu puesto en la feria</span>
+      </div>
+      <span class="msg-error">Por favor elegí un rubro</span>
+    </div>
+
+    <div class="campo" id="c-bio">
+      <label>Contá qué vendés</label>
+      <textarea id="f-bio" placeholder="Ej: Tejidos a mano en lana de oveja: ruanas, gorros y medias. Encargos a medida."></textarea>
+      <span class="hint">Que se entienda rápido qué hace único a tu puesto.</span>
+      <span class="msg-error">Contanos qué vendés (mínimo 20 caracteres)</span>
+    </div>
+  </div>
+
+  <div class="divisor"></div>
+
+  <div class="seccion">
+    <h2>📱 Contacto y redes</h2>
+
+    <div class="campo" id="c-wsp-puesto">
+      <label>WhatsApp del puesto</label>
+      <div class="red-row">
+        <span class="red-ic wsp"><i class="fa-brands fa-whatsapp"></i></span>
+        <input type="tel" id="f-wsp-puesto" placeholder="Ej: 1150127104" inputmode="numeric">
+      </div>
+      <span class="hint">Solo números, sin el 0 ni el 15. Con código de área (ej: 11 para CABA, 221 para La Plata).</span>
+      <span class="msg-error">Ingresá el WhatsApp del puesto</span>
+    </div>
+
+    <div class="campo">
+      <label>WhatsApp personal <span style="font-weight:400;text-transform:none;font-size:11px">(si es distinto al del puesto)</span></label>
+      <div class="red-row">
+        <span class="red-ic wsp-personal"><i class="fa-brands fa-whatsapp"></i></span>
+        <input type="tel" id="f-wsp-personal" placeholder="Ej: 1155556666" inputmode="numeric">
+      </div>
+      <span class="hint">Solo lo usamos nosotros para contactarte. No se muestra en la app.</span>
+    </div>
+
+    <div class="campo">
+      <label>Redes sociales <span style="font-weight:400;text-transform:none;font-size:11px">(las que tengas)</span></label>
+      <div class="red-row">
+        <span class="red-ic ig"><i class="fa-brands fa-instagram"></i></span>
+        <input type="text" id="f-instagram" placeholder="Instagram (sin @)">
+      </div>
+      <div class="red-row">
+        <span class="red-ic tk"><i class="fa-brands fa-tiktok"></i></span>
+        <input type="text" id="f-tiktok" placeholder="TikTok (sin @)">
+      </div>
+      <div class="red-row">
+        <span class="red-ic fb"><i class="fa-brands fa-facebook-f"></i></span>
+        <input type="text" id="f-facebook" placeholder="Facebook (usuario o página)">
+      </div>
+      <div class="red-row">
+        <span class="red-ic web"><i class="fa-solid fa-globe"></i></span>
+        <input type="text" id="f-web" placeholder="Sitio web (ej: mipuesto.com.ar)">
+      </div>
+    </div>
+  </div>
+
+  <div class="divisor"></div>
+
+  <div class="seccion">
+    <h2>📅 ¿En qué ferias participás?</h2>
+    <div class="ferias-lista" id="ferias-lista">
+      <p style="font-size:14px;color:#9A8B76;font-weight:700">Cargando ferias...</p>
+    </div>
+    <div class="campo" style="margin-top:14px">
+      <label>¿Con qué frecuencia vas? <span style="font-weight:400;text-transform:none;font-size:11px">(opcional)</span></label>
+      <input type="text" id="f-frecuencia" placeholder="Ej: Todos los sábados, 2° domingo del mes...">
+    </div>
+  </div>
+
+  <button class="btn-enviar" id="btn-enviar" onclick="enviarFormulario()">
+    🎪 Enviar mi solicitud
+  </button>
+
+</div>
+<!-- FIN FORMULARIO -->
+
+<!-- PANTALLA DE ÉXITO -->
+<div class="exito" id="exito">
+  <div class="exito-emoji">🎉</div>
+  <h2>¡Tu solicitud llegó!</h2>
+  <p>Recibimos los datos de tu puesto. En breve te contactamos por WhatsApp para darte la bienvenida a <strong>La Digi Feria</strong>.</p>
+  <a href="https://j3nri.github.io/digiferia" class="volver-link">👀 Ver la feria</a>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+let localidadElegida = "";
+
+async function cargarDatos(){
+  try{
+    const [rr, rf, rfl] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/rubros?select=id,nombre,emoji,clave&order=orden`, {headers:cab}),
+      fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,frecuencia&order=nombre`, {headers:cab}),
+      fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id&estado=eq.activo`, {headers:cab})
+    ]);
+    const rubros = rr.ok ? await rr.json() : [];
+    const ferias = rf.ok ? await rf.json() : [];
+    const flyers = rfl.ok ? await rfl.json() : [];
+    const feriasDest = new Set(flyers.map(fl=>fl.feria_id));
+
+    const sel = document.getElementById('f-rubro');
+    rubros.forEach(r=>{
+      const op = document.createElement('option');
+      op.value = r.id;
+      op.dataset.emoji = r.emoji;
+      op.dataset.nombre = r.nombre;
+      op.textContent = `${r.emoji} ${r.nombre}`;
+      sel.appendChild(op);
+    });
+
+    const lista = document.getElementById('ferias-lista');
+    if(!ferias.length){
+      lista.innerHTML = '<p style="font-size:14px;color:#9A8B76;font-weight:700">No hay ferias cargadas todavía.</p>';
+      return;
+    }
+    lista.innerHTML = ferias.map(f=>{
+      const dest = feriasDest.has(f.id);
+      return `
+        <label class="feria-check ${dest?'destacada':''}">
+          <input type="checkbox" name="feria" value="${f.id}">
+          <div class="fc-info">
+            <b>${f.nombre}</b>
+            <small>📍 ${f.lugar||""} ${f.frecuencia ? "· 🔁 "+f.frecuencia : ""}</small>
+            ${dest ? '<span class="badge-dest">🎉 Feria destacada en la app</span>' : ''}
+          </div>
+        </label>
+      `;
+    }).join("");
+  }catch(e){
+    console.warn("Error cargando datos:", e);
+  }
+}
+
+function actualizarRubro(){
+  const sel = document.getElementById('f-rubro');
+  const op = sel.options[sel.selectedIndex];
+  const preview = document.getElementById('rubro-preview');
+  if(sel.value && op.dataset.emoji){
+    document.getElementById('rp-emoji').textContent = op.dataset.emoji;
+    document.getElementById('rp-nombre').textContent = "Tu puesto va a usar este ícono: " + op.dataset.nombre;
+    preview.classList.add('on');
+  } else {
+    preview.classList.remove('on');
+  }
+}
+
+function elegirLoc(btn, val){
+  document.querySelectorAll('.loc-chip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  localidadElegida = val;
+  const otra = document.getElementById('f-localidad-otra');
+  if(val === 'Otra'){ otra.style.display='block'; localidadElegida=''; }
+  else { otra.style.display='none'; }
+}
+document.getElementById('f-localidad-otra').addEventListener('input', function(){
+  localidadElegida = this.value.trim();
+});
+
+function validar(){
+  let ok = true;
+  const reqs = [
+    {id:'f-nombre',    camp:'c-nombre',    check: v=>v.trim().length>1},
+    {id:'f-email',     camp:'c-email',     check: v=>v.includes('@')&&v.includes('.')},
+    {id:'f-puesto',    camp:'c-puesto',    check: v=>v.trim().length>1},
+    {id:'f-rubro',     camp:'c-rubro',     check: v=>v!==''},
+    {id:'f-bio',       camp:'c-bio',       check: v=>v.trim().length>=20},
+    {id:'f-wsp-puesto',camp:'c-wsp-puesto',check: v=>v.trim().length>=6},
+  ];
+  reqs.forEach(r=>{
+    const el = document.getElementById(r.id);
+    const camp = document.getElementById(r.camp);
+    if(!r.check(el.value)){ camp.classList.add('error'); ok=false; }
+    else { camp.classList.remove('error'); }
+  });
+  const cLoc = document.getElementById('c-localidad');
+  if(!localidadElegida){ cLoc.classList.add('error'); ok=false; }
+  else { cLoc.classList.remove('error'); }
+  return ok;
+}
+
+async function enviarFormulario(){
+  if(!validar()){ window.scrollTo({top:0,behavior:'smooth'}); return; }
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+
+  const sel = document.getElementById('f-rubro');
+  const op = sel.options[sel.selectedIndex];
+  const emojiRubro = op.dataset.emoji || '🎪';
+
+  const wspPuesto   = '549' + document.getElementById('f-wsp-puesto').value.trim().replace(/\D/g,'');
+  const wspPersonal = document.getElementById('f-wsp-personal').value.trim().replace(/\D/g,'');
+  const instagram   = document.getElementById('f-instagram').value.trim().replace('@','');
+  const tiktok      = document.getElementById('f-tiktok').value.trim().replace('@','');
+  const facebook    = document.getElementById('f-facebook').value.trim();
+  const web         = document.getElementById('f-web').value.trim().replace(/^https?:\/\//,'');
+  const feriasMarcadas = [...document.querySelectorAll('input[name=feria]:checked')].map(c=>c.value);
+  const frecuencia  = document.getElementById('f-frecuencia').value.trim();
+  const nombrePuesto = document.getElementById('f-puesto').value.trim();
+  const slug = nombrePuesto.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
+    + '-' + Date.now().toString(36);
+
+  const redes = {};
+  if(instagram)   redes.instagram = instagram;
+  if(tiktok)      redes.tiktok = tiktok;
+  if(facebook)    redes.facebook = facebook;
+  if(web)         redes.web = web;
+  if(wspPersonal) redes.whatsapp_personal = '549' + wspPersonal;
+
+  try{
+    const pResp = await fetch(`${SUPABASE_URL}/rest/v1/puestos`, {
+      method:'POST',
+      headers:{...cab, Prefer:'return=representation'},
+      body: JSON.stringify({
+        rubro_id: sel.value,
+        nombre: nombrePuesto,
+        slug,
+        bio: document.getElementById('f-bio').value.trim(),
+        foto_url: emojiRubro,
+        whatsapp: wspPuesto,
+        plan: 'gratis',
+        publicado: false,
+        redes
+      })
+    });
+    if(!pResp.ok) throw new Error(await pResp.text());
+    const [puesto] = await pResp.json();
+
+    if(feriasMarcadas.length){
+      await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria`, {
+        method:'POST',
+        headers:cab,
+        body: JSON.stringify(feriasMarcadas.map(fid=>({
+          puesto_id: puesto.id, feria_id: fid, frecuencia
+        })))
+      });
+    }
+
+    await fetch(`${SUPABASE_URL}/rest/v1/suscriptores`, {
+      method:'POST',
+      headers:cab,
+      body: JSON.stringify({ email: document.getElementById('f-email').value.trim(), verificado: false })
+    }).catch(()=>{});
+
+    document.getElementById('form-wrap').classList.add('oculto');
+    document.getElementById('exito').classList.add('on');
+    window.scrollTo({top:0});
+
+  }catch(err){
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = '🎪 Enviar mi solicitud';
+    alert('Hubo un problema al enviar. Fijate si tenés conexión e intentá de nuevo.');
+  }
+}
+
+cargarDatos();
+</script>
+</body>
+</html>
