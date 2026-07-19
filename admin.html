@@ -136,7 +136,7 @@ function entrar(){
 async function cargarPuestos(){
   const sel = "id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,rubros(nombre,emoji),puesto_feria(ferias(nombre)),suscriptores:redes->whatsapp_personal";
   // traemos publicado true y false
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`, {headers:cab});
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`, {headers:cab});
   puestos = resp.ok ? await resp.json() : [];
   renderLista();
 }
@@ -180,10 +180,12 @@ function cardPuesto(p){
 
   const feriasHtml = ferias.map(f=>`<span class="ferias-chip">📍 ${f}</span>`).join("");
 
+  const email = p.email_contacto || '';
+  const nombrePersona = p.nombre_persona || '';
   const acciones = p.publicado
     ? `<div class="card-acciones"><span class="tag-aprobado">✅ Publicado</span></div>`
     : `<div class="card-acciones">
-        <button class="btn-aprobar" id="btn-${p.id}" onclick="aprobar('${p.id}','${p.nombre}','${wsp}')">
+        <button class="btn-aprobar" id="btn-${p.id}" onclick="aprobar('${p.id}','${p.nombre}','${wsp}','${email}','${nombrePersona}')">
           <i class="fa-solid fa-check"></i> Aprobar y publicar
         </button>
         <button class="btn-rechazar" onclick="rechazar('${p.id}')">✕</button>
@@ -203,17 +205,20 @@ function cardPuesto(p){
       ${wspPersonal ? `<div class="dato"><span class="ic">📞</span>Personal: <a href="https://wa.me/${wspPersonal}" target="_blank" style="color:var(--verde);font-weight:800">${wspPersonal}</a></div>` : ''}
       ${redesHtml ? `<div class="dato"><span class="ic">🔗</span><div class="redes-row">${redesHtml}</div></div>` : ''}
       ${feriasHtml ? `<div class="dato"><span class="ic">📅</span><div class="redes-row">${feriasHtml}</div></div>` : ''}
+      ${email ? `<div class="dato"><span class="ic">📧</span>${email}</div>` : ''}
+      ${nombrePersona ? `<div class="dato"><span class="ic">👤</span>${nombrePersona}</div>` : ''}
       <div class="dato"><span class="ic">🕐</span>Solicitado: ${fecha}</div>
     </div>
     ${acciones}
   </div>`;
 }
 
-async function aprobar(id, nombre, wsp){
+async function aprobar(id, nombre, wsp, email, nombrePersona){
   const btn = document.getElementById('btn-'+id);
   btn.disabled = true;
   btn.innerHTML = '⏳ Publicando...';
 
+  // 1. Publicar el puesto
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
     method:'PATCH',
     headers:{...cab, Prefer:'return=minimal'},
@@ -221,12 +226,26 @@ async function aprobar(id, nombre, wsp){
   });
 
   if(resp.ok){
-    // Actualizar local
     const p = puestos.find(x=>x.id===id);
     if(p) p.publicado = true;
     renderLista();
     toast(`✅ ${nombre} está publicado en la feria`);
-    // Abrir WhatsApp con mensaje de bienvenida
+
+    // 2. Buscar email del feriante en suscriptores
+    // Lo buscamos por el email que se guardó al enviar el formulario
+    // Usamos el campo email guardado en el puesto si existe, o buscamos en suscriptores
+    try{
+      if(email){
+        await fetch(`${SUPABASE_URL}/functions/v1/enviar-bienvenida`, {
+          method:'POST',
+          headers:{...cab},
+          body: JSON.stringify({ email, nombre_puesto: nombre, nombre_persona: nombrePersona||nombre })
+        });
+        toast(`✅ ${nombre} publicado y email enviado 📧`);
+      }
+    }catch(e){ console.warn("Email no enviado:", e); }
+
+    // 3. Abrir WhatsApp con mensaje de bienvenida
     if(wsp){
       const msg = encodeURIComponent(`¡Hola! 🎪 Te damos la bienvenida a *La Digi Feria*. Tu puesto *${nombre}* ya está publicado y los visitantes pueden encontrarte. ¡Mucho éxito!`);
       window.open(`https://wa.me/${wsp}?text=${msg}`, '_blank');

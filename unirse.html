@@ -417,7 +417,9 @@ async function enviarFormulario(){
         whatsapp: wspPuesto,
         plan: 'gratis',
         publicado: false,
-        redes
+        redes,
+        email_contacto: document.getElementById('f-email').value.trim(),
+        nombre_persona: document.getElementById('f-nombre').value.trim()
       })
     });
     if(!pResp.ok) throw new Error(await pResp.text());
