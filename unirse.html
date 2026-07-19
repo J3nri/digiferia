@@ -278,7 +278,7 @@ const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
-let localidadElegida = "";
+window.localidadElegida = "";
 
 async function cargarDatos(){
   try{
@@ -341,13 +341,13 @@ function actualizarRubro(){
 function elegirLoc(btn, val){
   document.querySelectorAll('.loc-chip').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  localidadElegida = val;
+  window.localidadElegida = val;
   const otra = document.getElementById('f-localidad-otra');
-  if(val === 'Otra'){ otra.style.display='block'; localidadElegida=''; }
+  if(val === 'Otra'){ otra.style.display='block'; window.localidadElegida=''; }
   else { otra.style.display='none'; }
 }
 document.getElementById('f-localidad-otra').addEventListener('input', function(){
-  localidadElegida = this.value.trim();
+  window.localidadElegida = this.value.trim();
 });
 
 function validar(){
@@ -367,7 +367,7 @@ function validar(){
     else { camp.classList.remove('error'); }
   });
   const cLoc = document.getElementById('c-localidad');
-  if(!localidadElegida){ cLoc.classList.add('error'); ok=false; }
+  if(!window.localidadElegida){ cLoc.classList.add('error'); ok=false; }
   else { cLoc.classList.remove('error'); }
   return ok;
 }
