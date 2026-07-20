@@ -280,19 +280,48 @@ function cardFeria(f){
   </div>`;
 }
 
-// ── APROBAR FERIANTE (sin cambios) ──
+// ── APROBAR FERIANTE — con creación de cuenta ──
 async function aprobar(id, nombre, wsp, email, nombrePersona){
   const btn = document.getElementById('btn-'+id);
   btn.disabled = true;
   btn.innerHTML = '⏳ Publicando...';
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
-    method:'PATCH', headers:{...cab, Prefer:'return=minimal'},
-    body: JSON.stringify({publicado: true})
-  });
-  if(resp.ok){
+
+  try{
+    // 1. Publicar el puesto
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
+      method:'PATCH',
+      headers:{...cab, Prefer:'return=minimal'},
+      body: JSON.stringify({publicado: true})
+    });
+    if(!resp.ok) throw new Error('No se pudo publicar el puesto');
+
+    // 2. Crear cuenta del feriante via Edge Function
+    let cuentaCreada = false;
+    if(email){
+      btn.innerHTML = '⏳ Creando cuenta...';
+      try{
+        const respInvite = await fetch(`${SUPABASE_URL}/functions/v1/invitar-feriante`, {
+          method:'POST',
+          headers:{...cab},
+          body: JSON.stringify({
+            email,
+            nombre_puesto: nombre,
+            nombre_persona: nombrePersona || nombre,
+            puesto_id: id
+          })
+        });
+        const inviteData = await respInvite.json();
+        cuentaCreada = inviteData.ok;
+        if(!inviteData.ok) console.warn('Invite warning:', inviteData.error);
+      }catch(e){ console.warn('Edge Function error:', e); }
+    }
+
+    // 3. Actualizar lista
     const p = puestos.find(x=>x.id===id);
     if(p) p.publicado = true;
     renderLista();
+
+    // 4. Email de bienvenida (Resend) — además del email de cuenta
     try{
       if(email){
         await fetch(`${SUPABASE_URL}/functions/v1/enviar-bienvenida`, {
@@ -300,16 +329,23 @@ async function aprobar(id, nombre, wsp, email, nombrePersona){
           body: JSON.stringify({ email, nombre_puesto: nombre, nombre_persona: nombrePersona||nombre })
         });
       }
-    }catch(e){ console.warn("Email no enviado:", e); }
-    toast(`✅ ${nombre} publicado y email enviado 📧`);
+    }catch(e){ console.warn("Email bienvenida no enviado:", e); }
+
+    toast(`✅ ${nombre} publicado${cuentaCreada?' y cuenta creada 📧':''}`);
+
+    // 5. WhatsApp avisando
     if(wsp){
-      const msg = encodeURIComponent(`¡Hola! 🎪 Te damos la bienvenida a *La Digi Feria*. Tu puesto *${nombre}* ya está publicado. ¡Mucho éxito!`);
+      const msg = cuentaCreada
+        ? encodeURIComponent(`¡Hola${nombrePersona?' '+nombrePersona:''}! 🎪 Tu puesto *${nombre}* ya está publicado en *La Digi Feria*.\n\nTe mandamos un email a *${email}* con el link para crear tu contraseña y acceder a tu panel. ¡Revisá tu bandeja de entrada! 🌱`)
+        : encodeURIComponent(`¡Hola! 🎪 Te damos la bienvenida a *La Digi Feria*. Tu puesto *${nombre}* ya está publicado. ¡Mucho éxito!`);
       window.open(`https://wa.me/${wsp}?text=${msg}`, '_blank');
     }
-  } else {
+
+  }catch(e){
+    console.error(e);
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-check"></i> Aprobar y publicar';
-    toast('❌ Hubo un error. Intentá de nuevo.');
+    toast('❌ Error: ' + (e.message || 'intentá de nuevo'));
   }
 }
 
