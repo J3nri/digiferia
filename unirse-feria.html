@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sumá tu feria — La Digi Feria</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
+  --verde:#00A878; --celeste:#2D9CDB; --tinta:#2B2118;
+  --fondo:#FFF8EC; --blanco:#FFFFFF; --radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);min-height:100vh}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--fondo);box-shadow:0 0 40px rgba(43,33,24,.15)}
+.banderines{display:flex;height:22px;overflow:hidden}
+.banderines span{flex:1;min-width:26px;clip-path:polygon(0 0,100% 0,50% 100%)}
+.banderines span:nth-child(5n+1){background:var(--fucsia)}
+.banderines span:nth-child(5n+2){background:var(--amarillo)}
+.banderines span:nth-child(5n+3){background:var(--verde)}
+.banderines span:nth-child(5n+4){background:var(--naranja)}
+.banderines span:nth-child(5n+5){background:var(--celeste)}
+header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;top:0;z-index:20}
+.brandbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px}
+.logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px}
+.logo em{font-style:normal;color:var(--fucsia)}
+.logo .fer{color:var(--naranja)}
+.volver-link{font-size:13px;font-weight:800;color:var(--fucsia);text-decoration:none}
+/* Hero */
+.hero{background:linear-gradient(135deg,#8FD0F5,#4FA8E0);padding:24px 18px 20px;text-align:center;border-bottom:2px solid var(--tinta)}
+.hero h1{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:var(--tinta);line-height:1.2}
+.hero p{font-size:14px;font-weight:700;color:#1a4f6e;margin-top:6px;line-height:1.5}
+.hero-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.hero-chip{font-size:12px;font-weight:800;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:4px 12px}
+/* Formulario */
+.form-wrap{padding:20px 18px 40px}
+.campo{margin-bottom:16px}
+.campo label{display:block;font-weight:800;font-size:13.5px;margin-bottom:6px;color:var(--tinta)}
+.campo label .req{color:var(--fucsia)}
+.campo input,.campo textarea,.campo select{
+  width:100%;border:2px solid var(--tinta);border-radius:12px;
+  padding:11px 14px;font-family:'Nunito',sans-serif;font-size:14.5px;
+  background:var(--blanco);color:var(--tinta);outline:none;
+  transition:border-color .15s
+}
+.campo input:focus,.campo textarea:focus,.campo select:focus{border-color:var(--celeste)}
+.campo input.error,.campo textarea.error,.campo select.error{border-color:var(--fucsia)}
+.campo textarea{resize:vertical;min-height:90px;line-height:1.5}
+.campo select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232B2118' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.campo .hint{font-size:12px;color:#7A6A55;font-weight:700;margin-top:5px;line-height:1.4}
+/* Secciones */
+.seccion-titulo{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;
+  margin:24px 0 14px;padding-bottom:8px;border-bottom:2px solid #F0E4CE;
+  display:flex;align-items:center;gap:8px
+}
+/* Frecuencia con chips */
+.frec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frec-chip{
+  border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;
+  cursor:pointer;background:var(--blanco);font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:13px;text-align:left;transition:background .12s,transform .1s;
+  display:flex;align-items:center;gap:7px
+}
+.frec-chip:active{transform:scale(.97)}
+.frec-chip.on{background:var(--celeste);color:var(--blanco);border-color:var(--celeste)}
+.frec-chip span{font-size:18px}
+/* Días con chips */
+.dias-row{display:flex;gap:8px;flex-wrap:wrap}
+.dia-chip{
+  border:2px solid var(--tinta);border-radius:999px;padding:7px 14px;
+  cursor:pointer;background:var(--blanco);font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:13px;transition:background .12s
+}
+.dia-chip.on{background:var(--tinta);color:var(--amarillo)}
+/* Rubro */
+.rubro-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rubro-chip{
+  border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;
+  cursor:pointer;background:var(--blanco);font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:13px;text-align:center;transition:background .12s;
+  display:flex;flex-direction:column;align-items:center;gap:4px
+}
+.rubro-chip span{font-size:22px}
+.rubro-chip.on{background:var(--amarillo);border-color:#B8860B}
+/* Redes */
+.red-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.red-icono{width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.red-ig{background:linear-gradient(135deg,#FDE7F2,#FFD6E8)}
+.red-fb{background:#E3ECFB}
+.red-tw{background:#E8F4FD}
+.red-yt{background:#FDE7E7}
+.red-tk{background:#E8F6FD}
+.red-web{background:#FFF0D6}
+.red-row input{flex:1}
+/* Precio */
+.precio-row{display:flex;align-items:center;gap:8px}
+.precio-row .prefijo{font-weight:800;font-size:16px;color:#7A6A55}
+.precio-row input{flex:1}
+/* Foto / banner */
+.upload-area{
+  border:2px dashed var(--tinta);border-radius:14px;padding:20px;
+  text-align:center;cursor:pointer;background:#FFFDF6;transition:background .15s
+}
+.upload-area:hover{background:#FFF0D6}
+.upload-area p{font-weight:700;font-size:13.5px;color:#7A6A55;margin-top:6px}
+.upload-area .emoji{font-size:32px}
+.preview-img{width:100%;border-radius:12px;border:2px solid var(--tinta);margin-top:10px;display:none}
+/* CTA */
+.cta-wrap{margin-top:28px}
+.btn-enviar{
+  width:100%;padding:16px;background:var(--celeste);color:#fff;
+  border:2px solid var(--tinta);border-radius:14px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px;
+  cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9);
+  transition:transform .1s
+}
+.btn-enviar:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.btn-enviar:disabled{opacity:.6;cursor:not-allowed}
+.form-error{
+  background:#FDE7F2;border:2px solid var(--fucsia);border-radius:12px;
+  padding:10px 14px;font-size:13px;font-weight:800;color:var(--fucsia);
+  margin-top:12px;display:none
+}
+.form-error.on{display:block}
+/* Pantalla de éxito */
+.exito{display:none;flex-direction:column;align-items:center;text-align:center;padding:40px 24px}
+.exito.on{display:flex}
+.exito .emoji-grande{font-size:64px;margin-bottom:16px}
+.exito h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px}
+.exito p{font-size:15px;color:#5C4F3E;font-weight:700;margin-top:10px;line-height:1.6}
+.exito .pasos{background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:16px;margin-top:20px;text-align:left;width:100%}
+.exito .paso{display:flex;gap:10px;margin-bottom:10px;font-size:13.5px;font-weight:700}
+.exito .paso:last-child{margin-bottom:0}
+.exito .paso .num{width:24px;height:24px;border-radius:50%;background:var(--celeste);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.btn-volver{margin-top:20px;padding:13px 28px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="brandbar">
+    <div class="logo">La <em>Digi</em> <span class="fer">Feria</span></div>
+    <a href="index.html" class="volver-link">← Volver</a>
+  </div>
+  <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+</header>
+
+<!-- FORMULARIO -->
+<div id="pantalla-form">
+  <div class="hero">
+    <h1>📣 Sumá tu feria</h1>
+    <p>Publicá tu espacio en La Digi Feria y llegá a los visitantes antes, durante y después del evento.</p>
+    <div class="hero-chips">
+      <span class="hero-chip">🎉 Flyer en la home</span>
+      <span class="hero-chip">📅 Fechas en vivo</span>
+      <span class="hero-chip">🔔 Alertas a seguidores</span>
+    </div>
+  </div>
+
+  <div class="form-wrap">
+
+    <!-- ── DATOS DE LA FERIA ── -->
+    <div class="seccion-titulo">📣 Datos de la feria</div>
+
+    <div class="campo">
+      <label>Nombre de la feria <span class="req">*</span></label>
+      <input type="text" id="f-nombre" placeholder="Ej: Feria de Artesanos de Berazategui" maxlength="80">
+    </div>
+
+    <div class="campo">
+      <label>Descripción breve <span class="req">*</span></label>
+      <textarea id="f-descripcion" placeholder="Contale a los visitantes qué van a encontrar: rubros, ambiente, propuesta..."></textarea>
+      <div class="hint">Aparece en la página de tu feria. Sé específico: "50 puestos de artesanías, gastronomía y ropa" es mejor que "feria variada".</div>
+    </div>
+
+    <div class="campo">
+      <label>Dirección completa <span class="req">*</span></label>
+      <input type="text" id="f-lugar" placeholder="Ej: Plaza San Martín, Berazategui">
+    </div>
+
+    <div class="campo">
+      <label>Localidad / Barrio <span class="req">*</span></label>
+      <input type="text" id="f-localidad" placeholder="Ej: Berazategui, Juan María Gutiérrez">
+    </div>
+
+    <div class="campo">
+      <label>Horario <span class="req">*</span></label>
+      <input type="text" id="f-horario" placeholder="Ej: 10 a 19 hs">
+    </div>
+
+    <!-- ── FRECUENCIA ── -->
+    <div class="seccion-titulo">🔁 ¿Con qué frecuencia?</div>
+
+    <div class="campo">
+      <label>Tipo de frecuencia <span class="req">*</span></label>
+      <div class="frec-grid" id="frec-grid">
+        <button type="button" class="frec-chip" data-val="Todos los fines de semana" onclick="elegirFrec(this)"><span>🗓️</span>Todos los findes</button>
+        <button type="button" class="frec-chip" data-val="Quincenal" onclick="elegirFrec(this)"><span>📅</span>Quincenal</button>
+        <button type="button" class="frec-chip" data-val="Mensual" onclick="elegirFrec(this)"><span>🗓️</span>Mensual</button>
+        <button type="button" class="frec-chip" data-val="Eventos especiales" onclick="elegirFrec(this)"><span>🎉</span>Eventos especiales</button>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Días en que se realiza <span class="req">*</span></label>
+      <div class="dias-row" id="dias-row">
+        <button type="button" class="dia-chip" data-val="Sábado" onclick="toggleDia(this)">Sáb</button>
+        <button type="button" class="dia-chip" data-val="Domingo" onclick="toggleDia(this)">Dom</button>
+        <button type="button" class="dia-chip" data-val="Viernes" onclick="toggleDia(this)">Vie</button>
+        <button type="button" class="dia-chip" data-val="Lunes a viernes" onclick="toggleDia(this)">Lun-Vie</button>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Próxima fecha</label>
+      <input type="date" id="f-proxima-fecha">
+      <div class="hint">Opcional. Ayuda a mostrar tu feria en el calendario de la app.</div>
+    </div>
+
+    <!-- ── RUBROS / TIPO ── -->
+    <div class="seccion-titulo">🛍️ ¿Qué rubros predominan?</div>
+    <div class="campo">
+      <div class="hint" style="margin-bottom:10px">Elegí hasta 3 rubros principales. Ayuda a los visitantes a encontrarte.</div>
+      <div class="rubro-grid" id="rubro-grid">
+        <button type="button" class="rubro-chip" data-val="Artesanías" onclick="toggleRubro(this)"><span>🎨</span>Artesanías</button>
+        <button type="button" class="rubro-chip" data-val="Gastronomía" onclick="toggleRubro(this)"><span>🧁</span>Gastronomía</button>
+        <button type="button" class="rubro-chip" data-val="Ropa y accesorios" onclick="toggleRubro(this)"><span>👗</span>Ropa y accesorios</button>
+        <button type="button" class="rubro-chip" data-val="Plantas" onclick="toggleRubro(this)"><span>🌿</span>Plantas</button>
+        <button type="button" class="rubro-chip" data-val="Libros y cultura" onclick="toggleRubro(this)"><span>📚</span>Libros y cultura</button>
+        <button type="button" class="rubro-chip" data-val="Antigüedades" onclick="toggleRubro(this)"><span>🪑</span>Antigüedades</button>
+        <button type="button" class="rubro-chip" data-val="Tecnología" onclick="toggleRubro(this)"><span>💻</span>Tecnología</button>
+        <button type="button" class="rubro-chip" data-val="Mixta / variada" onclick="toggleRubro(this)"><span>🎪</span>Mixta / variada</button>
+      </div>
+    </div>
+
+    <!-- ── CAPACIDAD Y ENTRADA ── -->
+    <div class="seccion-titulo">📊 Capacidad y acceso</div>
+
+    <div class="campo">
+      <label>Cantidad de puestos aproximada <span class="req">*</span></label>
+      <select id="f-puestos">
+        <option value="">Seleccioná una opción</option>
+        <option value="Hasta 20 puestos">Hasta 20 puestos</option>
+        <option value="21 a 50 puestos">21 a 50 puestos</option>
+        <option value="51 a 100 puestos">51 a 100 puestos</option>
+        <option value="Más de 100 puestos">Más de 100 puestos</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Precio de entrada para el público</label>
+      <div class="precio-row">
+        <span class="prefijo">$</span>
+        <input type="number" id="f-entrada" placeholder="0 si es gratis" min="0">
+      </div>
+      <div class="hint">Si es gratis o a la gorra, dejá en 0.</div>
+    </div>
+
+    <!-- ── IMAGEN / FLYER ── -->
+    <div class="seccion-titulo">🖼️ Imagen de la feria</div>
+    <div class="campo">
+      <div class="hint" style="margin-bottom:10px">Una foto o flyer de tu feria. Se va a mostrar en el carrusel de la home si contratás el espacio destacado.</div>
+      <div class="upload-area" onclick="document.getElementById('f-foto').click()">
+        <div class="emoji">📸</div>
+        <p>Tocá para subir una imagen<br><span style="font-size:11px">JPG o PNG · Máx 3MB</span></p>
+        <input type="file" id="f-foto" accept="image/*" style="display:none" onchange="previewFoto(this)">
+      </div>
+      <img id="f-foto-preview" class="preview-img" alt="Preview">
+    </div>
+
+    <!-- ── REDES SOCIALES ── -->
+    <div class="seccion-titulo">📱 Redes sociales</div>
+    <div class="red-row">
+      <div class="red-icono red-ig"><i class="fa-brands fa-instagram" style="color:#E91E8C"></i></div>
+      <input type="text" id="f-ig" placeholder="usuario de Instagram (sin @)">
+    </div>
+    <div class="red-row">
+      <div class="red-icono red-fb"><i class="fa-brands fa-facebook" style="color:#1877F2"></i></div>
+      <input type="text" id="f-fb" placeholder="página de Facebook">
+    </div>
+    <div class="red-row">
+      <div class="red-icono red-tk"><i class="fa-brands fa-tiktok" style="color:#010101"></i></div>
+      <input type="text" id="f-tk" placeholder="usuario de TikTok (sin @)">
+    </div>
+    <div class="red-row">
+      <div class="red-icono red-web"><i class="fa-solid fa-globe" style="color:#FF7A00"></i></div>
+      <input type="text" id="f-web" placeholder="sitio web (sin https://)">
+    </div>
+
+    <!-- ── CONTACTO DEL ORGANIZADOR ── -->
+    <div class="seccion-titulo">👤 Tus datos de contacto</div>
+
+    <div class="campo">
+      <label>Tu nombre <span class="req">*</span></label>
+      <input type="text" id="f-contacto-nombre" placeholder="¿Con quién hablamos?">
+    </div>
+
+    <div class="campo">
+      <label>Email <span class="req">*</span></label>
+      <input type="email" id="f-email" placeholder="tu@email.com" autocomplete="email">
+      <div class="hint">Lo usamos para crear tu cuenta y avisarte cuando aprobemos tu feria.</div>
+    </div>
+
+    <div class="campo">
+      <label>WhatsApp del organizador <span class="req">*</span></label>
+      <input type="tel" id="f-wsp" placeholder="Ej: 5491155667788" inputmode="numeric">
+      <div class="hint">Con código de país, sin espacios ni guiones. Ej: 5491155667788</div>
+    </div>
+
+    <div class="campo">
+      <label>WhatsApp de contacto público (para el público de la feria)</label>
+      <input type="tel" id="f-wsp-publico" placeholder="Puede ser el mismo u otro" inputmode="numeric">
+    </div>
+
+    <!-- ── ENVIAR ── -->
+    <div class="cta-wrap">
+      <div class="form-error" id="form-error"></div>
+      <button class="btn-enviar" id="btn-enviar" onclick="enviarFormulario()">
+        📣 Enviar solicitud
+      </button>
+      <p style="font-size:12px;color:#7A6A55;font-weight:700;text-align:center;margin-top:12px;line-height:1.5">
+        Al enviar tu solicitud, el equipo de La Digi Feria la va a revisar y te contacta en menos de 48 hs. ¡Sin costo para registrarte!
+      </p>
+    </div>
+
+  </div><!-- /form-wrap -->
+</div><!-- /pantalla-form -->
+
+<!-- PANTALLA ÉXITO -->
+<div class="exito" id="pantalla-exito">
+  <div class="emoji-grande">🎉</div>
+  <h2>¡Solicitud enviada!</h2>
+  <p>Recibimos los datos de tu feria. El equipo de La Digi Feria los va a revisar y te vamos a contactar en menos de 48 hs.</p>
+  <div class="pasos">
+    <div class="paso"><div class="num">1</div><div>Revisamos tu solicitud y te mandamos un email de confirmación.</div></div>
+    <div class="paso"><div class="num">2</div><div>Te enviamos tus datos de acceso para entrar a tu panel.</div></div>
+    <div class="paso"><div class="num">3</div><div>Configuramos tu página en La Digi Feria y — si contratás el flyer — aparece en el carrusel de la home.</div></div>
+  </div>
+  <button class="btn-volver" onclick="window.location.href='index.html'">← Volver a la feria</button>
+</div>
+
+</div><!-- /app -->
+
+<script>
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+
+// ── Frecuencia (selección única) ──
+function elegirFrec(btn){
+  document.querySelectorAll('.frec-chip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ── Días (selección múltiple) ──
+function toggleDia(btn){
+  btn.classList.toggle('on');
+}
+
+// ── Rubros (hasta 3) ──
+function toggleRubro(btn){
+  const activos = document.querySelectorAll('.rubro-chip.on');
+  if(!btn.classList.contains('on') && activos.length >= 3){
+    btn.style.animation = 'nope .3s';
+    setTimeout(()=>btn.style.animation='', 300);
+    return;
+  }
+  btn.classList.toggle('on');
+}
+
+// ── Preview de foto ──
+function previewFoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 3*1024*1024){
+    alert("La imagen supera los 3MB. Elegí una más chica.");
+    input.value=''; return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('f-foto-preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Validación ──
+function validar(){
+  let ok = true;
+  const campos = ['f-nombre','f-descripcion','f-lugar','f-localidad','f-horario','f-contacto-nombre','f-email','f-wsp','f-puestos'];
+  campos.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el.value.trim()){ el.classList.add('error'); ok=false; }
+    else el.classList.remove('error');
+  });
+  const frec = document.querySelector('.frec-chip.on');
+  if(!frec){ document.getElementById('frec-grid').style.outline='2px solid var(--fucsia)'; ok=false; }
+  else document.getElementById('frec-grid').style.outline='';
+  const dias = document.querySelectorAll('.dia-chip.on');
+  if(!dias.length){ document.getElementById('dias-row').style.outline='2px solid var(--fucsia)'; ok=false; }
+  else document.getElementById('dias-row').style.outline='';
+  const email = document.getElementById('f-email').value.trim();
+  if(email && !email.includes('@')){ document.getElementById('f-email').classList.add('error'); ok=false; }
+  return ok;
+}
+
+// ── Guardar en Supabase ──
+async function guardarSolicitud(datos){
+  // 1. Guardar feria con estado 'pendiente'
+  const rFeria = await fetch(`${SUPABASE_URL}/rest/v1/ferias`, {
+    method:'POST',
+    headers:{
+      apikey: SUPABASE_KEY,
+      Authorization:`Bearer ${SUPABASE_KEY}`,
+      'Content-Type':'application/json',
+      Prefer:'return=representation'
+    },
+    body: JSON.stringify({
+      nombre: datos.nombre,
+      slug: datos.slug,
+      lugar: datos.lugar + (datos.localidad ? ', ' + datos.localidad : ''),
+      horario: datos.horario,
+      frecuencia: datos.frecuencia,
+      proxima_fecha: datos.proxima_fecha || null,
+      estado: 'pendiente',
+      // campos extra para el admin
+      email_contacto: datos.email,
+      nombre_contacto: datos.contacto_nombre,
+      whatsapp_contacto: datos.wsp,
+      whatsapp_publico: datos.wsp_publico || datos.wsp,
+      descripcion: datos.descripcion,
+      rubros_principales: datos.rubros,
+      cantidad_puestos: datos.puestos,
+      precio_entrada: datos.entrada || 0,
+      redes: datos.redes,
+    })
+  });
+  if(!rFeria.ok){
+    const err = await rFeria.json();
+    throw new Error(err.message || 'Error al guardar la feria');
+  }
+  return await rFeria.json();
+}
+
+// ── Enviar formulario ──
+async function enviarFormulario(){
+  const errEl = document.getElementById('form-error');
+  errEl.classList.remove('on');
+
+  if(!validar()){
+    errEl.textContent = 'Completá los campos obligatorios (marcados en rojo) antes de continuar.';
+    errEl.classList.add('on');
+    errEl.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando…';
+
+  try{
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const slug = nombre.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const frecEl = document.querySelector('.frec-chip.on');
+    const dias = [...document.querySelectorAll('.dia-chip.on')].map(b=>b.dataset.val).join(' y ');
+    const frecuencia = (frecEl ? frecEl.dataset.val : '') + (dias ? ' · ' + dias : '');
+    const rubros = [...document.querySelectorAll('.rubro-chip.on')].map(b=>b.dataset.val);
+    const redes = {};
+    const ig = document.getElementById('f-ig').value.trim();
+    const fb = document.getElementById('f-fb').value.trim();
+    const tk = document.getElementById('f-tk').value.trim();
+    const web = document.getElementById('f-web').value.trim();
+    if(ig) redes.instagram = ig;
+    if(fb) redes.facebook = fb;
+    if(tk) redes.tiktok = tk;
+    if(web) redes.web = web;
+
+    await guardarSolicitud({
+      nombre,
+      slug: slug + '-' + Date.now().toString(36),
+      lugar: document.getElementById('f-lugar').value.trim(),
+      localidad: document.getElementById('f-localidad').value.trim(),
+      horario: document.getElementById('f-horario').value.trim(),
+      frecuencia,
+      proxima_fecha: document.getElementById('f-proxima-fecha').value || null,
+      descripcion: document.getElementById('f-descripcion').value.trim(),
+      rubros,
+      puestos: document.getElementById('f-puestos').value,
+      entrada: document.getElementById('f-entrada').value || 0,
+      email: document.getElementById('f-email').value.trim(),
+      contacto_nombre: document.getElementById('f-contacto-nombre').value.trim(),
+      wsp: document.getElementById('f-wsp').value.trim(),
+      wsp_publico: document.getElementById('f-wsp-publico').value.trim(),
+      redes,
+    });
+
+    // Éxito
+    document.getElementById('pantalla-form').style.display = 'none';
+    document.getElementById('pantalla-exito').classList.add('on');
+    window.scrollTo({top:0});
+
+  }catch(e){
+    errEl.textContent = 'Hubo un problema al enviar: ' + (e.message || 'intentá de nuevo en un momento.');
+    errEl.classList.add('on');
+    btn.disabled = false;
+    btn.textContent = '📣 Enviar solicitud';
+  }
+}
+</script>
+</body>
+</html>
