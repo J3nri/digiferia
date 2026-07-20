@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La Digi Feria — Prototipo v2</title>
+<title>La Digi Feria</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -26,7 +26,32 @@ header{background:var(--blanco);position:sticky;top:0;z-index:20;border-bottom:1
 .logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;letter-spacing:.3px}
 .logo em{font-style:normal;color:var(--fucsia)}
 .logo .fer{color:var(--naranja)}
-.avatar-mini{width:36px;height:36px;border-radius:50%;background:var(--amarillo);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;border:2px solid var(--tinta)}
+/* Avatar header — muestra inicial o emoji del puesto */
+.avatar-mini{
+  width:36px;height:36px;border-radius:50%;background:var(--amarillo);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;border:2px solid var(--tinta);
+  cursor:pointer;position:relative;transition:transform .1s
+}
+.avatar-mini:active{transform:scale(.93)}
+.avatar-mini.logueado{background:var(--fucsia);color:#fff}
+.avatar-mini.org{background:var(--celeste);color:#fff}
+/* menú desplegable del avatar */
+.avatar-menu{
+  position:absolute;top:calc(100% + 8px);right:0;min-width:180px;
+  background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;
+  box-shadow:4px 4px 0 rgba(43,33,24,.9);z-index:50;
+  display:none;flex-direction:column;overflow:hidden
+}
+.avatar-menu.on{display:flex}
+.avatar-menu button{
+  background:none;border:none;text-align:left;padding:12px 16px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;
+  cursor:pointer;color:var(--tinta);border-bottom:1px solid #F0E4CE
+}
+.avatar-menu button:last-child{border-bottom:none}
+.avatar-menu button:hover{background:#FFF0D6}
+.avatar-menu .salir{color:var(--fucsia)}
 main{flex:1;padding-bottom:86px}
 .pantalla{display:none;animation:aparecer .25s ease}
 .pantalla.activa{display:block}
@@ -35,7 +60,7 @@ main{flex:1;padding-bottom:86px}
 h1{font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;line-height:1.15}
 h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom:12px}
 .sub{color:#7A6A55;font-size:14.5px;margin-top:4px}
-/* ---------- CARRUSEL DE FLYERS ---------- */
+/* CARRUSEL */
 .carrusel-wrap{padding:0 0 6px}
 .carrusel-label{display:flex;justify-content:space-between;align-items:baseline;padding:0 18px 8px}
 .carrusel-label h2{margin:0}
@@ -59,7 +84,6 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .fl4{background:linear-gradient(135deg,#8FD0F5,#4FA8E0)}
 .flyer.tu-feria{background:var(--blanco);display:flex;flex-direction:column}
 .flyer.fijo{min-width:auto;margin:0 18px 18px;cursor:pointer}
-/* fila horizontal de puestos destacados */
 .destacados-row{display:flex;gap:14px;overflow-x:auto;padding:2px 18px 18px;scroll-snap-type:x proximity;scrollbar-width:none}
 .destacados-row::-webkit-scrollbar{display:none}
 .destacados-row .puesto{min-width:46%;scroll-snap-align:start}
@@ -68,7 +92,6 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
   position:absolute;top:6px;right:6px;z-index:2;font-size:10.5px;font-weight:800;
   background:var(--amarillo);border:2px solid var(--tinta);border-radius:999px;padding:2px 8px
 }
-/* próximas fechas: lista simple (lo orgánico, sin pagar) */
 .prox-item{display:flex;align-items:center;gap:12px;margin:0 18px 10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:9px 13px}
 .prox-dia{width:46px;height:46px;border-radius:12px;border:2px solid var(--tinta);background:#FFF0D6;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;flex-shrink:0}
 .prox-dia small{font-size:9px;font-weight:800;text-transform:uppercase}
@@ -79,29 +102,23 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .chip-dest{font-size:10.5px;font-weight:800;background:var(--amarillo);border:2px solid var(--tinta);border-radius:999px;padding:2px 8px;white-space:nowrap}
 .btn-prox{width:100%;text-align:left;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;padding:14px 18px;border-radius:14px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9);color:var(--tinta)}
 .btn-prox:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
-/* contador fundadores */
 .fundadores{display:flex;align-items:center;gap:10px;margin-top:10px;background:#FFFDF4;border:2px dashed #B8860B;border-radius:12px;padding:9px 12px}
 .fundadores .num{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#B8860B;line-height:1}
 .fundadores small{font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.35}
-/* links del panel del feriante */
 .link-row{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;margin:0 18px 10px}
 .link-row .ic{font-size:18px}
 .link-row b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;display:block}
 .link-row small{font-size:12px;color:#7A6A55;font-weight:700;line-height:1.35;display:block}
-/* arrastre con mouse en filas horizontales (escritorio) */
 .chips,.destacados-row,.carrusel{cursor:grab}
 .arrastrando{cursor:grabbing !important;scroll-snap-type:none !important}
 .arrastrando *{user-select:none;pointer-events:none}
-/* cupos por rubro */
 .cupo-lleno,.cupo-ultimo{font-family:'Nunito',sans-serif;font-size:10.5px;font-weight:800;border:2px solid var(--tinta);border-radius:999px;padding:2px 8px;align-self:flex-start}
 .cupo-lleno{background:#EFE6D5;color:#5C4F3E}
 .cupo-ultimo{background:var(--amarillo)}
-/* marca del feriante en Mi Puesto */
 .mi-marca{display:flex;align-items:center;gap:12px;margin:12px 0 4px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:10px 14px;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
 .mi-logo{width:52px;height:52px;border-radius:50%;background:#FDF1DC;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
 .mi-marca b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16.5px;display:block}
 .mi-marca small{font-size:12.5px;color:#7A6A55;font-weight:700;font-style:italic}
-/* pines / insignias con tooltip */
 .pines{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 .pin{position:relative;width:40px;height:40px;border-radius:50%;background:var(--blanco);border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
 .pin .tooltip{
@@ -114,7 +131,6 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .pin .tooltip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--tinta)}
 .pin:hover .tooltip,.pin.abierto .tooltip{opacity:1;transform:translateX(-50%) scale(1)}
 .pin.abierto{background:var(--amarillo)}
-/* seguir + newsletter */
 .btn-seguir{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;padding:9px 18px;border-radius:999px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
 .btn-seguir.on{background:var(--amarillo)}
 .btn-seguir:active{transform:translate(2px,2px);box-shadow:0 0 0}
@@ -126,17 +142,114 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .news-form{display:flex;gap:8px;margin-top:12px}
 .news-form input{flex:1;min-width:0;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco)}
 .news-form button{border:2px solid var(--tinta);border-radius:12px;background:var(--fucsia);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
-/* modal de email */
+/* MODALES */
 .velo{position:fixed;inset:0;background:rgba(43,33,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
 .velo.on{display:flex}
 .modal{background:var(--fondo);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:6px 6px 0 rgba(43,33,24,.9);padding:20px;max-width:340px;width:100%}
 .modal h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px}
 .modal p{font-size:13.5px;color:#5C4F3E;margin-top:6px;line-height:1.45}
-.modal input{width:100%;margin-top:12px;border:2px solid var(--tinta);border-radius:12px;padding:11px 12px;font-family:'Nunito',sans-serif;font-size:14px}
+.modal input{width:100%;margin-top:12px;border:2px solid var(--tinta);border-radius:12px;padding:11px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco)}
 .modal .acciones{display:flex;gap:8px;margin-top:12px}
 .modal .acciones button{flex:1;border:2px solid var(--tinta);border-radius:12px;padding:11px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer}
 .m-ok{background:var(--verde);color:#fff}
 .m-no{background:var(--blanco)}
+.m-fucsia{background:var(--fucsia);color:#fff}
+/* modal de login */
+.login-tabs{display:flex;gap:8px;margin-bottom:14px}
+.login-tab{flex:1;padding:9px;border:2px solid var(--tinta);border-radius:12px;background:var(--blanco);font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;transition:background .15s}
+.login-tab.on{background:var(--tinta);color:var(--amarillo)}
+.login-error{color:var(--fucsia);font-size:12.5px;font-weight:800;margin-top:8px;display:none}
+.login-error.on{display:block}
+.login-spinner{display:none;text-align:center;padding:8px;font-size:13px;color:#7A6A55;font-weight:700}
+.login-spinner.on{display:block}
+/* olvido de contraseña */
+.link-btn{background:none;border:none;color:var(--fucsia);font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;margin-top:8px;display:block;text-align:right}
+/* pantalla Mi Puesto según estado */
+.mipuesto-login{padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.mipuesto-login .emoji-grande{font-size:52px}
+.mipuesto-login h2{margin:0}
+.mipuesto-login p{font-size:14px;color:#5C4F3E;font-weight:700;line-height:1.5;margin:0}
+.btn-login-big{
+  width:100%;padding:15px;background:var(--fucsia);color:#fff;
+  border:2px solid var(--tinta);border-radius:14px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;
+  cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9)
+}
+.btn-login-big.amarillo{background:var(--amarillo);color:var(--tinta)}
+/* Panel del feriante logueado */
+.panel-feriante{padding:0 0 24px}
+.panel-header{
+  margin:12px 18px;background:var(--blanco);border:2px solid var(--tinta);
+  border-radius:14px;padding:14px;box-shadow:3px 3px 0 rgba(43,33,24,.9);
+  display:flex;align-items:center;gap:12px
+}
+.panel-logo{
+  width:56px;height:56px;border-radius:50%;background:#FDF1DC;
+  border:2px solid var(--tinta);display:flex;align-items:center;
+  justify-content:center;font-size:28px;flex-shrink:0
+}
+.panel-info b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;display:block}
+.panel-info small{font-size:12px;color:#7A6A55;font-weight:700}
+.plan-badge{
+  display:inline-block;margin-top:5px;font-size:11px;font-weight:800;
+  padding:3px 10px;border-radius:999px;border:2px solid var(--tinta)
+}
+.plan-gratis{background:#EFE6D5}
+.plan-plus{background:#DFF5EC;color:#007453}
+.plan-pro{background:var(--amarillo)}
+.accion-row{
+  display:flex;align-items:center;gap:10px;background:var(--blanco);
+  border:2px solid var(--tinta);border-radius:12px;padding:12px 14px;
+  margin:0 18px 10px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9);
+  transition:transform .1s
+}
+.accion-row:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.accion-row .ic{font-size:20px;flex-shrink:0}
+.accion-row b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px;display:block}
+.accion-row small{font-size:12px;color:#7A6A55;font-weight:700}
+.accion-row .flecha-r{margin-left:auto;font-size:16px;color:#B3A48C}
+/* Confirmar asistencia */
+.confirmar-box{
+  margin:0 18px 16px;background:linear-gradient(135deg,#FDE7F2,#FFF0D6);
+  border:2px solid var(--tinta);border-radius:14px;
+  box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px
+}
+.confirmar-box h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px}
+.confirmar-box p{font-size:13px;color:#5C4F3E;font-weight:700;margin-top:4px}
+.confirmar-ferias{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.confirmar-feria-btn{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;
+  padding:10px 14px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px
+}
+.confirmar-feria-btn.confirmado{background:#DFF5EC;border-color:#00A878}
+/* Panel del organizador logueado */
+.panel-org{padding:0 0 24px}
+.org-feria-card{
+  margin:0 18px 12px;background:var(--blanco);border:2px solid var(--tinta);
+  border-radius:14px;box-shadow:4px 4px 0 rgba(43,33,24,.9);overflow:hidden
+}
+.org-feria-card .toldo{height:18px}
+.org-feria-body{padding:14px}
+.org-feria-body h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px}
+.org-feria-body p{font-size:13px;color:#7A6A55;font-weight:700;margin-top:3px}
+.org-acciones{display:flex;gap:8px;margin-top:12px}
+.org-btn{
+  flex:1;padding:10px;border:2px solid var(--tinta);border-radius:12px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;
+  cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)
+}
+.org-btn.principal{background:var(--celeste);color:#fff}
+.org-btn.sec{background:var(--blanco)}
+/* estado del flyer */
+.flyer-estado{
+  display:inline-flex;align-items:center;gap:5px;margin-top:8px;
+  font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;border:2px solid var(--tinta)
+}
+.fe-activo{background:#DFF5EC;color:#007453}
+.fe-pendiente{background:#FFF0D6;color:#7A6A55}
+.fe-vencido{background:#EFE6D5;color:#9A8B76}
+/* otros estilos existentes */
 .flyer.tu-feria .flyer-body{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .puntos{display:flex;gap:6px;justify-content:center;padding-bottom:4px}
 .puntos i{width:8px;height:8px;border-radius:50%;background:#DCCFB6;transition:background .2s,transform .2s}
@@ -148,37 +261,15 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .chip.on{background:var(--tinta);color:var(--amarillo)}
 .grilla{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 18px 24px}
 .vacio{grid-column:1/-1;text-align:center;color:#9A8B76;font-weight:700;padding:30px 10px}
-/* puesto vacío: invitación al feriante */
-.puesto.invita{
-  border-style:dashed;background:#FFFDF6;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;padding:18px 12px;min-height:210px
-}
-.puesto.invita .mas{
-  width:46px;height:46px;border-radius:50%;background:var(--amarillo);
-  border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;
-  font-size:26px;font-weight:800;margin-bottom:10px
-}
-.puesto.invita b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;line-height:1.25}
-.puesto.invita small{font-size:12px;color:#7A6A55;font-weight:700;margin-top:5px}
-.puesto.invita .cta-mini{
-  margin-top:10px;font-size:12.5px;font-weight:800;color:#fff;background:var(--fucsia);
-  border:2px solid var(--tinta);border-radius:999px;padding:6px 14px
-}
 .puesto{background:var(--blanco);border-radius:var(--radius);overflow:hidden;border:2px solid var(--tinta);box-shadow:4px 4px 0 rgba(43,33,24,.9);cursor:pointer;transition:transform .12s}
 .puesto:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
 .toldo{height:14px}
-.t-rosa{background:repeating-linear-gradient(45deg,var(--fucsia) 0 10px,var(--blanco) 10px 20px)}
-.t-verde{background:repeating-linear-gradient(45deg,var(--verde) 0 10px,var(--blanco) 10px 20px)}
-.t-naranja{background:repeating-linear-gradient(45deg,var(--naranja) 0 10px,var(--blanco) 10px 20px)}
-.t-celeste{background:repeating-linear-gradient(45deg,var(--celeste) 0 10px,var(--blanco) 10px 20px)}
-.t-amarillo{background:repeating-linear-gradient(45deg,var(--amarillo) 0 10px,var(--blanco) 10px 20px)}
 .foto{height:110px;display:flex;align-items:center;justify-content:center;font-size:44px;background:#FDF1DC;border-bottom:2px solid var(--tinta)}
 .pinfo{padding:10px 12px 12px}
 .pnombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15.5px;line-height:1.2}
 .prubro{font-size:12px;font-weight:800;color:var(--fucsia);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
 .pferia{font-size:12px;color:#7A6A55;margin-top:5px;line-height:1.5}
 .mas-ferias{display:inline-block;font-size:11px;font-weight:800;background:#FFF0D6;border:1.5px solid var(--tinta);border-radius:999px;padding:1px 8px;margin-top:4px}
-/* badge pulsante: asistencia confirmada */
 .este-finde{
   display:inline-flex;align-items:center;gap:4px;margin-top:6px;
   font-size:11px;font-weight:800;color:#fff;background:var(--fucsia);
@@ -197,19 +288,13 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .badges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
 .badge{font-size:12px;font-weight:800;padding:5px 11px;border-radius:999px;border:2px solid var(--tinta);background:var(--amarillo)}
 .bio{font-size:14px;color:#5C4F3E;margin-top:10px;line-height:1.45}
-/* redes sociales del feriante */
 .redes{display:flex;gap:10px;justify-content:center;margin-top:14px}
-.red{
-  width:42px;height:42px;border-radius:50%;border:2px solid var(--tinta);
-  display:flex;align-items:center;justify-content:center;font-size:19px;
-  cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9);transition:transform .1s;background:var(--blanco)
-}
+.red{width:42px;height:42px;border-radius:50%;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9);transition:transform .1s;background:var(--blanco)}
 .red:active{transform:translate(2px,2px);box-shadow:0 0 0 rgba(43,33,24,.9)}
 .red.ig{background:linear-gradient(135deg,#FDE7F2,#FFD6E8)}
 .red.tk{background:#E8F6FD}
 .red.fb{background:#E3ECFB}
 .red.web{background:#FFF0D6}
-/* agenda de ferias del feriante */
 .agenda{padding:0 18px}
 .agenda-item{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:10px 14px;margin-bottom:10px}
 .agenda-item .ic{font-size:20px}
@@ -253,7 +338,18 @@ nav button.on span{filter:none;opacity:1}
 <header>
   <div class="brandbar">
     <div class="logo">La <em>Digi</em> <span class="fer">Feria</span></div>
-    <div class="avatar-mini">J</div>
+    <!-- AVATAR: clickeable, abre menú o login -->
+    <div style="position:relative">
+      <div class="avatar-mini" id="avatar-btn" onclick="toggleAvatarMenu()" title="Mi cuenta">
+        <span id="avatar-inicial">?</span>
+      </div>
+      <div class="avatar-menu" id="avatar-menu">
+        <div style="padding:10px 16px 8px;font-size:12px;color:#7A6A55;font-weight:800;border-bottom:1px solid #F0E4CE" id="avatar-nombre-menu"></div>
+        <button onclick="irMiPanel()">🎪 Mi panel</button>
+        <button onclick="irHome()">🛍️ Recorrer la feria</button>
+        <button class="salir" onclick="cerrarSesion()">↩️ Cerrar sesión</button>
+      </div>
+    </div>
   </div>
   <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
 </header>
@@ -266,12 +362,8 @@ nav button.on span{filter:none;opacity:1}
     <h1>¡La feria está abierta! 🎪</h1>
     <p class="sub" id="contador-puestos"></p>
   </div>
-
-  <!-- 1. Puestos destacados (plan Pro) -->
   <div class="carrusel-label" id="label-destacados"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
   <div class="destacados-row" id="destacados-row"></div>
-
-  <!-- 2. Ferias destacadas (flyers pagos) -->
   <div class="carrusel-wrap">
     <div class="carrusel-label">
       <h2>Ferias destacadas 🎉</h2>
@@ -280,19 +372,13 @@ nav button.on span{filter:none;opacity:1}
     <div class="carrusel" id="carrusel-flyers"></div>
     <div class="puntos" id="carrusel-puntos"></div>
   </div>
-
-  <!-- 3. Botón a próximas ferias (lo orgánico no compite con lo destacado) -->
   <div style="padding:0 18px 20px">
     <button class="btn-prox" onclick="ir('p-ferias')">📅 Ver próximas ferias <span style="float:right">→</span></button>
   </div>
-
-  <!-- 4. Todos los puestos -->
   <div class="seccion" style="padding-bottom:6px;padding-top:8px"><h2>Todos los puestos <span id="badge-vivo" style="display:none;font-family:Nunito;font-size:10.5px;font-weight:800;background:#DFF5EC;color:#007453;border:2px solid var(--tinta);border-radius:999px;padding:2px 9px;vertical-align:middle">🟢 rubros en vivo</span></h2></div>
   <div class="chips" id="chips-rubros"></div>
   <div class="grilla" id="grilla-puestos"></div>
-
-  <!-- Newsletter -->
-  <div class="news-card">
+  <div class="news-card" id="news-card-wrap">
     <h3>📬 Que la feria te busque a vos</h3>
     <p>Dejanos tu email y enterate cada semana qué puestos confirmaron, qué ferias vienen y qué hay de nuevo en tus rubros favoritos.</p>
     <div class="news-form">
@@ -300,9 +386,7 @@ nav button.on span{filter:none;opacity:1}
       <button onclick="suscribirGeneral()">¡Anotarme!</button>
     </div>
   </div>
-
-  <!-- 5. Sumate (al final del paseo) -->
-  <div class="flyer tu-feria fijo" onclick="ir('p-mipuesto')">
+  <div class="flyer tu-feria fijo" onclick="abrirLoginOIr('unirse')">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Sos feriante? 🛍️</h3>
@@ -314,7 +398,7 @@ nav button.on span{filter:none;opacity:1}
       </div>
     </div>
   </div>
-  <div class="flyer tu-feria fijo" onclick="ir('p-mipuesto')">
+  <div class="flyer tu-feria fijo" onclick="abrirLoginOIr('organizador')">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Organizás una feria? 📣</h3>
@@ -366,39 +450,15 @@ nav button.on span{filter:none;opacity:1}
   <div id="lista-ferias"></div>
 </section>
 
-<!-- MI PUESTO -->
+<!-- MI PUESTO / MI PANEL -->
 <section class="pantalla" id="p-mipuesto">
-  <div class="seccion">
-    <h1>Mi puesto 🎪</h1>
-    <div class="mi-marca">
-      <div class="mi-logo">🐻</div>
-      <div>
-        <b>Pardo y Copito</b>
-        <small>"Fragancias que cuentan historias"</small>
-      </div>
-    </div>
-    <p class="sub">Armá tu puesto virtual en 5 minutos. Cargá TODAS las ferias donde participás, con sus días y frecuencia.</p>
-  </div>
-  <div class="feria-item" style="flex-direction:column;align-items:flex-start;gap:8px">
-    <h3 style="font-family:'Fredoka';font-weight:600">Todavía no tenés puesto</h3>
-    <p style="font-size:14px;color:#7A6A55">Subí tu foto, contá qué vendés, cargá productos y marcá tus ferias (podés elegir varias). Es gratis para arrancar.</p>
-  </div>
-  <div class="seccion" style="padding-bottom:8px"><h2>Tu panel va a incluir 🔑</h2></div>
-  <div class="link-row">
-    <span class="ic">🔗</span>
-    <div><b>Link de tu puesto</b><small>digiferia.app/puesto/tu-nombre — compartilo con tus clientes por WhatsApp e Instagram</small></div>
-  </div>
-  <div class="link-row">
-    <span class="ic">🤝</span>
-    <div><b>Link de invitación a feriantes</b><small>Por cada feriante que sumes y complete su primer mes activo: si sos Gratis ganás 1 mes de Plus, si sos Plus ganás 1 mes de Pro, y si sos Pro tenés 1 mes sin pagar la suscripción</small></div>
-  </div>
-  <div class="seccion" style="padding-bottom:8px"><h2>Colección de pines 📌</h2></div>
-  <div id="coleccion-pines"></div>
-  <button class="cta-wsp" style="background:var(--fucsia)">✨ Abrir mi puesto gratis</button>
+  <!-- Contenido dinámico según estado de login -->
+  <div id="mipuesto-contenido"></div>
 </section>
 
 </main>
 
+<!-- MODAL EMAIL (visitantes) -->
 <div class="velo" id="velo">
   <div class="modal">
     <h3 id="modal-titulo">🔔 ¡Buenísimo!</h3>
@@ -411,17 +471,65 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
-<nav>
+<!-- MODAL LOGIN -->
+<div class="velo" id="velo-login">
+  <div class="modal">
+    <h3>🎪 Accedé a tu panel</h3>
+    <p id="login-subtitulo" style="margin-bottom:10px">Ingresá con tu email y contraseña.</p>
+    <div class="login-tabs">
+      <button class="login-tab on" id="tab-ingresar" onclick="switchLoginTab('ingresar')">Ingresar</button>
+      <button class="login-tab" id="tab-recuperar" onclick="switchLoginTab('recuperar')">Olvidé mi contraseña</button>
+    </div>
+
+    <!-- Tab ingresar -->
+    <div id="login-form-ingresar">
+      <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email">
+      <input type="password" id="login-pass" placeholder="Contraseña" style="margin-top:8px" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')hacerLogin()">
+      <div class="login-error" id="login-error"></div>
+      <div class="login-spinner" id="login-spinner">Ingresando… 🎪</div>
+      <div class="acciones">
+        <button class="m-no" onclick="cerrarLogin()">Cancelar</button>
+        <button class="m-fucsia" onclick="hacerLogin()">Entrar</button>
+      </div>
+    </div>
+
+    <!-- Tab recuperar contraseña -->
+    <div id="login-form-recuperar" style="display:none">
+      <p style="font-size:13px;color:#5C4F3E;margin-top:0">Te mandamos un link para crear una nueva contraseña.</p>
+      <input type="email" id="recuperar-email" placeholder="tu@email.com" style="margin-top:10px">
+      <div class="login-error" id="recuperar-error"></div>
+      <div class="login-spinner" id="recuperar-spinner">Enviando… 📬</div>
+      <div class="acciones" style="margin-top:12px">
+        <button class="m-no" onclick="cerrarLogin()">Cancelar</button>
+        <button class="m-ok" onclick="hacerRecuperar()">Mandar link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN ASISTENCIA -->
+<div class="velo" id="velo-asistencia">
+  <div class="modal">
+    <h3>🔥 Confirmar asistencia</h3>
+    <p style="margin-top:6px">¿Cuándo vas a estar en la feria este finde?</p>
+    <div id="asistencia-opciones" style="display:flex;flex-direction:column;gap:8px;margin-top:14px"></div>
+    <div class="acciones" style="margin-top:14px">
+      <button class="m-no" onclick="cerrarAsistencia()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<nav id="nav-principal">
   <button class="on" data-p="p-home" onclick="tab(this)"><span>🎪</span>La Feria</button>
   <button data-p="p-buscar" onclick="tab(this)"><span>🔍</span>Buscar</button>
   <button data-p="p-ferias" onclick="tab(this)"><span>📅</span>Ferias</button>
-  <button data-p="p-mipuesto" onclick="tab(this)"><span>🛍️</span>Mi Puesto</button>
+  <button data-p="p-mipuesto" onclick="tab(this)" id="nav-mipuesto"><span>🛍️</span><span id="nav-mipuesto-label">Mi Puesto</span></button>
 </nav>
 
 </div>
 <script>
 // ================== DATOS ==================
-// Datos locales de respaldo; al cargar, se reemplazan por los rubros EN VIVO de Supabase
 let RUBROS = {
   marroquineria:{nombre:"Marroquinería", emoji:"🧵", color:"#E91E8C", clase:"rc1", cupo:null},
   plantas_suculentas:{nombre:"Plantas y suculentas", emoji:"🌵", color:"#00A878", clase:"rc2", cupo:null},
@@ -431,14 +539,13 @@ let RUBROS = {
   velas:{nombre:"Velas", emoji:"🕯️", color:"#B07CE8", clase:"rc6", cupo:3},
   tejidos:{nombre:"Tejidos", emoji:"🧶", color:"#E91E8C", clase:"rc1", cupo:null},
 };
-
 const rubroDe = clave => RUBROS[clave] || {nombre:clave, emoji:"🎪", color:"#E91E8C", clase:"rc1"};
 
 let FERIAS = [
-  {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1", ordenFecha:18},
-  {id:"parque", nombre:"Feria del Parque", lugar:"Parque central · 9 a 14 hs", frec:"2° y 4° sábado del mes", dia:"Sáb", num:"25", fd:"fd2", ordenFecha:25},
-  {id:"anden", nombre:"Feria del Andén", lugar:"Estación vieja · 11 a 20 hs", frec:"1° y 3° domingo del mes", dia:"Dom", num:"19", fd:"fd3", ordenFecha:19},
-  {id:"artesanal", nombre:"Paseo Artesanal Municipal", lugar:"Peatonal · 17 a 22 hs", frec:"Último finde del mes", dia:"Dom", num:"26", fd:"fd1", ordenFecha:26},
+  {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1"},
+  {id:"parque", nombre:"Feria del Parque", lugar:"Parque central · 9 a 14 hs", frec:"2° y 4° sábado del mes", dia:"Sáb", num:"25", fd:"fd2"},
+  {id:"anden", nombre:"Feria del Andén", lugar:"Estación vieja · 11 a 20 hs", frec:"1° y 3° domingo del mes", dia:"Dom", num:"19", fd:"fd3"},
+  {id:"artesanal", nombre:"Paseo Artesanal Municipal", lugar:"Peatonal · 17 a 22 hs", frec:"Último finde del mes", dia:"Dom", num:"26", fd:"fd1"},
 ];
 
 let FERIANTES = [
@@ -485,120 +592,476 @@ const PINES = {
   fundador:  {emoji:"🌱", nombre:"Puesto Fundador",   detalle:"Estuvo entre los primeros 20 puestos de La Digi Feria · Permanente, nunca se pierde"},
   fiel:      {emoji:"🎪", nombre:"Feriante Fiel",     detalle:"Más de 6 meses en la app con actividad · Se suspende tras 60 días inactivo"},
   embajador: {emoji:"🤝", nombre:"Embajador",         detalle:"5 o más feriantes invitados y activos · Revisión bimestral"},
-  gran_embajador: {emoji:"🌟", nombre:"Gran Embajador", detalle:"15 feriantes sumados en su historial total · Permanente, nunca se pierde"},
+  gran_embajador:{emoji:"🌟", nombre:"Gran Embajador", detalle:"15 feriantes sumados en su historial total · Permanente, nunca se pierde"},
   presente:  {emoji:"🔥", nombre:"Siempre Presente",  detalle:"8 fines de semana seguidos confirmando asistencia · Se pierde al cortar la racha"},
   rapido:    {emoji:"⚡", nombre:"Respuesta Rápida",  detalle:"Responde consultas en el día · Se revalida cada mes"},
 };
 
 const feriaPorId = id => FERIAS.find(f=>f.id===id);
 
-// ================== CONEXIÓN A SUPABASE ==================
+// ================== SUPABASE ==================
 const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 
-async function cargarRubrosEnVivo(){
-  try{
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rubros?select=clave,nombre,emoji,color,cupo,orden&order=orden`, {
-      headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+function sbHeaders(token){
+  return {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${token || SUPABASE_KEY}`,
+    "Content-Type": "application/json"
+  };
+}
+
+// ================== ESTADO DE SESIÓN ==================
+// usuario = { id, email, rol, nombre, puestoId, puestoEmoji, puestoBio, puestoNombre, puestoPlan, puestoFerias, puestoWhatsapp }
+// rol: 'feriante' | 'organizador' | 'admin' | null (visitante)
+let usuario = null;
+let tokenActual = null;
+
+async function iniciarSesionSupabase(email, pass){
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method:"POST",
+    headers:{ apikey: SUPABASE_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password:pass })
+  });
+  const data = await r.json();
+  if(!r.ok) throw new Error(data.error_description || data.msg || "Credenciales incorrectas");
+  return data; // { access_token, user }
+}
+
+async function cargarPerfil(userId, token){
+  // Busca en perfiles
+  const rp = await fetch(`${SUPABASE_URL}/rest/v1/perfiles?id=eq.${userId}&select=rol,nombre`, {
+    headers: sbHeaders(token)
+  });
+  const perfiles = await rp.json();
+  const perfil = perfiles[0] || {};
+  const rol = perfil.rol || 'feriante';
+
+  // Si es feriante, busca su puesto
+  let puestoData = {};
+  if(rol === 'feriante'){
+    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,bio,foto_url,plan,whatsapp,puesto_feria(ferias(id,nombre,frecuencia))`, {
+      headers: sbHeaders(token)
     });
-    if(!resp.ok) throw new Error("HTTP " + resp.status);
-    const datos = await resp.json();
-    if(Array.isArray(datos) && datos.length){
-      RUBROS = {};
-      datos.forEach((d,i)=>{
-        RUBROS[d.clave] = { nombre:d.nombre, emoji:d.emoji, color:d.color, cupo:d.cupo, clase:"rc"+(i%6+1) };
-      });
-      renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid();
-      const b = document.getElementById('badge-vivo');
-      if(b){ b.style.display = "inline-block"; }
-      console.log(`🟢 ${datos.length} rubros cargados en vivo desde Supabase`);
-    }
-  }catch(err){
-    console.warn("Sin conexión a Supabase; usando rubros locales de respaldo.", err);
-  }
-}
-
-// ---------- Puestos, ferias y flyers en vivo ----------
-const DIAS_ES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-function fechaCorta(iso){
-  if(!iso) return {dia:"—", num:"🎪", texto:""};
-  const d = new Date(iso + "T12:00:00");
-  return { dia: DIAS_ES[d.getDay()], num: String(d.getDate()), texto: DIAS_ES[d.getDay()] + " " + d.getDate() };
-}
-
-async function cargarFeriaYPuestosEnVivo(){
-  const cab = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
-  try{
-    // 1. Ferias
-    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha&order=proxima_fecha.asc.nullslast`, {headers:cab});
-    const ferias = rf.ok ? await rf.json() : [];
-
-    // 2. Puestos publicados, con todo embebido
-    const sel = "id,nombre,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
-    const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`, {headers:cab});
-    const puestos = rp.ok ? await rp.json() : [];
-
-    // 3. Flyers activos
-    const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`, {headers:cab});
-    const flyers = rfl.ok ? await rfl.json() : [];
-
-    if(!puestos.length) { console.warn("Aún no hay puestos publicados en la base; se muestran los de ejemplo."); return; }
-
-    // ---- Mapear ferias ----
-    if(ferias.length){
-      FERIAS = ferias.map(f=>{
-        const fc = fechaCorta(f.proxima_fecha);
-        return { id:f.id, nombre:f.nombre,
-          lugar:(f.lugar||"") + (f.horario ? " · " + f.horario : ""),
-          frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1",
-          ordenFecha: f.proxima_fecha ? new Date(f.proxima_fecha).getTime() : 9e15 };
-      });
-    }
-
-    // ---- Mapear puestos ----
-    const hoy = new Date(); const en7 = new Date(); en7.setDate(hoy.getDate()+7);
-    FERIANTES = puestos.map(p=>{
-      const asis = (p.asistencias||[]).map(a=>({...a, d:new Date(a.fecha+"T12:00:00")}))
-        .filter(a=>a.d >= new Date(hoy.toDateString()) && a.d <= en7)
-        .sort((a,b)=>a.d-b.d)[0];
-      const fdet = (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({
-        id:x.ferias.id, nombre:x.ferias.nombre, frec:x.frecuencia||x.ferias.frecuencia||"" }));
-      const feriaAsis = asis ? fdet.find(x=>x.id===asis.feria_id) : null;
+    const puestos = await rpu.json();
+    if(puestos[0]){
+      const p = puestos[0];
       const esUrl = p.foto_url && p.foto_url.startsWith("http");
-      return {
-        id: p.id, nombre: p.nombre, bio: p.bio||"",
-        emoji: (!esUrl && p.foto_url) ? p.foto_url : "🎪",
-        foto: esUrl ? p.foto_url : null,
-        rubro: p.rubros ? p.rubros.clave : null,
-        plan: p.plan==="gratis" ? null : p.plan,
-        whatsapp: p.whatsapp || null,
-        redes: (p.redes && Object.keys(p.redes).length) ? p.redes : null,
-        ferias: fdet.map(x=>x.id), feriasDetalle: fdet,
-        productos: (p.productos||[]).filter(x=>x.visible!==false)
-          .sort((a,b)=>(a.orden||0)-(b.orden||0))
-          .map(x=>({ n:x.nombre, p:"$"+Number(x.precio).toLocaleString("es-AR"),
-                     foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,
-                     e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️" })),
-        pinesDB: (p.puesto_insignia||[]).filter(x=>x.vigente!==false && x.insignias).map(x=>x.insignias),
-        confirmado: asis ? { nombre: feriaAsis ? feriaAsis.nombre : "", texto: fechaCorta(asis.fecha).texto } : null
+      puestoData = {
+        puestoId: p.id,
+        puestoNombre: p.nombre,
+        puestoBio: p.bio || "",
+        puestoEmoji: (!esUrl && p.foto_url) ? p.foto_url : "🎪",
+        puestoFoto: esUrl ? p.foto_url : null,
+        puestoPlan: p.plan || "gratis",
+        puestoWhatsapp: p.whatsapp,
+        puestoFerias: (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({
+          id: x.ferias.id, nombre: x.ferias.nombre, frec: x.ferias.frecuencia||""
+        }))
       };
-    });
-
-    // ---- Mapear flyers ----
-    FLYERS = flyers.filter(fl=>FERIAS.some(fe=>fe.id===fl.feria_id))
-      .map((fl,i)=>{
-        const fe = FERIAS.find(x=>x.id===fl.feria_id);
-        return { feriaId: fl.feria_id, estilo: "fl"+(i%4+1),
-                 fecha: (fe.dia!=="—" ? fe.dia+" "+fe.num : "Próximamente") };
-      });
-
-    renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
-    const b = document.getElementById('badge-vivo');
-    if(b){ b.style.display = "inline-block"; b.textContent = "🟢 datos en vivo"; }
-    console.log(`🟢 ${puestos.length} puesto(s), ${ferias.length} feria(s) y ${flyers.length} flyer(s) en vivo desde Supabase`);
-  }catch(err){
-    console.warn("No se pudieron cargar puestos en vivo; se muestran los de ejemplo.", err);
+    }
   }
+
+  // Si es organizador, busca sus ferias
+  let feriaOrg = [];
+  if(rol === 'organizador'){
+    const rfo = await fetch(`${SUPABASE_URL}/rest/v1/organizador_feria?usuario_id=eq.${userId}&select=ferias(id,nombre,lugar,frecuencia),flyers(estado,imagen_url)`, {
+      headers: sbHeaders(token)
+    });
+    const fo = rfo.ok ? await rfo.json() : [];
+    feriaOrg = fo.filter(x=>x.ferias).map(x=>({
+      id: x.ferias.id, nombre: x.ferias.nombre,
+      lugar: x.ferias.lugar||"", frec: x.ferias.frecuencia||"",
+      flyerEstado: (x.flyers && x.flyers[0]) ? x.flyers[0].estado : null,
+      flyerImg: (x.flyers && x.flyers[0]) ? x.flyers[0].imagen_url : null,
+    }));
+  }
+
+  return { id: userId, email: perfil.email || "", rol, nombre: perfil.nombre || email.split("@")[0], ...puestoData, feriaOrg };
+}
+
+function guardarSesionLocal(token, user){
+  try{
+    localStorage.setItem('df_token', token);
+    localStorage.setItem('df_uid', user.id);
+  }catch(e){}
+}
+function limpiarSesionLocal(){
+  try{ localStorage.removeItem('df_token'); localStorage.removeItem('df_uid'); }catch(e){}
+}
+async function recuperarSesionLocal(){
+  try{
+    const token = localStorage.getItem('df_token');
+    const uid   = localStorage.getItem('df_uid');
+    if(!token || !uid) return;
+    // Verificar que el token sigue siendo válido
+    const rv = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers:{ apikey: SUPABASE_KEY, Authorization:`Bearer ${token}` }
+    });
+    if(!rv.ok) throw new Error("token expirado");
+    tokenActual = token;
+    usuario = await cargarPerfil(uid, token);
+    actualizarUI();
+  }catch(e){
+    limpiarSesionLocal();
+  }
+}
+
+// ================== ACCIONES DE LOGIN ==================
+function abrirLogin(){
+  document.getElementById('velo-login').classList.add('on');
+  setTimeout(()=>document.getElementById('login-email').focus(), 100);
+}
+function cerrarLogin(){
+  document.getElementById('velo-login').classList.remove('on');
+  document.getElementById('login-error').classList.remove('on');
+  document.getElementById('login-spinner').classList.remove('on');
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value = '';
+}
+function switchLoginTab(tab){
+  const isIngresar = tab === 'ingresar';
+  document.getElementById('tab-ingresar').classList.toggle('on', isIngresar);
+  document.getElementById('tab-recuperar').classList.toggle('on', !isIngresar);
+  document.getElementById('login-form-ingresar').style.display = isIngresar ? '' : 'none';
+  document.getElementById('login-form-recuperar').style.display = isIngresar ? 'none' : '';
+}
+
+async function hacerLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-error');
+  const spin  = document.getElementById('login-spinner');
+  err.classList.remove('on');
+  if(!email || !pass){ err.textContent = "Completá los dos campos."; err.classList.add('on'); return; }
+  spin.classList.add('on');
+  try{
+    const data = await iniciarSesionSupabase(email, pass);
+    tokenActual = data.access_token;
+    usuario = await cargarPerfil(data.user.id, tokenActual);
+    guardarSesionLocal(tokenActual, usuario);
+    cerrarLogin();
+    actualizarUI();
+    // Si estaba en Mi Puesto, mostrar panel
+    if(document.getElementById('p-mipuesto').classList.contains('activa')){
+      renderMiPuesto();
+    }
+  }catch(e){
+    err.textContent = e.message || "No pudimos ingresar. Revisá el email y la contraseña.";
+    err.classList.add('on');
+  }finally{
+    spin.classList.remove('on');
+  }
+}
+
+async function hacerRecuperar(){
+  const email = document.getElementById('recuperar-email').value.trim();
+  const err   = document.getElementById('recuperar-error');
+  const spin  = document.getElementById('recuperar-spinner');
+  err.classList.remove('on');
+  if(!email){ err.textContent = "Ingresá tu email."; err.classList.add('on'); return; }
+  spin.classList.add('on');
+  try{
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+      method:"POST",
+      headers:{ apikey: SUPABASE_KEY, "Content-Type":"application/json" },
+      body: JSON.stringify({ email })
+    });
+    cerrarLogin();
+    mostrarToast("📬 ¡Listo! Revisá tu email para recuperar tu contraseña.");
+  }catch(e){
+    err.textContent = "Hubo un problema. Intentá de nuevo.";
+    err.classList.add('on');
+  }finally{
+    spin.classList.remove('on');
+  }
+}
+
+async function cerrarSesion(){
+  cerrarAvatarMenu();
+  try{
+    if(tokenActual){
+      await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+        method:"POST",
+        headers:{ apikey: SUPABASE_KEY, Authorization:`Bearer ${tokenActual}` }
+      });
+    }
+  }catch(e){}
+  usuario = null; tokenActual = null;
+  limpiarSesionLocal();
+  actualizarUI();
+  renderMiPuesto();
+  ir('p-home');
+  mostrarToast("👋 ¡Hasta la próxima feria!");
+}
+
+// Cuando el feriante toca "¿Sos feriante?" o "¿Organizás una feria?"
+function abrirLoginOIr(destino){
+  if(usuario) { ir('p-mipuesto'); return; }
+  if(destino === 'unirse'){
+    window.open('unirse.html', '_blank');
+  } else {
+    abrirLogin();
+  }
+}
+
+// ================== UI DEL AVATAR Y MENÚ ==================
+function actualizarUI(){
+  const btn = document.getElementById('avatar-btn');
+  const inicial = document.getElementById('avatar-inicial');
+  const menu = document.getElementById('avatar-menu');
+  const label = document.getElementById('nav-mipuesto-label');
+
+  if(usuario){
+    const ini = usuario.puestoEmoji && usuario.puestoEmoji !== '🎪'
+      ? usuario.puestoEmoji
+      : (usuario.nombre || "U")[0].toUpperCase();
+    inicial.textContent = ini;
+    btn.className = "avatar-mini " + (usuario.rol === 'organizador' ? 'org' : 'logueado');
+    document.getElementById('avatar-nombre-menu').textContent = usuario.nombre || usuario.email;
+    label.textContent = usuario.rol === 'organizador' ? 'Mi Feria' : 'Mi Puesto';
+    // Ocultar newsletter si está logueado como feriante
+    const nc = document.getElementById('news-card-wrap');
+    if(nc && usuario.rol === 'feriante') nc.style.display = 'none';
+  } else {
+    inicial.textContent = "?";
+    btn.className = "avatar-mini";
+    label.textContent = "Mi Puesto";
+    const nc = document.getElementById('news-card-wrap');
+    if(nc) nc.style.display = '';
+  }
+}
+
+function toggleAvatarMenu(){
+  if(!usuario){ abrirLogin(); return; }
+  document.getElementById('avatar-menu').classList.toggle('on');
+}
+function cerrarAvatarMenu(){
+  document.getElementById('avatar-menu').classList.remove('on');
+}
+function irMiPanel(){ cerrarAvatarMenu(); ir('p-mipuesto'); }
+function irHome(){ cerrarAvatarMenu(); ir('p-home'); }
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#avatar-btn') && !e.target.closest('#avatar-menu')){
+    cerrarAvatarMenu();
+  }
+});
+
+// ================== PANTALLA MI PUESTO ==================
+function renderMiPuesto(){
+  const cont = document.getElementById('mipuesto-contenido');
+  if(!usuario){
+    // Sin login: invitación + botón
+    cont.innerHTML = `
+      <div class="mipuesto-login">
+        <div class="emoji-grande">🎪</div>
+        <h2>Tu espacio en la feria</h2>
+        <p>Si sos feriante o manejás una feria, ingresá para ver y gestionar tu panel.</p>
+        <button class="btn-login-big" onclick="abrirLogin()">Ingresar a mi cuenta</button>
+        <button class="btn-login-big amarillo" onclick="window.open('unirse.html','_blank')">Quiero sumarme gratis 🌱</button>
+      </div>`;
+    return;
+  }
+  if(usuario.rol === 'feriante'){
+    renderPanelFeriante(cont);
+  } else if(usuario.rol === 'organizador'){
+    renderPanelOrganizador(cont);
+  } else {
+    cont.innerHTML = `<div class="mipuesto-login"><div class="emoji-grande">👑</div><h2>Panel de admin</h2><p>Accedé desde <a href="admin.html" style="color:var(--fucsia)">admin.html</a>.</p></div>`;
+  }
+}
+
+function renderPanelFeriante(cont){
+  const u = usuario;
+  const tienePuesto = !!u.puestoId;
+  const planClase = u.puestoPlan === 'pro' ? 'plan-pro' : u.puestoPlan === 'plus' ? 'plan-plus' : 'plan-gratis';
+  const planLabel = u.puestoPlan === 'pro' ? '⭐ Plan Pro' : u.puestoPlan === 'plus' ? '✅ Plan Plus' : '🎪 Plan Gratis';
+
+  if(!tienePuesto){
+    cont.innerHTML = `
+      <div class="seccion"><h1>Hola, ${u.nombre} 👋</h1><p class="sub">Todavía no tenés un puesto aprobado.</p></div>
+      <div class="mipuesto-login" style="padding-top:0">
+        <p>Una vez que el equipo de La Digi Feria apruebe tu solicitud, tu panel va a aparecer acá.</p>
+        <button class="btn-login-big" onclick="window.open('unirse.html','_blank')">Completar mi solicitud</button>
+      </div>`;
+    return;
+  }
+
+  const feriasList = (u.puestoFerias||[]).map(f=>
+    `<button class="confirmar-feria-btn" id="cfbtn-${f.id}" onclick="toggleAsistencia('${f.id}','${f.nombre}')">
+      📍 ${f.nombre} <span style="font-size:11px;color:#7A6A55">${f.frec}</span>
+    </button>`
+  ).join("") || `<p style="font-size:13px;color:#7A6A55;font-weight:700">Todavía no tenés ferias vinculadas a tu puesto.</p>`;
+
+  cont.innerHTML = `
+    <div class="panel-feriante">
+      <div class="seccion" style="padding-bottom:8px"><h1>Mi puesto 🎪</h1></div>
+
+      <div class="panel-header">
+        <div class="panel-logo">${u.puestoEmoji || "🎪"}</div>
+        <div class="panel-info">
+          <b>${u.puestoNombre}</b>
+          <small>${u.puestoBio ? u.puestoBio.slice(0,60)+"…" : ""}</small>
+          <span class="plan-badge ${planClase}">${planLabel}</span>
+        </div>
+      </div>
+
+      <!-- Confirmar asistencia -->
+      <div class="confirmar-box">
+        <h3>🔥 ¿Vas a la feria este finde?</h3>
+        <p>Confirmá tu asistencia para que los clientes sepan que vas a estar y para activar el badge en tu puesto.</p>
+        <div class="confirmar-ferias">${feriasList}</div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="accion-row" onclick="verMiPuesto()">
+        <div class="ic">👁️</div>
+        <div><b>Ver mi puesto</b><small>Como lo ven tus clientes</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+      <div class="accion-row" onclick="mostrarToast('✏️ Edición de puesto — próximamente!')">
+        <div class="ic">✏️</div>
+        <div><b>Editar mi puesto</b><small>Fotos, descripción, productos, precios</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+      <div class="accion-row" onclick="mostrarToast('📊 Estadísticas — disponibles en Plan Plus y Pro')">
+        <div class="ic">📊</div>
+        <div><b>Ver estadísticas</b><small>Visitas y consultas recibidas</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+      <div class="accion-row" onclick="copiarLinkPuesto()">
+        <div class="ic">🔗</div>
+        <div><b>Compartir mi puesto</b><small>digiferia.ar — copiá y compartí</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+
+      <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Colección de pines 📌</h2></div>
+      ${Object.values(PINES).map(p=>
+        `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
+      ).join("")}
+    </div>`;
+}
+
+function renderPanelOrganizador(cont){
+  const u = usuario;
+  const ferias = u.feriaOrg || [];
+
+  const flyerBadge = (estado) => {
+    if(!estado) return `<span class="flyer-estado fe-pendiente">⏳ Sin flyer activo</span>`;
+    if(estado === 'activo') return `<span class="flyer-estado fe-activo">🟢 Flyer activo</span>`;
+    if(estado === 'vencido') return `<span class="flyer-estado fe-vencido">⚫ Flyer vencido</span>`;
+    return `<span class="flyer-estado fe-pendiente">⏳ Pendiente</span>`;
+  };
+
+  const feriasHtml = ferias.length ? ferias.map((f,i)=>`
+    <div class="org-feria-card">
+      <div class="toldo fl${(i%4)+1}" style="height:18px"></div>
+      <div class="org-feria-body">
+        <h3>${f.nombre}</h3>
+        <p>📍 ${f.lugar} · 🔁 ${f.frec}</p>
+        ${flyerBadge(f.flyerEstado)}
+        <div class="org-acciones">
+          <button class="org-btn principal" onclick="mostrarToast('📸 Subir flyer — próximamente!')">📸 Actualizar flyer</button>
+          <button class="org-btn sec" onclick="mostrarToast('📅 Confirmar/cancelar fecha — próximamente!')">📅 Confirmar fecha</button>
+        </div>
+      </div>
+    </div>`).join("") :
+    `<div style="margin:18px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:16px;text-align:center">
+      <p style="font-weight:700;color:#7A6A55">Todavía no tenés ferias vinculadas a tu cuenta.<br>Escribinos a hola@digiferia.ar para que te demos el acceso.</p>
+    </div>`;
+
+  cont.innerHTML = `
+    <div class="panel-org">
+      <div class="seccion" style="padding-bottom:8px"><h1>Mi feria 📣</h1></div>
+      <div class="panel-header">
+        <div class="panel-logo">📣</div>
+        <div class="panel-info">
+          <b>${u.nombre}</b>
+          <small>${ferias.length} feria${ferias.length!==1?"s":""} vinculada${ferias.length!==1?"s":""}</small>
+          <span class="plan-badge plan-pro">🎉 Organizador</span>
+        </div>
+      </div>
+      ${feriasHtml}
+      <div class="accion-row" onclick="mostrarToast('📊 Estadísticas de flyer — próximamente!')">
+        <div class="ic">📊</div>
+        <div><b>Ver estadísticas</b><small>Clicks en tu flyer este mes</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+    </div>`;
+}
+
+// Ver mi propio perfil como si fuera un visitante
+function verMiPuesto(){
+  if(usuario && usuario.puestoId){
+    verPerfil(usuario.puestoId);
+  }
+}
+
+// Copiar link del puesto
+function copiarLinkPuesto(){
+  const link = `https://digiferia.ar`;
+  navigator.clipboard.writeText(link).then(()=>{
+    mostrarToast("🔗 ¡Link copiado! Compartilo con tus clientes.");
+  }).catch(()=>{
+    mostrarToast("🔗 Tu link: digiferia.ar");
+  });
+}
+
+// ================== CONFIRMAR ASISTENCIA ==================
+const asistenciasConfirmadas = new Set();
+
+async function toggleAsistencia(feriaId, feriaName){
+  const btn = document.getElementById(`cfbtn-${feriaId}`);
+  const yaConfirmada = asistenciasConfirmadas.has(feriaId);
+
+  if(yaConfirmada){
+    // Desconfirmar: borrar asistencia (simplificado — solo UI por ahora)
+    asistenciasConfirmadas.delete(feriaId);
+    if(btn){ btn.classList.remove('confirmado'); btn.innerHTML = `📍 ${feriaName} <span style="font-size:11px;color:#7A6A55">Confirmá tu asistencia</span>`; }
+    mostrarToast("✅ Asistencia cancelada.");
+    return;
+  }
+
+  // Confirmar: guardar en Supabase
+  if(!usuario || !usuario.puestoId){ return; }
+  try{
+    const hoy = new Date();
+    // Próximo sábado o domingo
+    const diasHastaFinde = [6,0].map(d=> { const diff = (d - hoy.getDay() + 7)%7; return diff===0?7:diff; });
+    const proxFecha = new Date(hoy);
+    proxFecha.setDate(hoy.getDate() + Math.min(...diasHastaFinde));
+    const fechaStr = proxFecha.toISOString().split("T")[0];
+
+    await fetch(`${SUPABASE_URL}/rest/v1/asistencias`, {
+      method:"POST",
+      headers:{ ...sbHeaders(tokenActual), Prefer:"resolution=merge-duplicates" },
+      body: JSON.stringify({ puesto_id: usuario.puestoId, feria_id: feriaId, fecha: fechaStr })
+    });
+    asistenciasConfirmadas.add(feriaId);
+    if(btn){ btn.classList.add('confirmado'); btn.innerHTML = `✅ ${feriaName} — Confirmado!`; }
+    mostrarToast("🔥 ¡Asistencia confirmada! Tus seguidores van a recibir una notificación.");
+  }catch(e){
+    mostrarToast("❌ No se pudo confirmar. Intentá de nuevo.");
+  }
+}
+
+function cerrarAsistencia(){
+  document.getElementById('velo-asistencia').classList.remove('on');
+}
+
+// ================== TOAST ==================
+function mostrarToast(msg){
+  let t = document.getElementById('toast-digi');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast-digi';
+    t.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#FFF8EC;font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;padding:12px 20px;border-radius:14px;z-index:100;box-shadow:4px 4px 0 rgba(43,33,24,.6);max-width:340px;text-align:center;transition:opacity .3s`;
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.style.opacity='0'; }, 3000);
 }
 
 // ================== NAVEGACIÓN ==================
@@ -607,6 +1070,7 @@ function ir(id){
   document.getElementById(id).classList.add('activa');
   window.scrollTo({top:0});
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.p===id));
+  if(id === 'p-mipuesto') renderMiPuesto();
 }
 function tab(btn){ ir(btn.dataset.p); }
 
@@ -629,8 +1093,7 @@ function cardPuesto(f){
   const primera = nombreFeriaDe(f, 0);
   const extra = f.ferias.length - 1;
   const badge = f.confirmado
-    ? `<div><span class="este-finde">🔥 ${nombreFeriaConfirmada(f).replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>`
-    : "";
+    ? `<div><span class="este-finde">🔥 ${nombreFeriaConfirmada(f).replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>` : "";
   const sello = f.plan==="pro" ? `<span class="sello-destacado">⭐ Destacado</span>` : "";
   const foto = f.foto
     ? `<div class="foto" style="background-image:url('${f.foto}');background-size:cover;background-position:center"></div>`
@@ -656,12 +1119,8 @@ function renderDestacados(){
 }
 
 function renderGrilla(){
-  let lista;
-  if(filtroActivo==="todos") lista = FERIANTES;
-  else if(filtroActivo==="finde") lista = FERIANTES.filter(f=>f.confirmado);
-  else lista = FERIANTES.filter(f=>f.rubro===filtroActivo);
-  const rango = f => f.plan==="pro" ? 2 : f.plan==="plus" ? 1 : 0;
-  lista = [...lista].sort((a,b)=>rango(b)-rango(a));
+  let lista = filtroActivo==="todos" ? FERIANTES : filtroActivo==="finde" ? FERIANTES.filter(f=>f.confirmado) : FERIANTES.filter(f=>f.rubro===filtroActivo);
+  lista = [...lista].sort((a,b)=>(a.plan==="pro"?2:a.plan==="plus"?1:0) < (b.plan==="pro"?2:b.plan==="plus"?1:0) ? 1 : -1);
   const g = document.getElementById('grilla-puestos');
   g.innerHTML = lista.length ? lista.map(cardPuesto).join("") : `<div class="vacio">Todavía no hay puestos acá 🙈</div>`;
   const c = document.getElementById('contador-puestos');
@@ -682,8 +1141,7 @@ function renderChips(){
 
 function filtrar(rubro){
   filtroActivo = rubro;
-  renderChips();
-  renderGrilla();
+  renderChips(); renderGrilla();
   ir('p-home');
 }
 
@@ -691,6 +1149,7 @@ function filtrar(rubro){
 function verPerfil(id){
   perfilActualId = id;
   const f = FERIANTES.find(x=>String(x.id)===String(id));
+  if(!f) return;
   const r = rubroDe(f.rubro);
   const pt = document.getElementById('perfil-toldo');
   pt.className = "toldo-grande toldo";
@@ -703,40 +1162,35 @@ function verPerfil(id){
   const listaPines = f.pinesDB && f.pinesDB.length ? f.pinesDB : (f.pines||[]).map(k=>PINES[k]).filter(Boolean);
   document.getElementById('perfil-pines').innerHTML = listaPines.map(p=>{
     const det = p.detalle + (p.regla ? " · " + p.regla : "");
-    return `<span class="pin" onclick="event.stopPropagation();togglePin(this)">${p.emoji}
-      <span class="tooltip"><b>${p.emoji} ${p.nombre}</b>${det}</span></span>`;
+    return `<span class="pin" onclick="event.stopPropagation();togglePin(this)">${p.emoji}<span class="tooltip"><b>${p.emoji} ${p.nombre}</b>${det}</span></span>`;
   }).join("");
   document.getElementById('perfil-bio').textContent = f.bio;
   const REDES_CFG = {
-    instagram:{icono:"📸", clase:"ig", url:u=>`https://instagram.com/${u}`},
-    tiktok:{icono:"🎵", clase:"tk", url:u=>`https://tiktok.com/@${u}`},
-    facebook:{icono:"👍", clase:"fb", url:u=>`https://facebook.com/${u}`},
-    web:{icono:"🌐", clase:"web", url:u=>`https://${u}`},
+    instagram:{icono:"📸",clase:"ig",url:u=>`https://instagram.com/${u}`},
+    tiktok:{icono:"🎵",clase:"tk",url:u=>`https://tiktok.com/@${u}`},
+    facebook:{icono:"👍",clase:"fb",url:u=>`https://facebook.com/${u}`},
+    web:{icono:"🌐",clase:"web",url:u=>`https://${u}`},
   };
-  const rd = document.getElementById('perfil-redes');
-  rd.innerHTML = f.redes ? Object.entries(f.redes).map(([k,v])=>{
-    const c = REDES_CFG[k];
-    return c ? `<a class="red ${c.clase}" href="${c.url(v)}" target="_blank" rel="noopener" title="${k}: ${v}">${c.icono}</a>` : "";
+  document.getElementById('perfil-redes').innerHTML = f.redes ? Object.entries(f.redes).map(([k,v])=>{
+    const c = REDES_CFG[k]; return c ? `<a class="red ${c.clase}" href="${c.url(v)}" target="_blank" rel="noopener">${c.icono}</a>` : "";
   }).join("") : "";
   const agenda = f.feriasDetalle
     ? f.feriasDetalle.map(fd=>({nombre:fd.nombre, frec:fd.frec}))
-    : f.ferias.map(fid=>{ const fe = feriaPorId(fid); return fe ? {nombre:fe.nombre, frec:fe.frec} : null; }).filter(Boolean);
+    : f.ferias.map(fid=>{ const fe=feriaPorId(fid); return fe?{nombre:fe.nombre,frec:fe.frec}:null; }).filter(Boolean);
   document.getElementById('perfil-agenda').innerHTML = agenda.map(a=>
     `<div class="agenda-item"><div class="ic">📍</div><div><b>${a.nombre}</b><small>${a.frec||""}</small></div></div>`
   ).join("");
   document.getElementById('perfil-productos').innerHTML = f.productos.map(p=>{
-    const foto = p.foto
-      ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>`
-      : `<div class="foto">${p.e||"🛍️"}</div>`;
+    const foto = p.foto ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>` : `<div class="foto">${p.e||"🛍️"}</div>`;
     return `<div class="prod">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
   }).join("");
   const btnW = document.getElementById('btn-wsp');
   if(f.whatsapp){
-    btnW.onclick = ()=>window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent("Hola "+f.nombre+"! 👋 Vi tu puesto en La Digi Feria y quería consultarte.")}`,"_blank");
+    btnW.onclick = ()=>window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent("Hola "+f.nombre+"! 👋 Vi tu puesto en La Digi Feria y quería consultarte.")}`, "_blank");
   } else { btnW.onclick = null; }
   const av = document.getElementById('perfil-emoji');
-  if(f.foto){ av.style.backgroundImage = `url('${f.foto}')`; av.style.backgroundSize="cover"; av.style.backgroundPosition="center"; av.textContent=""; }
-  else { av.style.backgroundImage=""; av.textContent = f.emoji; }
+  if(f.foto){ av.style.backgroundImage=`url('${f.foto}')`;av.style.backgroundSize="cover";av.style.backgroundPosition="center";av.textContent=""; }
+  else{ av.style.backgroundImage=""; av.textContent=f.emoji; }
   actualizarBtnPerfil(id);
   ir('p-perfil');
 }
@@ -766,10 +1220,10 @@ function buscarTexto(q){
     f.nombre.toLowerCase().includes(q) ||
     rubroDe(f.rubro).nombre.toLowerCase().includes(q) ||
     f.productos.some(p=>p.n.toLowerCase().includes(q)) ||
-    f.ferias.some(fid=>feriaPorId(fid).nombre.toLowerCase().includes(q))
+    f.ferias.some(fid=>feriaPorId(fid)?.nombre.toLowerCase().includes(q))
   );
   res.style.display="grid"; rub.style.display="none";
-  res.innerHTML = lista.length ? lista.map(cardPuesto).join("") : `<div class="vacio">No encontramos nada con “${q}” 🙈</div>`;
+  res.innerHTML = lista.length ? lista.map(cardPuesto).join("") : `<div class="vacio">No encontramos nada con "${q}" 🙈</div>`;
 }
 
 // ================== FERIAS ==================
@@ -789,21 +1243,22 @@ function renderFerias(){
   }).join("");
 }
 
-// ================== CARRUSEL DE FLYERS (ferias patrocinadas) ==================
+// ================== CARRUSEL ==================
 let FLYERS = [
-  {feriaId:"plaza",     estilo:"fl1", fecha:"Sáb 18 y Dom 19 · 10 a 19 hs"},
-  {feriaId:"anden",     estilo:"fl2", fecha:"Dom 19 · 11 a 20 hs"},
-  {feriaId:"parque",    estilo:"fl3", fecha:"Sáb 25 · 9 a 14 hs"},
+  {feriaId:"plaza", estilo:"fl1", fecha:"Sáb 18 y Dom 19 · 10 a 19 hs"},
+  {feriaId:"anden", estilo:"fl2", fecha:"Dom 19 · 11 a 20 hs"},
+  {feriaId:"parque", estilo:"fl3", fecha:"Sáb 25 · 9 a 14 hs"},
   {feriaId:"artesanal", estilo:"fl4", fecha:"Dom 26 · 17 a 22 hs"},
 ];
 
 function renderCarrusel(){
   const wrap = document.querySelector('.carrusel-wrap');
-  if(!FLYERS.length){ if(wrap) wrap.style.display = "none"; return; }
-  if(wrap) wrap.style.display = "";
+  if(!FLYERS.length){ if(wrap) wrap.style.display="none"; return; }
+  if(wrap) wrap.style.display="";
   const cont = document.getElementById('carrusel-flyers');
-  let html = FLYERS.map(fl=>{
+  cont.innerHTML = FLYERS.map(fl=>{
     const fe = feriaPorId(fl.feriaId);
+    if(!fe) return "";
     const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
     return `<div class="flyer ${fl.estilo}" onclick="ir('p-ferias')">
       <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
@@ -815,25 +1270,14 @@ function renderCarrusel(){
       </div>
     </div>`;
   }).join("");
-  cont.innerHTML = html;
-
-  // puntos indicadores
   const total = FLYERS.length;
-  document.getElementById('carrusel-puntos').innerHTML =
-    Array.from({length:total},(_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
-
-  // sincronizar puntos con el scroll
+  document.getElementById('carrusel-puntos').innerHTML = Array.from({length:total},(_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
   cont.addEventListener('scroll', ()=>{
     const i = Math.round(cont.scrollLeft / (cont.scrollWidth/total));
     document.querySelectorAll('#carrusel-puntos i').forEach((p,j)=>p.classList.toggle('on', j===Math.min(i,total-1)));
   }, {passive:true});
-
-  // autoplay suave (se detiene cuando el usuario toca)
-  let idx = 0, auto = setInterval(()=>{
-    idx = (idx+1) % total;
-    cont.scrollTo({left: idx * cont.scrollWidth/total, behavior:'smooth'});
-  }, 3500);
-  cont.addEventListener('touchstart', ()=>clearInterval(auto), {passive:true, once:true});
+  let idx=0, auto=setInterval(()=>{ idx=(idx+1)%total; cont.scrollTo({left:idx*cont.scrollWidth/total,behavior:'smooth'}); }, 3500);
+  cont.addEventListener('touchstart', ()=>clearInterval(auto), {passive:true,once:true});
   cont.addEventListener('mousedown', ()=>clearInterval(auto), {once:true});
 }
 
@@ -848,20 +1292,19 @@ document.addEventListener('click', ()=>document.querySelectorAll('.pin.abierto')
 // ================== SEGUIR / NEWSLETTER ==================
 let emailVisitante = null;
 const siguiendo = new Set();
-let pendiente = null;   // seguimiento en espera de email
+let pendiente = null;
 
 function seguir(tipo, id, nombre, boton){
-  const clave = tipo + ":" + id;
+  const clave = tipo+":"+id;
   if(siguiendo.has(clave)){
     siguiendo.delete(clave);
     if(boton) boton.classList.remove('on');
     if(tipo==='puesto') actualizarBtnPerfil(id);
     return;
   }
-  if(!emailVisitante){
+  if(!emailVisitante && !usuario){
     pendiente = {tipo, id, nombre, boton};
-    document.getElementById('modal-texto').textContent =
-      `Dejanos tu email y te avisamos las novedades de ${nombre}: fechas confirmadas, productos nuevos y más.`;
+    document.getElementById('modal-texto').textContent = `Dejanos tu email y te avisamos las novedades de ${nombre}: fechas confirmadas, productos nuevos y más.`;
     document.getElementById('velo').classList.add('on');
     return;
   }
@@ -872,13 +1315,12 @@ function seguir(tipo, id, nombre, boton){
 
 function confirmarEmail(){
   const em = document.getElementById('modal-email').value.trim();
-  if(!em || !em.includes('@')){ document.getElementById('modal-email').style.borderColor = '#E91E8C'; return; }
+  if(!em||!em.includes('@')){ document.getElementById('modal-email').style.borderColor='#E91E8C'; return; }
   emailVisitante = em;
   cerrarModal();
-  if(pendiente){ seguir(pendiente.tipo, pendiente.id, pendiente.nombre, pendiente.boton); pendiente = null; }
+  if(pendiente){ seguir(pendiente.tipo, pendiente.id, pendiente.nombre, pendiente.boton); pendiente=null; }
   renderFerias();
 }
-
 function cerrarModal(){ document.getElementById('velo').classList.remove('on'); }
 
 let perfilActualId = null;
@@ -895,51 +1337,102 @@ function actualizarBtnPerfil(id){
 
 function suscribirGeneral(){
   const em = document.getElementById('news-email').value.trim();
-  if(!em || !em.includes('@')){ document.getElementById('news-email').style.borderColor = '#E91E8C'; return; }
+  if(!em||!em.includes('@')){ document.getElementById('news-email').style.borderColor='#E91E8C'; return; }
   emailVisitante = em;
   siguiendo.add('general:digiferia');
   const card = document.querySelector('.news-card');
   card.innerHTML = '<h3>🎉 ¡Listo!</h3><p>Cada semana te va a llegar lo mejor de La Digi Feria. Podés seguir también puestos, ferias o rubros puntuales con la campanita 🔔.</p>';
 }
 
-// ================== COLECCIÓN DE PINES ==================
-document.getElementById('coleccion-pines').innerHTML = Object.values(PINES).map(p=>
-  `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
-).join("");
-
-// ================== ARRASTRE CON MOUSE (escritorio) ==================
-function arrastrable(el){
-  let apretado=false, seMovio=false, x0=0, scroll0=0;
-  el.addEventListener('mousedown', e=>{
-    apretado=true; seMovio=false; x0=e.pageX; scroll0=el.scrollLeft;
-  });
-  window.addEventListener('mousemove', e=>{
-    if(!apretado) return;
-    const dx = e.pageX - x0;
-    if(Math.abs(dx) > 6 && !seMovio){ seMovio=true; el.classList.add('arrastrando'); }
-    if(seMovio) el.scrollLeft = scroll0 - dx;
-  });
-  window.addEventListener('mouseup', ()=>{
-    apretado=false;
-    if(seMovio) setTimeout(()=>{ el.classList.remove('arrastrando'); }, 50);
-  });
-  // si hubo arrastre, que soltar no dispare el click del elemento
-  el.addEventListener('click', e=>{
-    if(seMovio){ e.stopPropagation(); e.preventDefault(); seMovio=false; }
-  }, true);
-  // rueda del mouse: desplaza en horizontal
-  el.addEventListener('wheel', e=>{
-    if(e.deltaY){ e.preventDefault(); el.scrollLeft += e.deltaY; }
-  }, {passive:false});
+// ================== SUPABASE EN VIVO ==================
+const DIAS_ES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+function fechaCorta(iso){
+  if(!iso) return {dia:"—", num:"🎪", texto:""};
+  const d = new Date(iso+"T12:00:00");
+  return { dia:DIAS_ES[d.getDay()], num:String(d.getDate()), texto:DIAS_ES[d.getDay()]+" "+d.getDate() };
 }
-['chips-rubros','destacados-row','carrusel-flyers'].forEach(id=>{
-  const el = document.getElementById(id);
-  if(el) arrastrable(el);
-});
+
+async function cargarRubrosEnVivo(){
+  try{
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rubros?select=clave,nombre,emoji,color,cupo,orden&order=orden`, {headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+    if(!resp.ok) throw new Error();
+    const datos = await resp.json();
+    if(Array.isArray(datos)&&datos.length){
+      RUBROS={};
+      datos.forEach((d,i)=>{ RUBROS[d.clave]={nombre:d.nombre,emoji:d.emoji,color:d.color,cupo:d.cupo,clase:"rc"+(i%6+1)}; });
+      renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid();
+      const b=document.getElementById('badge-vivo'); if(b) b.style.display="inline-block";
+    }
+  }catch(e){ console.warn("Rubros locales."); }
+}
+
+async function cargarFeriaYPuestosEnVivo(){
+  const cab = {apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`};
+  try{
+    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha&order=proxima_fecha.asc.nullslast`,{headers:cab});
+    const ferias = rf.ok ? await rf.json() : [];
+    const sel = "id,nombre,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
+    const puestos = rp.ok ? await rp.json() : [];
+    const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
+    const flyers = rfl.ok ? await rfl.json() : [];
+    if(!puestos.length){ console.warn("Sin puestos en vivo; usando ejemplos."); return; }
+    if(ferias.length){
+      FERIAS = ferias.map(f=>{
+        const fc=fechaCorta(f.proxima_fecha);
+        return {id:f.id, nombre:f.nombre, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
+      });
+    }
+    const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
+    FERIANTES = puestos.map(p=>{
+      const asis = (p.asistencias||[]).map(a=>({...a,d:new Date(a.fecha+"T12:00:00")})).filter(a=>a.d>=new Date(hoy.toDateString())&&a.d<=en7).sort((a,b)=>a.d-b.d)[0];
+      const fdet = (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({id:x.ferias.id,nombre:x.ferias.nombre,frec:x.frecuencia||x.ferias.frecuencia||""}));
+      const feriaAsis = asis ? fdet.find(x=>x.id===asis.feria_id) : null;
+      const esUrl = p.foto_url&&p.foto_url.startsWith("http");
+      return {
+        id:p.id, nombre:p.nombre, bio:p.bio||"",
+        emoji:(!esUrl&&p.foto_url)?p.foto_url:"🎪",
+        foto:esUrl?p.foto_url:null,
+        rubro:p.rubros?p.rubros.clave:null,
+        plan:p.plan==="gratis"?null:p.plan,
+        whatsapp:p.whatsapp||null,
+        redes:(p.redes&&Object.keys(p.redes).length)?p.redes:null,
+        ferias:fdet.map(x=>x.id), feriasDetalle:fdet,
+        productos:(p.productos||[]).filter(x=>x.visible!==false).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️"})),
+        pinesDB:(p.puesto_insignia||[]).filter(x=>x.vigente!==false&&x.insignias).map(x=>x.insignias),
+        confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
+      };
+    });
+    FLYERS = flyers.filter(fl=>FERIAS.some(fe=>fe.id===fl.feria_id)).map((fl,i)=>{
+      const fe=FERIAS.find(x=>x.id===fl.feria_id);
+      return {feriaId:fl.feria_id, estilo:"fl"+(i%4+1), fecha:(fe.dia!=="—"?fe.dia+" "+fe.num:"Próximamente")};
+    });
+    renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+    const b=document.getElementById('badge-vivo'); if(b){b.style.display="inline-block";b.textContent="🟢 datos en vivo";}
+  }catch(e){ console.warn("Error cargando datos en vivo:", e); }
+}
+
+// ================== ARRASTRE CON MOUSE ==================
+function arrastrable(el){
+  let apretado=false,seMovio=false,x0=0,scroll0=0;
+  el.addEventListener('mousedown',e=>{apretado=true;seMovio=false;x0=e.pageX;scroll0=el.scrollLeft;});
+  window.addEventListener('mousemove',e=>{
+    if(!apretado)return;
+    const dx=e.pageX-x0;
+    if(Math.abs(dx)>6&&!seMovio){seMovio=true;el.classList.add('arrastrando');}
+    if(seMovio) el.scrollLeft=scroll0-dx;
+  });
+  window.addEventListener('mouseup',()=>{apretado=false;if(seMovio)setTimeout(()=>el.classList.remove('arrastrando'),50);});
+  el.addEventListener('click',e=>{if(seMovio){e.stopPropagation();e.preventDefault();seMovio=false;}},true);
+  el.addEventListener('wheel',e=>{if(e.deltaY){e.preventDefault();el.scrollLeft+=e.deltaY;}},{passive:false});
+}
+['chips-rubros','destacados-row','carrusel-flyers'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
 
 // ================== INIT ==================
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo);
+// Recuperar sesión guardada
+recuperarSesionLocal();
 </script>
 </body>
 </html>
