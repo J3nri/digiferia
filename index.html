@@ -508,6 +508,21 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
+<!-- MODAL NUEVA CONTRASEÑA (llegó desde email de invitación) -->
+<div class="velo" id="velo-nueva-pass">
+  <div class="modal">
+    <h3>🔐 Elegí tu contraseña</h3>
+    <p style="margin-top:6px">Bienvenido/a a La Digi Feria. Elegí una contraseña para acceder a tu panel.</p>
+    <input type="password" id="nueva-pass" placeholder="Nueva contraseña (mínimo 6 caracteres)" style="margin-top:12px">
+    <input type="password" id="nueva-pass-confirm" placeholder="Repetí la contraseña" style="margin-top:8px">
+    <div class="login-error" id="nueva-pass-error"></div>
+    <div class="login-spinner" id="nueva-pass-spinner">Guardando… 🔐</div>
+    <div class="acciones" style="margin-top:12px">
+      <button class="m-fucsia" onclick="guardarNuevaPass()">Guardar y entrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMACIÓN ASISTENCIA -->
 <div class="velo" id="velo-asistencia">
   <div class="modal">
@@ -1428,11 +1443,81 @@ function arrastrable(el){
 }
 ['chips-rubros','destacados-row','carrusel-flyers'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
 
+// ================== NUEVA CONTRASEÑA (invitación por email) ==================
+// Supabase pone el token en el hash: #access_token=xxx&type=invite
+function detectarTokenInvitacion(){
+  const hash = window.location.hash;
+  if(!hash) return;
+  const params = new URLSearchParams(hash.replace('#',''));
+  const token = params.get('access_token');
+  const type  = params.get('type'); // 'invite' o 'recovery'
+  if(token && (type === 'invite' || type === 'recovery')){
+    // Guardar token temporalmente para usarlo al crear la contraseña
+    window._inviteToken = token;
+    // Limpiar el hash de la URL (no lo muestre en la barra)
+    history.replaceState(null, '', window.location.pathname);
+    // Abrir modal de nueva contraseña
+    document.getElementById('velo-nueva-pass').classList.add('on');
+    setTimeout(()=>document.getElementById('nueva-pass').focus(), 200);
+  }
+}
+
+async function guardarNuevaPass(){
+  const pass    = document.getElementById('nueva-pass').value;
+  const confirm = document.getElementById('nueva-pass-confirm').value;
+  const err     = document.getElementById('nueva-pass-error');
+  const spin    = document.getElementById('nueva-pass-spinner');
+  err.classList.remove('on');
+
+  if(pass.length < 6){
+    err.textContent = 'La contraseña tiene que tener al menos 6 caracteres.';
+    err.classList.add('on'); return;
+  }
+  if(pass !== confirm){
+    err.textContent = 'Las contraseñas no coinciden.';
+    err.classList.add('on'); return;
+  }
+
+  spin.classList.add('on');
+  try{
+    // Usar el token de invitación para actualizar la contraseña
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers:{
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${window._inviteToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password: pass })
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.msg || data.error_description || 'Error al guardar');
+
+    // Contraseña guardada — ahora iniciar sesión completa
+    tokenActual = window._inviteToken;
+    usuario = await cargarPerfil(data.id, tokenActual);
+    guardarSesionLocal(tokenActual, usuario);
+    document.getElementById('velo-nueva-pass').classList.remove('on');
+    actualizarUI();
+    renderMiPuesto();
+    ir('p-mipuesto');
+    mostrarToast('🎉 ¡Bienvenido/a! Tu contraseña quedó guardada.');
+
+  }catch(e){
+    err.textContent = e.message || 'Hubo un problema. Intentá de nuevo.';
+    err.classList.add('on');
+  }finally{
+    spin.classList.remove('on');
+  }
+}
+
 // ================== INIT ==================
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo);
 // Recuperar sesión guardada
 recuperarSesionLocal();
+// Detectar si llegó desde un email de invitación o recuperación
+detectarTokenInvitacion();
 </script>
 </body>
 </html>
