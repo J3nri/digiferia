@@ -154,7 +154,7 @@ async function cargarPuestos(){
 
 async function cargarFerias(){
   const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,frecuencia,estado,descripcion,rubros_principales,cantidad_puestos,precio_entrada,email_contacto,nombre_contacto,whatsapp_contacto,whatsapp_publico,redes&order=nombre.asc`,
+    `${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,frecuencia,estado,descripcion,rubros_principales,cantidad_puestos,precio_entrada,email_contacto,nombre_contacto,whatsapp_contacto,whatsapp_publico,redes&estado=neq.rechazada&order=nombre.asc`,
     {headers:cab}
   );
   ferias = resp.ok ? await resp.json() : [];
@@ -391,11 +391,19 @@ async function aprobarFeria(id, nombre, wsp, email, nombreContacto){
 }
 
 async function rechazarFeria(id, nombre){
-  if(!confirm(`¿Rechazar y eliminar la solicitud de "${nombre}"?`)) return;
-  await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${id}`, {method:'DELETE', headers:cab});
-  ferias = ferias.filter(f=>f.id!==id);
-  renderLista();
-  toast('🗑️ Solicitud de feria eliminada');
+  if(!confirm(`¿Rechazar la solicitud de "${nombre}"? No va a aparecer más en pendientes.`)) return;
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${id}`, {
+    method:'PATCH',
+    headers:{...cab, Prefer:'return=minimal'},
+    body: JSON.stringify({estado: 'rechazada'})
+  });
+  if(resp.ok){
+    ferias = ferias.filter(f=>f.id!==id);
+    renderLista();
+    toast('🗑️ Solicitud rechazada');
+  } else {
+    toast('❌ No se pudo rechazar. Revisá los permisos en Supabase.');
+  }
 }
 
 function toast(msg){
