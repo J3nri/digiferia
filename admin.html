@@ -41,32 +41,44 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .panel-header{padding:16px 18px 8px;display:flex;align-items:center;justify-content:space-between}
 .panel-header h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px}
 .contador{font-size:13px;font-weight:800;background:#FDE7F2;border:2px solid var(--tinta);border-radius:999px;padding:3px 12px;color:var(--fucsia)}
+/* tabs principales: Feriantes / Ferias */
+.tabs-main{display:flex;gap:8px;padding:0 18px 12px}
+.tab-main{flex:1;padding:11px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;border:2px solid var(--tinta);border-radius:12px;background:var(--blanco);color:var(--tinta);box-shadow:3px 3px 0 rgba(43,33,24,.9);transition:background .12s}
+.tab-main.on{background:var(--tinta);color:var(--amarillo);box-shadow:none}
+/* tabs secundarios: Pendientes / Aprobados */
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--tinta);margin:0 18px}
 .tab{flex:1;padding:10px;text-align:center;font-weight:800;font-size:13px;cursor:pointer;color:#9A8B76;border-bottom:3px solid transparent;margin-bottom:-2px}
 .tab.on{color:var(--fucsia);border-bottom-color:var(--fucsia)}
 .lista{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
-/* tarjeta de puesto pendiente */
+/* tarjetas */
 .card{background:var(--blanco);border:2px solid var(--tinta);border-radius:var(--radius);overflow:hidden;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
 .card-head{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}
 .card-emoji{font-size:32px;width:52px;height:52px;background:#FDF1DC;border:2px solid var(--tinta);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-emoji.org{background:#E3F2FC;font-size:26px}
 .card-titulo{flex:1}
 .card-titulo b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;display:block}
 .card-titulo small{font-size:12px;font-weight:800;color:var(--fucsia);text-transform:uppercase}
+.card-titulo small.celeste{color:var(--celeste)}
 .card-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px}
 .dato{font-size:13px;font-weight:700;color:#5C4F3E;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
 .dato .ic{width:18px;flex-shrink:0;text-align:center}
 .redes-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
 .red-chip{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;border:1.5px solid var(--tinta);background:#F0E4CE;display:flex;align-items:center;gap:5px}
 .ferias-chip{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;border:1.5px solid var(--tinta);background:#DFF5EC;color:#007453}
+.rubro-chip{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;border:1.5px solid var(--tinta);background:#E3F2FC;color:#1a4f6e}
 .card-acciones{display:flex;gap:8px;padding:0 14px 14px}
 .btn-aprobar{flex:1;padding:12px;background:var(--verde);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;border:2px solid var(--tinta);border-radius:12px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9);display:flex;align-items:center;justify-content:center;gap:6px}
 .btn-aprobar:active{transform:translate(2px,2px);box-shadow:0 0 0}
 .btn-aprobar:disabled{background:#DCCFB6;color:#9A8B76;box-shadow:none;cursor:not-allowed;transform:none}
+.btn-aprobar.celeste{background:var(--celeste)}
 .btn-rechazar{padding:12px 14px;background:var(--blanco);color:var(--tinta);font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;border:2px solid var(--tinta);border-radius:12px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
 .btn-rechazar:active{transform:translate(2px,2px);box-shadow:0 0 0}
 .card.aprobado{border-color:var(--verde);opacity:.7}
 .card.aprobado .card-head{background:#DFF5EC}
+.card.aprobado-feria{border-color:var(--celeste);opacity:.7}
+.card.aprobado-feria .card-head{background:#E3F2FC}
 .tag-aprobado{font-size:11px;font-weight:800;background:var(--verde);color:#fff;border-radius:999px;padding:2px 10px}
+.tag-aprobado.celeste{background:var(--celeste)}
 /* vacío */
 .vacio{text-align:center;padding:40px 20px;color:#9A8B76;font-weight:700;font-size:15px}
 .vacio span{font-size:40px;display:block;margin-bottom:12px}
@@ -98,13 +110,22 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 <!-- PANEL -->
 <div class="panel" id="panel">
   <div class="panel-header">
-    <h2>Puestos para revisar</h2>
+    <h2 id="panel-titulo">Solicitudes</h2>
     <span class="contador" id="contador">0 pendientes</span>
   </div>
+
+  <!-- Tabs principales: Feriantes / Ferias -->
+  <div class="tabs-main">
+    <button class="tab-main on" onclick="cambiarSeccion('feriantes', this)">🛍️ Feriantes</button>
+    <button class="tab-main" onclick="cambiarSeccion('ferias', this)">📣 Ferias</button>
+  </div>
+
+  <!-- Tabs secundarios: Pendientes / Aprobados -->
   <div class="tabs">
     <div class="tab on" onclick="cambiarTab('pendientes',this)">⏳ Pendientes</div>
     <div class="tab" onclick="cambiarTab('aprobados',this)">✅ Aprobados</div>
   </div>
+
   <div class="lista" id="lista"></div>
 </div>
 
@@ -116,28 +137,54 @@ const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
-// Contraseña simple de admin (no es la de Supabase)
 const PWD_ADMIN = "digiferia2026";
 
-let tabActual = "pendientes";
+let tabActual     = "pendientes";
+let seccionActual = "feriantes";
 let puestos = [];
+let ferias  = [];
 
+// ── LOGIN ──
 function entrar(){
-  const v = document.getElementById('pwd').value;
-  if(v === PWD_ADMIN){
+  if(document.getElementById('pwd').value === PWD_ADMIN){
     document.getElementById('login').style.display = 'none';
     document.getElementById('panel').classList.add('on');
-    cargarPuestos();
+    cargarTodo();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
 }
 
+// ── CARGA DE DATOS ──
+async function cargarTodo(){
+  await Promise.all([cargarPuestos(), cargarFerias()]);
+  renderLista();
+}
+
 async function cargarPuestos(){
-  const sel = "id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,rubros(nombre,emoji),puesto_feria(ferias(nombre)),suscriptores:redes->whatsapp_personal";
-  // traemos publicado true y false
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`, {headers:cab});
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`,
+    {headers:cab}
+  );
   puestos = resp.ok ? await resp.json() : [];
+}
+
+async function cargarFerias(){
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,frecuencia,estado,descripcion,rubros_principales,cantidad_puestos,precio_entrada,email_contacto,nombre_contacto,whatsapp_contacto,whatsapp_publico,redes&order=nombre.asc`,
+    {headers:cab}
+  );
+  ferias = resp.ok ? await resp.json() : [];
+}
+
+// ── TABS Y SECCIONES ──
+function cambiarSeccion(sec, el){
+  seccionActual = sec;
+  document.querySelectorAll('.tab-main').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  // resetear sub-tab a pendientes
+  tabActual = 'pendientes';
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on', i===0));
   renderLista();
 }
 
@@ -149,27 +196,38 @@ function cambiarTab(tab, el){
 }
 
 function renderLista(){
-  const pendientes = puestos.filter(p=>!p.publicado);
-  const aprobados  = puestos.filter(p=>p.publicado);
-  const lista = tabActual === 'pendientes' ? pendientes : aprobados;
-
-  document.getElementById('contador').textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''}`;
-
   const cont = document.getElementById('lista');
-  if(!lista.length){
-    cont.innerHTML = `<div class="vacio"><span>${tabActual==='pendientes'?'🎉':'🎪'}</span>${tabActual==='pendientes'?'¡No hay puestos pendientes! Todo al día.':'Todavía no hay puestos aprobados.'}</div>`;
-    return;
+
+  if(seccionActual === 'feriantes'){
+    const pendientes = puestos.filter(p=>!p.publicado);
+    const aprobados  = puestos.filter(p=>p.publicado);
+    const lista = tabActual === 'pendientes' ? pendientes : aprobados;
+    document.getElementById('contador').textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''}`;
+    document.getElementById('panel-titulo').textContent = 'Feriantes';
+    cont.innerHTML = lista.length
+      ? lista.map(p=>cardPuesto(p)).join("")
+      : `<div class="vacio"><span>${tabActual==='pendientes'?'🎉':'🎪'}</span>${tabActual==='pendientes'?'¡No hay puestos pendientes! Todo al día.':'Todavía no hay puestos aprobados.'}</div>`;
+
+  } else {
+    const pendientes = ferias.filter(f=>f.estado==='pendiente');
+    const aprobadas  = ferias.filter(f=>f.estado!=='pendiente');
+    const lista = tabActual === 'pendientes' ? pendientes : aprobadas;
+    document.getElementById('contador').textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''}`;
+    document.getElementById('panel-titulo').textContent = 'Ferias';
+    cont.innerHTML = lista.length
+      ? lista.map(f=>cardFeria(f)).join("")
+      : `<div class="vacio"><span>${tabActual==='pendientes'?'🎉':'📣'}</span>${tabActual==='pendientes'?'¡No hay ferias pendientes!':'Todavía no hay ferias aprobadas.'}</div>`;
   }
-  cont.innerHTML = lista.map(p=>cardPuesto(p)).join("");
 }
 
+// ── CARD FERIANTE (sin cambios respecto al original) ──
 function cardPuesto(p){
   const rubro = p.rubros ? `${p.rubros.emoji} ${p.rubros.nombre}` : '—';
-  const ferias = (p.puesto_feria||[]).map(pf=>pf.ferias?.nombre).filter(Boolean);
+  const ferias_vinc = (p.puesto_feria||[]).map(pf=>pf.ferias?.nombre).filter(Boolean);
   const redes = p.redes || {};
   const wsp = p.whatsapp || '';
   const wspPersonal = redes.whatsapp_personal || '';
-  const fecha = new Date(p.creado_en).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const fecha = p.creado_en ? new Date(p.creado_en).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
 
   const redesHtml = Object.entries(redes)
     .filter(([k])=>k!=='whatsapp_personal')
@@ -178,17 +236,17 @@ function cardPuesto(p){
       return `<span class="red-chip">${iconos[k]||'🔗'} ${v}</span>`;
     }).join("");
 
-  const feriasHtml = ferias.map(f=>`<span class="ferias-chip">📍 ${f}</span>`).join("");
-
+  const feriasHtml = ferias_vinc.map(f=>`<span class="ferias-chip">📍 ${f}</span>`).join("");
   const email = p.email_contacto || '';
   const nombrePersona = p.nombre_persona || '';
+
   const acciones = p.publicado
     ? `<div class="card-acciones"><span class="tag-aprobado">✅ Publicado</span></div>`
     : `<div class="card-acciones">
         <button class="btn-aprobar" id="btn-${p.id}" onclick="aprobar('${p.id}','${p.nombre}','${wsp}','${email}','${nombrePersona}')">
           <i class="fa-solid fa-check"></i> Aprobar y publicar
         </button>
-        <button class="btn-rechazar" onclick="rechazar('${p.id}')">✕</button>
+        <button class="btn-rechazar" onclick="rechazarPuesto('${p.id}')">✕</button>
        </div>`;
 
   return `<div class="card ${p.publicado?'aprobado':''}" id="card-${p.id}">
@@ -213,12 +271,59 @@ function cardPuesto(p){
   </div>`;
 }
 
+// ── CARD FERIA ──
+function cardFeria(f){
+  const aprobada = f.estado !== 'pendiente';
+  const rubros = (f.rubros_principales||[]).map(r=>`<span class="rubro-chip">🛍️ ${r}</span>`).join("");
+  const redes = f.redes || {};
+  const redesHtml = Object.entries(redes).map(([k,v])=>{
+    const iconos = {instagram:'<i class="fa-brands fa-instagram"></i>',facebook:'<i class="fa-brands fa-facebook-f"></i>',tiktok:'<i class="fa-brands fa-tiktok"></i>',web:'<i class="fa-solid fa-globe"></i>'};
+    return `<span class="red-chip">${iconos[k]||'🔗'} ${v}</span>`;
+  }).join("");
+
+  const wsp = f.whatsapp_contacto || '';
+  const email = f.email_contacto || '';
+  const nombre = f.nombre_contacto || '';
+
+  const acciones = aprobada
+    ? `<div class="card-acciones"><span class="tag-aprobado celeste">✅ Activa</span></div>`
+    : `<div class="card-acciones">
+        <button class="btn-aprobar celeste" id="btn-f-${f.id}" onclick="aprobarFeria('${f.id}','${f.nombre}','${wsp}','${email}','${nombre}')">
+          <i class="fa-solid fa-check"></i> Aprobar feria
+        </button>
+        <button class="btn-rechazar" onclick="rechazarFeria('${f.id}','${f.nombre}')">✕</button>
+       </div>`;
+
+  return `<div class="card ${aprobada?'aprobado-feria':''}" id="card-f-${f.id}">
+    <div class="card-head">
+      <div class="card-emoji org">📣</div>
+      <div class="card-titulo">
+        <b>${f.nombre}</b>
+        <small class="celeste">Organizador de feria</small>
+      </div>
+    </div>
+    <div class="card-body">
+      ${f.descripcion ? `<div class="dato"><span class="ic">📝</span>${f.descripcion}</div>` : ''}
+      ${f.lugar ? `<div class="dato"><span class="ic">📍</span>${f.lugar}</div>` : ''}
+      ${f.frecuencia ? `<div class="dato"><span class="ic">🔁</span>${f.frecuencia}</div>` : ''}
+      ${f.cantidad_puestos ? `<div class="dato"><span class="ic">🎪</span>${f.cantidad_puestos}</div>` : ''}
+      ${f.precio_entrada != null ? `<div class="dato"><span class="ic">🎟️</span>Entrada: ${Number(f.precio_entrada)===0?'Gratis':'$'+Number(f.precio_entrada).toLocaleString('es-AR')}</div>` : ''}
+      ${rubros ? `<div class="dato"><span class="ic">🛍️</span><div class="redes-row">${rubros}</div></div>` : ''}
+      ${redesHtml ? `<div class="dato"><span class="ic">🔗</span><div class="redes-row">${redesHtml}</div></div>` : ''}
+      ${nombre ? `<div class="dato"><span class="ic">👤</span>${nombre}</div>` : ''}
+      ${email ? `<div class="dato"><span class="ic">📧</span>${email}</div>` : ''}
+      ${wsp ? `<div class="dato"><span class="ic">💬</span><a href="https://wa.me/${wsp}" target="_blank" style="color:var(--verde);font-weight:800">${wsp}</a></div>` : ''}
+    </div>
+    ${acciones}
+  </div>`;
+}
+
+// ── APROBAR FERIANTE (idéntico al original) ──
 async function aprobar(id, nombre, wsp, email, nombrePersona){
   const btn = document.getElementById('btn-'+id);
   btn.disabled = true;
   btn.innerHTML = '⏳ Publicando...';
 
-  // 1. Publicar el puesto
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
     method:'PATCH',
     headers:{...cab, Prefer:'return=minimal'},
@@ -230,10 +335,6 @@ async function aprobar(id, nombre, wsp, email, nombrePersona){
     if(p) p.publicado = true;
     renderLista();
     toast(`✅ ${nombre} está publicado en la feria`);
-
-    // 2. Buscar email del feriante en suscriptores
-    // Lo buscamos por el email que se guardó al enviar el formulario
-    // Usamos el campo email guardado en el puesto si existe, o buscamos en suscriptores
     try{
       if(email){
         await fetch(`${SUPABASE_URL}/functions/v1/enviar-bienvenida`, {
@@ -244,8 +345,6 @@ async function aprobar(id, nombre, wsp, email, nombrePersona){
         toast(`✅ ${nombre} publicado y email enviado 📧`);
       }
     }catch(e){ console.warn("Email no enviado:", e); }
-
-    // 3. Abrir WhatsApp con mensaje de bienvenida
     if(wsp){
       const msg = encodeURIComponent(`¡Hola! 🎪 Te damos la bienvenida a *La Digi Feria*. Tu puesto *${nombre}* ya está publicado y los visitantes pueden encontrarte. ¡Mucho éxito!`);
       window.open(`https://wa.me/${wsp}?text=${msg}`, '_blank');
@@ -257,21 +356,58 @@ async function aprobar(id, nombre, wsp, email, nombrePersona){
   }
 }
 
-async function rechazar(id){
+async function rechazarPuesto(id){
   if(!confirm('¿Rechazar y eliminar este puesto?')) return;
-  await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {
-    method:'DELETE', headers:cab
-  });
+  await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {method:'DELETE', headers:cab});
   puestos = puestos.filter(p=>p.id!==id);
   renderLista();
   toast('🗑️ Puesto eliminado');
+}
+
+// ── APROBAR FERIA ──
+async function aprobarFeria(id, nombre, wsp, email, nombreContacto){
+  const btn = document.getElementById('btn-f-'+id);
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Aprobando...';
+
+  // 1. Cambiar estado a 'activa'
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${id}`, {
+    method:'PATCH',
+    headers:{...cab, Prefer:'return=minimal'},
+    body: JSON.stringify({estado: 'activa'})
+  });
+
+  if(resp.ok){
+    const f = ferias.find(x=>x.id===id);
+    if(f) f.estado = 'activa';
+    renderLista();
+    toast(`✅ ${nombre} aprobada y activa en la feria`);
+
+    // 2. Mandar WhatsApp al organizador
+    if(wsp){
+      const msg = encodeURIComponent(`¡Hola${nombreContacto?' '+nombreContacto:''}! 📣 Tu feria *${nombre}* ya está activa en *La Digi Feria*. Los feriantes pueden vincularse a ella y los visitantes la van a encontrar en el calendario. ¡Éxitos!`);
+      window.open(`https://wa.me/${wsp}?text=${msg}`, '_blank');
+    }
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Aprobar feria';
+    toast('❌ Hubo un error. Intentá de nuevo.');
+  }
+}
+
+async function rechazarFeria(id, nombre){
+  if(!confirm(`¿Rechazar y eliminar la solicitud de "${nombre}"?`)) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${id}`, {method:'DELETE', headers:cab});
+  ferias = ferias.filter(f=>f.id!==id);
+  renderLista();
+  toast('🗑️ Solicitud de feria eliminada');
 }
 
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('on');
-  setTimeout(()=>t.classList.remove('on'), 3000);
+  setTimeout(()=>t.classList.remove('on'), 3500);
 }
 </script>
 </body>
