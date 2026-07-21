@@ -111,6 +111,18 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 .nota-revision{margin:0 18px 18px;background:#FFF0D6;border:2px solid var(--tinta);border-radius:14px;padding:12px 14px}
 .nota-revision p{font-size:13px;font-weight:700;color:#5C4F3E;line-height:1.5}
 .nota-revision strong{color:var(--naranja)}
+/* planes */
+.plan-card{border:2px solid var(--tinta);border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.plan-cabecera{font-size:11.5px;font-weight:800;text-align:center;padding:5px;background:var(--amarillo);border-bottom:2px solid var(--tinta)}
+.plan-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:2px solid #F0E4CE}
+.plan-nombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px}
+.plan-precio{font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;color:var(--verde)}
+.plan-items{list-style:none;padding:10px 14px 12px;display:flex;flex-direction:column;gap:6px}
+.plan-items li{font-size:13px;font-weight:700;color:#5C4F3E}
+.plan-gratis{background:#FFFDF6}
+.plan-plus{background:#F0FBF7}
+.plan-pro{background:#FFFDF0}
+.plan-nota{background:linear-gradient(135deg,#FDE7F2,#FFF0D6);border:2px solid var(--tinta);border-radius:14px;padding:12px 14px;font-size:13px;font-weight:700;color:#5C4F3E;line-height:1.5;margin-top:4px}
 </style>
 </head>
 <body>
@@ -255,6 +267,64 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
       <input type="text" id="f-frecuencia" placeholder="Ej: Todos los sábados, 2° domingo del mes...">
     </div>
   </div>
+
+  <!-- SECCIÓN DE PLANES -->
+  <div class="seccion" style="padding-bottom:8px">
+    <h2>💎 Planes disponibles</h2>
+    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:14px;line-height:1.5">Arrancás gratis. Podés subir de plan cuando quieras desde tu panel.</p>
+
+    <div class="plan-card plan-gratis">
+      <div class="plan-head">
+        <span class="plan-nombre">🎪 Gratis</span>
+        <span class="plan-precio">$0 / mes</span>
+      </div>
+      <ul class="plan-items">
+        <li>✅ Hasta 10 productos</li>
+        <li>✅ 1 foto por producto</li>
+        <li>✅ Todas las ferias vinculadas</li>
+        <li>✅ Panel de pedidos por WhatsApp</li>
+        <li>❌ Sin estadísticas</li>
+        <li>❌ Sin prioridad en tu rubro</li>
+      </ul>
+    </div>
+
+    <div class="plan-card plan-plus">
+      <div class="plan-head">
+        <span class="plan-nombre">✅ Plus</span>
+        <span class="plan-precio">$6.990 / mes</span>
+      </div>
+      <ul class="plan-items">
+        <li>✅ Hasta 50 productos</li>
+        <li>✅ 4 fotos por producto</li>
+        <li>✅ Estadísticas de visitas y consultas</li>
+        <li>✅ Exportar contactos</li>
+        <li>✅ Primero en tu rubro 🔝</li>
+        <li>❌ Sin destacado en la home</li>
+      </ul>
+    </div>
+
+    <div class="plan-card plan-pro">
+      <div class="plan-cabecera">⭐ El más elegido por los fundadores</div>
+      <div class="plan-head">
+        <span class="plan-nombre">⭐ Pro</span>
+        <span class="plan-precio">$12.990 / mes</span>
+      </div>
+      <ul class="plan-items">
+        <li>✅ Productos ilimitados</li>
+        <li>✅ Hasta 10 fotos por producto</li>
+        <li>✅ Estadísticas completas</li>
+        <li>✅ Exportar contactos</li>
+        <li>✅ Primero en tu rubro 🔝</li>
+        <li>✅ <b>Destacado en la home con sello dorado ⭐</b></li>
+        <li>✅ Soporte prioritario</li>
+      </ul>
+    </div>
+
+    <div class="plan-nota">
+      🌱 <b>¿Sos de los primeros 20 feriantes?</b> Si entrás como Puesto Fundador, te regalamos 6 meses de Plan Plus y la insignia exclusiva que nunca se pierde.
+    </div>
+  </div>
+  <div class="divisor"></div>
 
   <button class="btn-enviar" id="btn-enviar" onclick="enviarFormulario()">
     🎪 Enviar mi solicitud
