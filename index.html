@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 :root{
   --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
@@ -295,6 +296,7 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .red.tk{background:#E8F6FD}
 .red.fb{background:#E3ECFB}
 .red.web{background:#FFF0D6}
+.red.yt{background:#FDE7E7}
 .agenda{padding:0 18px}
 .agenda-item{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:10px 14px;margin-bottom:10px}
 .agenda-item .ic{font-size:20px}
@@ -1181,10 +1183,11 @@ function verPerfil(id){
   }).join("");
   document.getElementById('perfil-bio').textContent = f.bio;
   const REDES_CFG = {
-    instagram:{icono:"📸",clase:"ig",url:u=>`https://instagram.com/${u}`},
-    tiktok:{icono:"🎵",clase:"tk",url:u=>`https://tiktok.com/@${u}`},
-    facebook:{icono:"👍",clase:"fb",url:u=>`https://facebook.com/${u}`},
-    web:{icono:"🌐",clase:"web",url:u=>`https://${u}`},
+    instagram:{icono:'<i class="fa-brands fa-instagram"></i>',clase:"ig",url:u=>`https://instagram.com/${u}`},
+    tiktok:{icono:'<i class="fa-brands fa-tiktok"></i>',clase:"tk",url:u=>`https://tiktok.com/@${u}`},
+    facebook:{icono:'<i class="fa-brands fa-facebook-f"></i>',clase:"fb",url:u=>`https://facebook.com/${u}`},
+    web:{icono:'<i class="fa-solid fa-globe"></i>',clase:"web",url:u=>`https://${u}`},
+    youtube:{icono:'<i class="fa-brands fa-youtube"></i>',clase:"yt",url:u=>`https://youtube.com/@${u}`},
   };
   document.getElementById('perfil-redes').innerHTML = f.redes ? Object.entries(f.redes).map(([k,v])=>{
     const c = REDES_CFG[k]; return c ? `<a class="red ${c.clase}" href="${c.url(v)}" target="_blank" rel="noopener">${c.icono}</a>` : "";
