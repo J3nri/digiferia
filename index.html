@@ -682,15 +682,14 @@ async function cargarPerfil(userId, token){
   // Si es organizador, busca sus ferias
   let feriaOrg = [];
   if(rol === 'organizador'){
-    const rfo = await fetch(`${SUPABASE_URL}/rest/v1/organizador_feria?usuario_id=eq.${userId}&select=ferias(id,nombre,lugar,frecuencia),flyers(estado,imagen_url)`, {
+    const rfo = await fetch(`${SUPABASE_URL}/rest/v1/organizador_feria?usuario_id=eq.${userId}&select=ferias(id,nombre,lugar,frecuencia,estado)`, {
       headers: sbHeaders(token)
     });
     const fo = rfo.ok ? await rfo.json() : [];
     feriaOrg = fo.filter(x=>x.ferias).map(x=>({
       id: x.ferias.id, nombre: x.ferias.nombre,
       lugar: x.ferias.lugar||"", frec: x.ferias.frecuencia||"",
-      flyerEstado: (x.flyers && x.flyers[0]) ? x.flyers[0].estado : null,
-      flyerImg: (x.flyers && x.flyers[0]) ? x.flyers[0].imagen_url : null,
+      flyerEstado: null, flyerImg: null,
     }));
   }
 
