@@ -529,6 +529,31 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
+<!-- MODAL SUBIR FLYER -->
+<div class="velo" id="velo-flyer">
+  <div class="modal">
+    <h3>📸 Actualizar flyer</h3>
+    <p style="font-size:13px;color:#5C4F3E;font-weight:700;margin-top:6px" id="flyer-feria-nombre"></p>
+    <input type="hidden" id="flyer-feria-id">
+    <div style="margin:14px 0">
+      <div id="flyer-preview" style="width:100%;height:180px;border-radius:14px;border:2px dashed var(--tinta);background:#FDF1DC;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden" onclick="document.getElementById('flyer-input').click()">
+        <div style="text-align:center">
+          <div style="font-size:36px">🖼️</div>
+          <p style="font-size:13px;font-weight:800;color:#7A6A55;margin-top:6px">Tocá para elegir imagen</p>
+          <p style="font-size:11px;color:#9A8B76;font-weight:700">JPG o PNG · Máx 3MB<br>Tamaño ideal: 800x450px</p>
+        </div>
+      </div>
+      <input type="file" id="flyer-input" accept="image/*" style="display:none" onchange="previewFlyer(this)">
+    </div>
+    <div class="login-error" id="flyer-error"></div>
+    <div class="login-spinner" id="flyer-spinner">Subiendo flyer… 📸</div>
+    <div class="acciones" style="margin-top:12px">
+      <button class="m-no" onclick="cerrarSubirFlyer()">Cancelar</button>
+      <button class="m-fucsia" id="flyer-btn-guardar" onclick="guardarFlyer()">📸 Publicar flyer</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EMAIL (visitantes) -->
 <div class="velo" id="velo">
   <div class="modal">
@@ -864,10 +889,23 @@ async function cargarPerfil(userId, token){
       headers: sbHeaders(token)
     });
     const fo = rfo.ok ? await rfo.json() : [];
+    const feriaIds = fo.filter(x=>x.ferias).map(x=>x.ferias.id);
+    
+    // Buscar flyers activos de esas ferias
+    let flyersMap = {};
+    if(feriaIds.length){
+      const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?feria_id=in.(${feriaIds.join(',')})&estado=eq.activo&select=feria_id,imagen_url,estado`, {
+        headers: sbHeaders(token)
+      });
+      const flyers = rfl.ok ? await rfl.json() : [];
+      flyers.forEach(fl=>{ flyersMap[fl.feria_id] = fl; });
+    }
+
     feriaOrg = fo.filter(x=>x.ferias).map(x=>({
       id: x.ferias.id, nombre: x.ferias.nombre,
       lugar: x.ferias.lugar||"", frec: x.ferias.frecuencia||"",
-      flyerEstado: null, flyerImg: null,
+      flyerEstado: flyersMap[x.ferias.id]?.estado || null,
+      flyerImg: flyersMap[x.ferias.id]?.imagen_url || null,
     }));
   }
 
@@ -1140,9 +1178,9 @@ function renderPanelOrganizador(cont){
   const u = usuario;
   const ferias = u.feriaOrg || [];
 
-  const flyerBadge = (estado) => {
-    if(!estado) return `<span class="flyer-estado fe-pendiente">⏳ Sin flyer activo</span>`;
-    if(estado === 'activo') return `<span class="flyer-estado fe-activo">🟢 Flyer activo</span>`;
+  const flyerBadge = (estado, imgUrl) => {
+    if(!estado || estado === 'pendiente') return `<span class="flyer-estado fe-pendiente">⏳ Sin flyer activo</span>`;
+    if(estado === 'activo') return `<div><span class="flyer-estado fe-activo">🟢 Flyer activo</span>${imgUrl && imgUrl !== 'pendiente' ? `<br><img src="${imgUrl}" style="width:100%;border-radius:10px;margin-top:8px;border:2px solid var(--tinta)">` : ''}</div>`;
     if(estado === 'vencido') return `<span class="flyer-estado fe-vencido">⚫ Flyer vencido</span>`;
     return `<span class="flyer-estado fe-pendiente">⏳ Pendiente</span>`;
   };
@@ -1153,10 +1191,10 @@ function renderPanelOrganizador(cont){
       <div class="org-feria-body">
         <h3>${f.nombre}</h3>
         <p>📍 ${f.lugar} · 🔁 ${f.frec}</p>
-        ${flyerBadge(f.flyerEstado)}
+        ${flyerBadge(f.flyerEstado, f.flyerImg)}
         <div class="org-acciones">
-          <button class="org-btn principal" onclick="mostrarToast('📸 Subir flyer — próximamente!')">📸 Actualizar flyer</button>
-          <button class="org-btn sec" onclick="mostrarToast('📅 Confirmar/cancelar fecha — próximamente!')">📅 Confirmar fecha</button>
+          <button class="org-btn principal" onclick="abrirSubirFlyer('${f.id}','${f.nombre}')">📸 Actualizar flyer</button>
+          <button class="org-btn sec" onclick="mostrarToast('📅 Confirmar fecha — próximamente!')">📅 Confirmar fecha</button>
         </div>
       </div>
     </div>`).join("") :
@@ -2053,6 +2091,116 @@ async function toggleFeriaEdic(checkbox, feriaId){
     mostrarToast('❌ Error: ' + e.message);
   }
 }
+// ================== FLYER DEL ORGANIZADOR ==================
+let flyerArchivo = null;
+
+function abrirSubirFlyer(feriaId, feriaNombre){
+  document.getElementById('flyer-feria-id').value = feriaId;
+  document.getElementById('flyer-feria-nombre').textContent = feriaNombre;
+  flyerArchivo = null;
+  document.getElementById('flyer-error').classList.remove('on');
+  document.getElementById('flyer-spinner').classList.remove('on');
+  document.getElementById('flyer-preview').innerHTML = `
+    <div style="text-align:center">
+      <div style="font-size:36px">🖼️</div>
+      <p style="font-size:13px;font-weight:800;color:#7A6A55;margin-top:6px">Tocá para elegir imagen</p>
+      <p style="font-size:11px;color:#9A8B76;font-weight:700">JPG o PNG · Máx 3MB<br>Tamaño ideal: 800x450px</p>
+    </div>`;
+  document.getElementById('velo-flyer').classList.add('on');
+}
+
+function cerrarSubirFlyer(){
+  document.getElementById('velo-flyer').classList.remove('on');
+}
+
+function previewFlyer(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 3*1024*1024){
+    mostrarToast('❌ La imagen supera los 3MB');
+    input.value = ''; return;
+  }
+  flyerArchivo = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('flyer-preview');
+    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function guardarFlyer(){
+  const feriaId = document.getElementById('flyer-feria-id').value;
+  const err = document.getElementById('flyer-error');
+  const spin = document.getElementById('flyer-spinner');
+  const btn = document.getElementById('flyer-btn-guardar');
+  err.classList.remove('on');
+
+  if(!flyerArchivo){
+    err.textContent = 'Elegí una imagen primero';
+    err.classList.add('on'); return;
+  }
+
+  spin.classList.add('on');
+  btn.disabled = true;
+
+  try{
+    // 1. Subir imagen a Storage
+    const ext = flyerArchivo.name.split('.').pop();
+    const path = `flyers/${feriaId}-${Date.now()}.${ext}`;
+    const respStorage = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${path}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': flyerArchivo.type },
+      body: flyerArchivo
+    });
+    if(!respStorage.ok) throw new Error('Error subiendo imagen');
+    const imgUrl = `${SUPABASE_URL}/storage/v1/object/public/imagenes/${path}`;
+
+    // 2. Ver si ya tiene un flyer activo
+    const rFlyer = await fetch(`${SUPABASE_URL}/rest/v1/flyers?feria_id=eq.${feriaId}&estado=eq.activo`, {
+      headers: sbHeaders(tokenActual)
+    });
+    const flyersExist = rFlyer.ok ? await rFlyer.json() : [];
+
+    if(flyersExist.length){
+      // Actualizar el flyer existente
+      await fetch(`${SUPABASE_URL}/rest/v1/flyers?feria_id=eq.${feriaId}&estado=eq.activo`, {
+        method: 'PATCH',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify({ imagen_url: imgUrl })
+      });
+    } else {
+      // Crear nuevo flyer
+      await fetch(`${SUPABASE_URL}/rest/v1/flyers`, {
+        method: 'POST',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          feria_id: feriaId,
+          imagen_url: imgUrl,
+          estado: 'activo',
+          vigencia_desde: new Date().toISOString().split('T')[0],
+          vigencia_hasta: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
+        })
+      });
+    }
+
+    // 3. Actualizar UI local
+    const f = usuario.feriaOrg.find(x=>x.id===feriaId);
+    if(f){ f.flyerEstado = 'activo'; f.flyerImg = imgUrl; }
+
+    cerrarSubirFlyer();
+    renderMiPuesto();
+    mostrarToast('✅ ¡Flyer publicado! Ya aparece en el carrusel de la home.');
+
+  }catch(e){
+    err.textContent = 'Error: ' + e.message;
+    err.classList.add('on');
+  }finally{
+    spin.classList.remove('on');
+    btn.disabled = false;
+  }
+}
+
 // ================== DETALLE DE PRODUCTO ==================
 let productoActual = null;
 let carrito = [];
