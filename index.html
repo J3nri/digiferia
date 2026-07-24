@@ -484,6 +484,51 @@ nav button.on span{filter:none;opacity:1}
 
 </main>
 
+<!-- MODAL DETALLE PRODUCTO -->
+<div class="velo" id="velo-detalle-prod" style="align-items:flex-end;padding:0">
+  <div style="background:var(--fondo);width:100%;max-width:480px;border-radius:24px 24px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:90vh;overflow-y:auto">
+    <!-- Carrusel de fotos -->
+    <div id="detalle-fotos" style="position:relative;background:#FDF1DC;border-bottom:2px solid var(--tinta)">
+      <div id="detalle-fotos-wrap" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:260px">
+      </div>
+      <div id="detalle-puntos" style="display:flex;gap:6px;justify-content:center;padding:8px 0;background:var(--fondo)"></div>
+    </div>
+    <!-- Info -->
+    <div style="padding:18px">
+      <h2 id="detalle-nombre" style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px;line-height:1.2"></h2>
+      <div id="detalle-precio" style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--verde);margin-top:6px"></div>
+      <p id="detalle-desc" style="font-size:14px;color:#5C4F3E;font-weight:700;margin-top:10px;line-height:1.5"></p>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button onclick="cerrarDetalleProd()" style="flex:1;padding:13px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer">← Volver</button>
+        <button id="btn-agregar-carrito" onclick="agregarAlCarrito()" style="flex:2;padding:13px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🛒 Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CARRITO FLOTANTE -->
+<div id="carrito-flotante" style="display:none;position:fixed;bottom:90px;right:18px;z-index:40">
+  <button onclick="abrirCarrito()" style="background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:999px;padding:12px 18px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9);display:flex;align-items:center;gap:8px">
+    🛒 <span id="carrito-count">0</span> producto<span id="carrito-s">s</span>
+  </button>
+</div>
+
+<!-- MODAL CARRITO -->
+<div class="velo" id="velo-carrito" style="align-items:flex-end;padding:0">
+  <div style="background:var(--fondo);width:100%;max-width:480px;border-radius:24px 24px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:85vh;overflow-y:auto;padding-bottom:20px">
+    <div style="padding:18px 18px 12px;border-bottom:2px solid #F0E4CE;display:flex;align-items:center;justify-content:space-between">
+      <h2 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px">🛒 Tu pedido</h2>
+      <button onclick="cerrarCarrito()" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
+    </div>
+    <div id="carrito-items" style="padding:14px 18px"></div>
+    <div style="padding:0 18px">
+      <div id="carrito-total" style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:18px;color:var(--verde);margin-bottom:14px"></div>
+      <button onclick="enviarCarritoWsp()" style="width:100%;padding:15px;background:#25D366;color:#fff;border:2px solid var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9)">💬 Pedir por WhatsApp</button>
+      <button onclick="vaciarCarrito()" style="width:100%;padding:11px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;margin-top:8px;color:#9A8B76">🗑️ Vaciar carrito</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EMAIL (visitantes) -->
 <div class="velo" id="velo">
   <div class="modal">
@@ -1330,9 +1375,13 @@ function verPerfil(id){
   document.getElementById('perfil-agenda').innerHTML = agenda.map(a=>
     `<div class="agenda-item"><div class="ic">📍</div><div><b>${a.nombre}</b><small>${a.frec||""}</small></div></div>`
   ).join("");
-  document.getElementById('perfil-productos').innerHTML = f.productos.map(p=>{
+  // Guardar referencia al feriante actual para el carrito
+  window.perfilActual = f;
+  const esPro = f.plan === 'pro';
+
+  document.getElementById('perfil-productos').innerHTML = f.productos.map((p,i)=>{
     const foto = p.foto ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>` : `<div class="foto">${p.e||"🛍️"}</div>`;
-    return `<div class="prod">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
+    return `<div class="prod" onclick="verProducto(${i})" style="cursor:pointer">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
   }).join("");
   const btnW = document.getElementById('btn-wsp');
   if(f.whatsapp){
@@ -1548,7 +1597,7 @@ async function cargarFeriaYPuestosEnVivo(){
         whatsapp:p.whatsapp||null,
         redes:(p.redes&&Object.keys(p.redes).length)?p.redes:null,
         ferias:fdet.map(x=>x.id), feriasDetalle:fdet,
-        productos:(p.productos||[]).filter(x=>x.visible!==false).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️"})),
+        productos:(p.productos||[]).filter(x=>x.visible!==false).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
         pinesDB:(p.puesto_insignia||[]).filter(x=>x.vigente!==false&&x.insignias).map(x=>x.insignias),
         confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
       };
@@ -2004,11 +2053,95 @@ async function toggleFeriaEdic(checkbox, feriaId){
     mostrarToast('❌ Error: ' + e.message);
   }
 }
+// ================== DETALLE DE PRODUCTO ==================
+let productoActual = null;
+let carrito = [];
+
+function verProducto(idx){
+  const f = window.perfilActual;
+  if(!f) return;
+  productoActual = f.productos[idx];
+  const p = productoActual;
+  document.getElementById('detalle-nombre').textContent = p.n;
+  document.getElementById('detalle-precio').textContent = p.p;
+  document.getElementById('detalle-desc').textContent = p.desc || '';
+  const wrap = document.getElementById('detalle-fotos-wrap');
+  const puntos = document.getElementById('detalle-puntos');
+  let fotos = [];
+  if(p.fotos && p.fotos.length) fotos = p.fotos.filter(Boolean);
+  else if(p.foto) fotos = [p.foto];
+  if(fotos.length){
+    wrap.innerHTML = fotos.map(url=>`<div style="min-width:100%;scroll-snap-align:center;height:260px;background:#FDF1DC;flex-shrink:0"><img src="${url}" style="width:100%;height:100%;object-fit:cover"></div>`).join('');
+    puntos.innerHTML = fotos.length>1 ? fotos.map((_,i)=>`<span style="width:8px;height:8px;border-radius:50%;background:${i===0?'var(--fucsia)':'#DCCFB6'};display:inline-block;transition:background .2s"></span>`).join('') : '';
+    wrap.onscroll = ()=>{ const i=Math.round(wrap.scrollLeft/wrap.offsetWidth); puntos.querySelectorAll('span').forEach((s,j)=>{ s.style.background=j===i?'var(--fucsia)':'#DCCFB6'; }); };
+  } else {
+    wrap.innerHTML = `<div style="min-width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:72px">${p.e||'🛍️'}</div>`;
+    puntos.innerHTML = '';
+  }
+  const btnC = document.getElementById('btn-agregar-carrito');
+  btnC.style.display = window.perfilActual?.plan==='pro' ? '' : 'none';
+  document.getElementById('velo-detalle-prod').classList.add('on');
+}
+function cerrarDetalleProd(){ document.getElementById('velo-detalle-prod').classList.remove('on'); }
+
+// ================== CARRITO ==================
+function agregarAlCarrito(){
+  if(!productoActual) return;
+  const existe = carrito.find(x=>x.producto.n===productoActual.n);
+  if(existe) existe.cantidad++;
+  else carrito.push({producto:productoActual, cantidad:1});
+  actualizarCarritoFlotante();
+  cerrarDetalleProd();
+  mostrarToast('✅ Agregado al carrito 🛒');
+}
+function actualizarCarritoFlotante(){
+  const total = carrito.reduce((s,x)=>s+x.cantidad,0);
+  document.getElementById('carrito-count').textContent = total;
+  document.getElementById('carrito-s').textContent = total===1?'':'s';
+  document.getElementById('carrito-flotante').style.display = total>0?'':'none';
+}
+function abrirCarrito(){ renderCarrito(); document.getElementById('velo-carrito').classList.add('on'); }
+function cerrarCarrito(){ document.getElementById('velo-carrito').classList.remove('on'); }
+function renderCarrito(){
+  const cont = document.getElementById('carrito-items');
+  if(!carrito.length){ cont.innerHTML='<p style="font-size:14px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">El carrito está vacío</p>'; return; }
+  let totalNum=0;
+  cont.innerHTML = carrito.map((x,i)=>{
+    const precio=Number(x.producto.p.replace(/[^0-9]/g,''));
+    const subtotal=precio*x.cantidad;
+    totalNum+=subtotal;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0E4CE">
+      <div style="flex:1"><b style="font-family:'Fredoka',sans-serif;font-size:15px">${x.producto.n}</b><div style="font-size:13px;color:var(--verde);font-weight:800">${x.producto.p} c/u</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="cambiarCantidad(${i},-1)" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--tinta);background:var(--blanco);font-size:16px;cursor:pointer">−</button>
+        <span style="font-weight:800;font-size:15px;min-width:20px;text-align:center">${x.cantidad}</span>
+        <button onclick="cambiarCantidad(${i},1)" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--tinta);background:var(--blanco);font-size:16px;cursor:pointer">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('carrito-total').textContent = `Total: $${totalNum.toLocaleString('es-AR')}`;
+}
+function cambiarCantidad(i,delta){
+  carrito[i].cantidad+=delta;
+  if(carrito[i].cantidad<=0) carrito.splice(i,1);
+  actualizarCarritoFlotante(); renderCarrito();
+}
+function vaciarCarrito(){ carrito=[]; actualizarCarritoFlotante(); cerrarCarrito(); mostrarToast('🗑️ Carrito vaciado'); }
+function enviarCarritoWsp(){
+  const f=window.perfilActual;
+  if(!f||!f.whatsapp) return;
+  let msg=`¡Hola ${f.nombre}! 👋 Vi tu puesto en La Digi Feria y quiero hacer este pedido:\n\n`;
+  let total=0;
+  carrito.forEach(x=>{ const precio=Number(x.producto.p.replace(/[^0-9]/g,'')); const subtotal=precio*x.cantidad; total+=subtotal; msg+=`• ${x.producto.n} x${x.cantidad} = $${subtotal.toLocaleString('es-AR')}\n`; });
+  msg+=`\n*Total: $${total.toLocaleString('es-AR')}*\n\n¿Podés confirmarme disponibilidad y forma de pago? 🙏`;
+  window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank');
+  cerrarCarrito();
+}
+
+// ================== INIT ==================
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo);
-// Recuperar sesión guardada
 recuperarSesionLocal();
-// Detectar si llegó desde un email de invitación o recuperación
 detectarTokenInvitacion();
 </script>
 </body>
