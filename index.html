@@ -297,6 +297,30 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .red.fb{background:#E3ECFB}
 .red.web{background:#FFF0D6}
 .red.yt{background:#FDE7E7}
+/* edición del puesto */
+.solapa{flex:1;background:none;border:none;padding:11px 6px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;cursor:pointer;color:#9A8B76;border-bottom:3px solid transparent;margin-bottom:-2px}
+.solapa.on{color:var(--fucsia);border-bottom-color:var(--fucsia)}
+.edic-panel{padding-bottom:100px}
+.edic-campo{margin-bottom:14px}
+.edic-campo label{display:block;font-size:12.5px;font-weight:800;color:#5C4F3E;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.edic-campo input,.edic-campo textarea{width:100%;border:2px solid var(--tinta);border-radius:12px;padding:11px 14px;font-family:'Nunito',sans-serif;font-size:14.5px;background:var(--blanco);outline:none}
+.edic-campo input:focus,.edic-campo textarea:focus{border-color:var(--fucsia)}
+.edic-campo textarea{resize:vertical}
+.edic-btn-guardar{width:100%;padding:15px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9);margin-top:8px}
+.edic-btn-agregar{width:100%;padding:13px;background:var(--blanco);color:var(--tinta);border:2px dashed var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;cursor:pointer;margin-top:4px}
+.prod-card{background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.prod-card .prod-foto{width:52px;height:52px;border-radius:10px;background:#FDF1DC;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden}
+.prod-card .prod-foto img{width:100%;height:100%;object-fit:cover}
+.prod-card .prod-info{flex:1}
+.prod-card .prod-info b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;display:block}
+.prod-card .prod-info small{font-size:12.5px;color:var(--verde);font-weight:800}
+.prod-card .prod-acciones{display:flex;gap:6px}
+.prod-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.feria-check-edic{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.feria-check-edic input{width:20px;height:20px;accent-color:var(--fucsia);flex-shrink:0}
+.feria-check-edic b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px;display:block}
+.feria-check-edic small{font-size:12px;color:#7A6A55;font-weight:700}
+.feria-check-edic.on{border-color:var(--fucsia);background:#FEF0F7}
 .agenda{padding:0 18px}
 .agenda-item{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:10px 14px;margin-bottom:10px}
 .agenda-item .ic{font-size:20px}
@@ -521,6 +545,109 @@ nav button.on span{filter:none;opacity:1}
     <div class="login-spinner" id="nueva-pass-spinner">Guardando… 🔐</div>
     <div class="acciones" style="margin-top:12px">
       <button class="m-fucsia" onclick="guardarNuevaPass()">Guardar y entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDICIÓN DEL PUESTO -->
+<div class="velo" id="velo-edicion" style="align-items:flex-start;padding:0;overflow-y:auto">
+  <div style="background:var(--fondo);width:100%;max-width:480px;margin:0 auto;min-height:100vh;position:relative">
+    
+    <!-- Header -->
+    <div style="background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+      <button onclick="cerrarEdicion()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0;line-height:1">←</button>
+      <span style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px">Editar mi puesto</span>
+    </div>
+
+    <!-- Solapas -->
+    <div style="display:flex;border-bottom:2px solid var(--tinta);background:var(--blanco)">
+      <button class="solapa on" id="sol-0" onclick="cambiarSolapa(0)">🎪 Mi puesto</button>
+      <button class="solapa" id="sol-1" onclick="cambiarSolapa(1)">🛍️ Productos</button>
+      <button class="solapa" id="sol-2" onclick="cambiarSolapa(2)">📅 Ferias</button>
+    </div>
+
+    <!-- SOLAPA 0: Mi puesto -->
+    <div id="edic-0" class="edic-panel">
+      <div style="padding:18px">
+
+        <!-- Logo/foto -->
+        <div style="text-align:center;margin-bottom:18px">
+          <div id="edic-logo-preview" style="width:90px;height:90px;border-radius:50%;background:#FDF1DC;border:3px solid var(--tinta);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;cursor:pointer" onclick="document.getElementById('edic-foto-input').click()">
+          </div>
+          <input type="file" id="edic-foto-input" accept="image/*" style="display:none" onchange="previewLogoEdic(this)">
+          <button onclick="document.getElementById('edic-foto-input').click()" style="font-size:13px;font-weight:800;color:var(--fucsia);background:none;border:none;cursor:pointer">📸 Cambiar foto</button>
+        </div>
+
+        <div class="edic-campo">
+          <label>Nombre del puesto</label>
+          <input type="text" id="edic-nombre" placeholder="Nombre de tu puesto">
+        </div>
+        <div class="edic-campo">
+          <label>Descripción</label>
+          <textarea id="edic-bio" rows="3" placeholder="Contá qué vendés y qué hace único a tu puesto"></textarea>
+        </div>
+        <div class="edic-campo">
+          <label>WhatsApp del puesto</label>
+          <input type="tel" id="edic-wsp" placeholder="Ej: 5491150127104" inputmode="numeric">
+          <small style="font-size:12px;color:#7A6A55;font-weight:700">Con código de país, sin espacios. Ej: 5491150127104</small>
+        </div>
+        <div class="edic-campo">
+          <label>Instagram</label>
+          <input type="text" id="edic-ig" placeholder="usuario (sin @)">
+        </div>
+        <div class="edic-campo">
+          <label>TikTok</label>
+          <input type="text" id="edic-tk" placeholder="usuario (sin @)">
+        </div>
+        <div class="edic-campo">
+          <label>Facebook</label>
+          <input type="text" id="edic-fb" placeholder="página o usuario">
+        </div>
+        <div class="edic-campo">
+          <label>Sitio web</label>
+          <input type="text" id="edic-web" placeholder="mipuesto.com.ar">
+        </div>
+
+        <button class="edic-btn-guardar" onclick="guardarInfoPuesto()">💾 Guardar cambios</button>
+      </div>
+    </div>
+
+    <!-- SOLAPA 1: Productos -->
+    <div id="edic-1" class="edic-panel" style="display:none">
+      <div style="padding:18px">
+        <div id="edic-lista-productos"></div>
+        <button class="edic-btn-agregar" onclick="abrirFormProducto()">+ Agregar producto</button>
+      </div>
+    </div>
+
+    <!-- SOLAPA 2: Ferias -->
+    <div id="edic-2" class="edic-panel" style="display:none">
+      <div style="padding:18px">
+        <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:14px">Seleccioná las ferias donde participás. Podés cambiarlas cuando quieras.</p>
+        <div id="edic-lista-ferias"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="velo" id="velo-producto">
+  <div class="modal">
+    <h3 id="prod-modal-titulo">➕ Nuevo producto</h3>
+    <input type="hidden" id="prod-id">
+    <div style="text-align:center;margin:12px 0 8px">
+      <div id="prod-foto-preview" style="width:80px;height:80px;border-radius:14px;background:#FDF1DC;border:2px solid var(--tinta);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;cursor:pointer" onclick="document.getElementById('prod-foto-input').click()">📦</div>
+      <input type="file" id="prod-foto-input" accept="image/*" style="display:none" onchange="previewFotoProducto(this)">
+      <button onclick="document.getElementById('prod-foto-input').click()" style="font-size:12px;font-weight:800;color:var(--fucsia);background:none;border:none;cursor:pointer">📸 Agregar foto</button>
+    </div>
+    <input type="text" id="prod-nombre" placeholder="Nombre del producto" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;margin-bottom:8px">
+    <textarea id="prod-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;resize:none;margin-bottom:8px"></textarea>
+    <input type="number" id="prod-precio" placeholder="Precio en $" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
+    <div class="login-error" id="prod-error" style="margin-top:8px"></div>
+    <div class="acciones" style="margin-top:12px">
+      <button class="m-no" onclick="cerrarFormProducto()">Cancelar</button>
+      <button class="m-fucsia" onclick="guardarProducto()">Guardar</button>
     </div>
   </div>
 </div>
@@ -935,7 +1062,7 @@ function renderPanelFeriante(cont){
         <div><b>Ver mi puesto</b><small>Como lo ven tus clientes</small></div>
         <div class="flecha-r">→</div>
       </div>
-      <div class="accion-row" onclick="mostrarToast('✏️ Edición de puesto — próximamente!')">
+      <div class="accion-row" onclick="abrirEdicion()">
         <div class="ic">✏️</div>
         <div><b>Editar mi puesto</b><small>Fotos, descripción, productos, precios</small></div>
         <div class="flecha-r">→</div>
@@ -1513,7 +1640,329 @@ async function guardarNuevaPass(){
   }
 }
 
-// ================== INIT ==================
+// ================== EDICIÓN DEL PUESTO ==================
+let fotoNueva = null; // archivo de foto nuevo
+let fotoProdNueva = null; // archivo de foto de producto nuevo
+let productosEdic = []; // lista local de productos en edición
+
+function abrirEdicion(){
+  const u = usuario;
+  if(!u || !u.puestoId) return;
+
+  // Prellenar solapa 0
+  const av = document.getElementById('edic-logo-preview');
+  if(u.puestoFoto){ av.style.backgroundImage=`url('${u.puestoFoto}')`;av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent=''; }
+  else { av.style.backgroundImage=''; av.textContent = u.puestoEmoji || '🎪'; }
+
+  document.getElementById('edic-nombre').value = u.puestoNombre || '';
+  document.getElementById('edic-bio').value    = u.puestoBio || '';
+  document.getElementById('edic-wsp').value    = u.puestoWhatsapp || '';
+  const redes = u.puestoRedes || {};
+  document.getElementById('edic-ig').value  = redes.instagram || '';
+  document.getElementById('edic-tk').value  = redes.tiktok || '';
+  document.getElementById('edic-fb').value  = redes.facebook || '';
+  document.getElementById('edic-web').value = redes.web || '';
+
+  fotoNueva = null;
+  cambiarSolapa(0);
+  document.getElementById('velo-edicion').classList.add('on');
+  document.getElementById('velo-edicion').scrollTop = 0;
+}
+
+function cerrarEdicion(){
+  document.getElementById('velo-edicion').classList.remove('on');
+}
+
+function cambiarSolapa(n){
+  [0,1,2].forEach(i=>{
+    document.getElementById(`sol-${i}`).classList.toggle('on', i===n);
+    document.getElementById(`edic-${i}`).style.display = i===n ? '' : 'none';
+  });
+  if(n===1) cargarProductosEdic();
+  if(n===2) cargarFeriasEdic();
+}
+
+function previewLogoEdic(input){
+  const file = input.files[0];
+  if(!file) return;
+  fotoNueva = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const av = document.getElementById('edic-logo-preview');
+    av.style.backgroundImage = `url('${e.target.result}')`;
+    av.style.backgroundSize = 'cover';
+    av.style.backgroundPosition = 'center';
+    av.textContent = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function subirFoto(file, carpeta){
+  const ext = file.name.split('.').pop();
+  const path = `${carpeta}/${usuario.id}-${Date.now()}.${ext}`;
+  const resp = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${path}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': file.type },
+    body: file
+  });
+  if(!resp.ok) throw new Error('Error subiendo imagen');
+  return `${SUPABASE_URL}/storage/v1/object/public/imagenes/${path}`;
+}
+
+async function guardarInfoPuesto(){
+  const btn = document.querySelector('#edic-0 .edic-btn-guardar');
+  btn.textContent = '⏳ Guardando...'; btn.disabled = true;
+  try{
+    let fotoUrl = usuario.puestoFoto || usuario.puestoEmoji || '🎪';
+    if(fotoNueva){
+      fotoUrl = await subirFoto(fotoNueva, 'puestos');
+    }
+    const redes = {};
+    const ig = document.getElementById('edic-ig').value.trim();
+    const tk = document.getElementById('edic-tk').value.trim();
+    const fb = document.getElementById('edic-fb').value.trim();
+    const web = document.getElementById('edic-web').value.trim();
+    if(ig) redes.instagram = ig;
+    if(tk) redes.tiktok = tk;
+    if(fb) redes.facebook = fb;
+    if(web) redes.web = web;
+
+    await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        nombre: document.getElementById('edic-nombre').value.trim(),
+        bio: document.getElementById('edic-bio').value.trim(),
+        whatsapp: document.getElementById('edic-wsp').value.trim(),
+        foto_url: fotoUrl,
+        redes
+      })
+    });
+
+    // Actualizar usuario local
+    usuario.puestoNombre = document.getElementById('edic-nombre').value.trim();
+    usuario.puestoBio    = document.getElementById('edic-bio').value.trim();
+    usuario.puestoWhatsapp = document.getElementById('edic-wsp').value.trim();
+    usuario.puestoRedes  = redes;
+    if(fotoNueva){ usuario.puestoFoto = fotoUrl; usuario.puestoEmoji = ''; }
+
+    mostrarToast('✅ ¡Cambios guardados!');
+    cerrarEdicion();
+    renderMiPuesto();
+    // Recargar datos en vivo
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){
+    mostrarToast('❌ Error: ' + e.message);
+  }finally{
+    btn.textContent = '💾 Guardar cambios'; btn.disabled = false;
+  }
+}
+
+// ── Productos ──
+async function cargarProductosEdic(){
+  const cont = document.getElementById('edic-lista-productos');
+  cont.innerHTML = '<p style="font-size:13px;color:#7A6A55;font-weight:700">Cargando...</p>';
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&order=orden.asc`, {
+      headers: sbHeaders(tokenActual)
+    });
+    productosEdic = r.ok ? await r.json() : [];
+    renderProductosEdic();
+  }catch(e){ cont.innerHTML = '<p style="color:var(--fucsia);font-weight:800">Error cargando productos</p>'; }
+}
+
+function renderProductosEdic(){
+  const cont = document.getElementById('edic-lista-productos');
+  if(!productosEdic.length){
+    cont.innerHTML = '<p style="font-size:13.5px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">Todavía no tenés productos. ¡Agregá el primero!</p>';
+    return;
+  }
+  cont.innerHTML = productosEdic.map(p=>{
+    const foto = p.fotos && p.fotos[0];
+    const esUrl = foto && foto.startsWith('http');
+    const fotoHtml = esUrl
+      ? `<img src="${foto}" style="width:100%;height:100%;object-fit:cover">`
+      : `<span>${foto || '📦'}</span>`;
+    return `<div class="prod-card">
+      <div class="prod-foto">${fotoHtml}</div>
+      <div class="prod-info">
+        <b>${p.nombre}</b>
+        <small>$${Number(p.precio).toLocaleString('es-AR')}</small>
+      </div>
+      <div class="prod-acciones">
+        <button class="prod-btn" onclick="editarProducto('${p.id}')" title="Editar">✏️</button>
+        <button class="prod-btn" onclick="borrarProducto('${p.id}')" title="Borrar" style="background:#FDE7F2">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirFormProducto(id){
+  document.getElementById('prod-id').value = id || '';
+  document.getElementById('prod-modal-titulo').textContent = id ? '✏️ Editar producto' : '➕ Nuevo producto';
+  document.getElementById('prod-nombre').value = '';
+  document.getElementById('prod-descripcion').value = '';
+  document.getElementById('prod-precio').value = '';
+  document.getElementById('prod-foto-preview').innerHTML = '📦';
+  document.getElementById('prod-foto-preview').style.backgroundImage = '';
+  document.getElementById('prod-error').classList.remove('on');
+  fotoProdNueva = null;
+
+  if(id){
+    const p = productosEdic.find(x=>x.id===id);
+    if(p){
+      document.getElementById('prod-nombre').value = p.nombre || '';
+      document.getElementById('prod-descripcion').value = p.descripcion || '';
+      document.getElementById('prod-precio').value = p.precio || '';
+      const foto = p.fotos && p.fotos[0];
+      if(foto && foto.startsWith('http')){
+        document.getElementById('prod-foto-preview').style.backgroundImage = `url('${foto}')`;
+        document.getElementById('prod-foto-preview').style.backgroundSize = 'cover';
+        document.getElementById('prod-foto-preview').innerHTML = '';
+      } else if(foto){
+        document.getElementById('prod-foto-preview').textContent = foto;
+      }
+    }
+  }
+  document.getElementById('velo-producto').classList.add('on');
+}
+
+function editarProducto(id){ abrirFormProducto(id); }
+
+function cerrarFormProducto(){
+  document.getElementById('velo-producto').classList.remove('on');
+}
+
+function previewFotoProducto(input){
+  const file = input.files[0];
+  if(!file) return;
+  fotoProdNueva = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('prod-foto-preview');
+    prev.style.backgroundImage = `url('${e.target.result}')`;
+    prev.style.backgroundSize = 'cover';
+    prev.style.backgroundPosition = 'center';
+    prev.innerHTML = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function guardarProducto(){
+  const nombre = document.getElementById('prod-nombre').value.trim();
+  const precio = document.getElementById('prod-precio').value;
+  const err = document.getElementById('prod-error');
+  err.classList.remove('on');
+  if(!nombre){ err.textContent='Ingresá el nombre del producto'; err.classList.add('on'); return; }
+  if(!precio){ err.textContent='Ingresá el precio'; err.classList.add('on'); return; }
+
+  const id = document.getElementById('prod-id').value;
+  try{
+    let fotos = [];
+    if(fotoProdNueva){
+      const url = await subirFoto(fotoProdNueva, 'productos');
+      fotos = [url];
+    } else if(id) {
+      const p = productosEdic.find(x=>x.id===id);
+      fotos = p ? (p.fotos || []) : [];
+    }
+
+    const body = {
+      puesto_id: usuario.puestoId,
+      nombre,
+      descripcion: document.getElementById('prod-descripcion').value.trim(),
+      precio: Number(precio),
+      fotos,
+      visible: true,
+      orden: id ? productosEdic.find(x=>x.id===id)?.orden || 0 : productosEdic.length
+    };
+
+    if(id){
+      await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      await fetch(`${SUPABASE_URL}/rest/v1/productos`, {
+        method: 'POST',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify(body)
+      });
+    }
+
+    cerrarFormProducto();
+    mostrarToast(id ? '✅ Producto actualizado' : '✅ Producto agregado');
+    cargarProductosEdic();
+  }catch(e){
+    err.textContent = 'Error: ' + e.message;
+    err.classList.add('on');
+  }
+}
+
+async function borrarProducto(id){
+  if(!confirm('¿Borrar este producto?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
+    method: 'DELETE', headers: sbHeaders(tokenActual)
+  });
+  mostrarToast('🗑️ Producto borrado');
+  cargarProductosEdic();
+}
+
+// ── Ferias ──
+async function cargarFeriasEdic(){
+  const cont = document.getElementById('edic-lista-ferias');
+  cont.innerHTML = '<p style="font-size:13px;color:#7A6A55;font-weight:700">Cargando...</p>';
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,frecuencia`, {
+      headers: sbHeaders(tokenActual)
+    });
+    const todasFerias = r.ok ? await r.json() : [];
+    const misFeriasIds = new Set((usuario.puestoFerias||[]).map(f=>f.id));
+
+    cont.innerHTML = todasFerias.map(f=>{
+      const vinculada = misFeriasIds.has(f.id);
+      return `<label class="feria-check-edic ${vinculada?'on':''}">
+        <input type="checkbox" value="${f.id}" ${vinculada?'checked':''} onchange="toggleFeriaEdic(this,'${f.id}')">
+        <div>
+          <b>${f.nombre}</b>
+          <small>📍 ${f.lugar||''} ${f.frecuencia ? '· '+f.frecuencia : ''}</small>
+        </div>
+      </label>`;
+    }).join('') || '<p style="font-size:13.5px;color:#7A6A55;font-weight:700">No hay ferias activas disponibles.</p>';
+  }catch(e){ cont.innerHTML = '<p style="color:var(--fucsia);font-weight:800">Error cargando ferias</p>'; }
+}
+
+async function toggleFeriaEdic(checkbox, feriaId){
+  const label = checkbox.closest('.feria-check-edic');
+  try{
+    if(checkbox.checked){
+      await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria`, {
+        method: 'POST',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ puesto_id: usuario.puestoId, feria_id: feriaId })
+      });
+      label.classList.add('on');
+      mostrarToast('✅ Feria vinculada');
+    } else {
+      await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria?puesto_id=eq.${usuario.puestoId}&feria_id=eq.${feriaId}`, {
+        method: 'DELETE', headers: sbHeaders(tokenActual)
+      });
+      label.classList.remove('on');
+      mostrarToast('✅ Feria desvinculada');
+    }
+    // Actualizar ferias del usuario local
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria?puesto_id=eq.${usuario.puestoId}&select=ferias(id,nombre,frecuencia)`, {
+      headers: sbHeaders(tokenActual)
+    });
+    const data = r.ok ? await r.json() : [];
+    usuario.puestoFerias = data.filter(x=>x.ferias).map(x=>({id:x.ferias.id,nombre:x.ferias.nombre,frec:x.ferias.frecuencia||''}));
+  }catch(e){
+    checkbox.checked = !checkbox.checked;
+    label.classList.toggle('on', checkbox.checked);
+    mostrarToast('❌ Error: ' + e.message);
+  }
+}
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo);
 // Recuperar sesión guardada
