@@ -636,11 +636,17 @@ nav button.on span{filter:none;opacity:1}
   <div class="modal">
     <h3 id="prod-modal-titulo">➕ Nuevo producto</h3>
     <input type="hidden" id="prod-id">
-    <div style="text-align:center;margin:12px 0 8px">
-      <div id="prod-foto-preview" style="width:80px;height:80px;border-radius:14px;background:#FDF1DC;border:2px solid var(--tinta);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;cursor:pointer" onclick="document.getElementById('prod-foto-input').click()">📦</div>
-      <input type="file" id="prod-foto-input" accept="image/*" style="display:none" onchange="previewFotoProducto(this)">
-      <button onclick="document.getElementById('prod-foto-input').click()" style="font-size:12px;font-weight:800;color:var(--fucsia);background:none;border:none;cursor:pointer">📸 Agregar foto</button>
+    
+    <!-- Fotos múltiples -->
+    <div style="margin:10px 0 12px">
+      <div style="font-size:12px;font-weight:800;color:#5C4F3E;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">
+        Fotos <span id="prod-foto-contador" style="color:#9A8B76;font-weight:700;text-transform:none;letter-spacing:0"></span>
+      </div>
+      <div id="prod-fotos-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <input type="file" id="prod-foto-input" accept="image/*" multiple style="display:none" onchange="agregarFotosProducto(this)">
+      <button id="prod-foto-btn" onclick="document.getElementById('prod-foto-input').click()" style="font-size:12.5px;font-weight:800;color:var(--fucsia);background:#FEF0F7;border:2px dashed var(--fucsia);border-radius:10px;padding:8px 14px;cursor:pointer;width:100%">📸 Agregar foto</button>
     </div>
+
     <input type="text" id="prod-nombre" placeholder="Nombre del producto" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;margin-bottom:8px">
     <textarea id="prod-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;resize:none;margin-bottom:8px"></textarea>
     <input type="number" id="prod-precio" placeholder="Precio en $" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
@@ -1803,10 +1809,8 @@ function abrirFormProducto(id){
   document.getElementById('prod-nombre').value = '';
   document.getElementById('prod-descripcion').value = '';
   document.getElementById('prod-precio').value = '';
-  document.getElementById('prod-foto-preview').innerHTML = '📦';
-  document.getElementById('prod-foto-preview').style.backgroundImage = '';
   document.getElementById('prod-error').classList.remove('on');
-  fotoProdNueva = null;
+  fotosProducto = [];
 
   if(id){
     const p = productosEdic.find(x=>x.id===id);
@@ -1814,16 +1818,11 @@ function abrirFormProducto(id){
       document.getElementById('prod-nombre').value = p.nombre || '';
       document.getElementById('prod-descripcion').value = p.descripcion || '';
       document.getElementById('prod-precio').value = p.precio || '';
-      const foto = p.fotos && p.fotos[0];
-      if(foto && foto.startsWith('http')){
-        document.getElementById('prod-foto-preview').style.backgroundImage = `url('${foto}')`;
-        document.getElementById('prod-foto-preview').style.backgroundSize = 'cover';
-        document.getElementById('prod-foto-preview').innerHTML = '';
-      } else if(foto){
-        document.getElementById('prod-foto-preview').textContent = foto;
-      }
+      // Cargar fotos existentes
+      fotosProducto = (p.fotos||[]).filter(Boolean).map(url=>({url, preview:null, file:null}));
     }
   }
+  renderFotosProducto();
   document.getElementById('velo-producto').classList.add('on');
 }
 
@@ -1833,19 +1832,54 @@ function cerrarFormProducto(){
   document.getElementById('velo-producto').classList.remove('on');
 }
 
-function previewFotoProducto(input){
-  const file = input.files[0];
-  if(!file) return;
-  fotoProdNueva = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const prev = document.getElementById('prod-foto-preview');
-    prev.style.backgroundImage = `url('${e.target.result}')`;
-    prev.style.backgroundSize = 'cover';
-    prev.style.backgroundPosition = 'center';
-    prev.innerHTML = '';
-  };
-  reader.readAsDataURL(file);
+let fotosProducto = []; // array de {url, file} — url puede ser existente o blob preview
+
+const MAX_FOTOS = {gratis:1, plus:3, pro:6};
+
+function maxFotosActual(){
+  return MAX_FOTOS[usuario?.puestoPlan || 'gratis'] || 1;
+}
+
+function renderFotosProducto(){
+  const grid = document.getElementById('prod-fotos-grid');
+  const max = maxFotosActual();
+  document.getElementById('prod-foto-contador').textContent = `(${fotosProducto.length}/${max})`;
+  
+  grid.innerHTML = fotosProducto.map((f,i)=>`
+    <div style="position:relative;width:70px;height:70px">
+      <div style="width:70px;height:70px;border-radius:10px;border:2px solid var(--tinta);overflow:hidden;background:#FDF1DC">
+        <img src="${f.preview || f.url}" style="width:100%;height:100%;object-fit:cover">
+      </div>
+      <button onclick="quitarFotoProducto(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+    </div>`).join('');
+
+  // Mostrar/ocultar botón agregar
+  const btn = document.getElementById('prod-foto-btn');
+  btn.style.display = fotosProducto.length >= max ? 'none' : '';
+  if(fotosProducto.length >= max){
+    document.getElementById('prod-foto-contador').textContent += ` · límite del plan`;
+  }
+}
+
+function quitarFotoProducto(i){
+  fotosProducto.splice(i, 1);
+  renderFotosProducto();
+}
+
+async function agregarFotosProducto(input){
+  const max = maxFotosActual();
+  const files = Array.from(input.files);
+  for(const file of files){
+    if(fotosProducto.length >= max) break;
+    const preview = await new Promise(res=>{
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsDataURL(file);
+    });
+    fotosProducto.push({file, preview, url:null});
+  }
+  input.value = '';
+  renderFotosProducto();
 }
 
 async function guardarProducto(){
@@ -1857,14 +1891,19 @@ async function guardarProducto(){
   if(!precio){ err.textContent='Ingresá el precio'; err.classList.add('on'); return; }
 
   const id = document.getElementById('prod-id').value;
+  const guardarBtn = document.querySelector('#velo-producto .m-fucsia');
+  guardarBtn.textContent = '⏳ Guardando...'; guardarBtn.disabled = true;
+
   try{
-    let fotos = [];
-    if(fotoProdNueva){
-      const url = await subirFoto(fotoProdNueva, 'productos');
-      fotos = [url];
-    } else if(id) {
-      const p = productosEdic.find(x=>x.id===id);
-      fotos = p ? (p.fotos || []) : [];
+    // Subir fotos nuevas (las que tienen file)
+    const fotosFinales = [];
+    for(const f of fotosProducto){
+      if(f.file){
+        const url = await subirFoto(f.file, 'productos');
+        fotosFinales.push(url);
+      } else if(f.url){
+        fotosFinales.push(f.url);
+      }
     }
 
     const body = {
@@ -1872,7 +1911,7 @@ async function guardarProducto(){
       nombre,
       descripcion: document.getElementById('prod-descripcion').value.trim(),
       precio: Number(precio),
-      fotos,
+      fotos: fotosFinales,
       visible: true,
       orden: id ? productosEdic.find(x=>x.id===id)?.orden || 0 : productosEdic.length
     };
@@ -1897,6 +1936,8 @@ async function guardarProducto(){
   }catch(e){
     err.textContent = 'Error: ' + e.message;
     err.classList.add('on');
+  }finally{
+    guardarBtn.textContent = 'Guardar'; guardarBtn.disabled = false;
   }
 }
 
