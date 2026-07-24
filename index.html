@@ -529,6 +529,41 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR FECHA -->
+<div class="velo" id="velo-fechas">
+  <div class="modal" style="max-width:380px">
+    <h3>📅 Confirmar fechas</h3>
+    <p style="font-size:13px;color:#5C4F3E;font-weight:700;margin-top:4px" id="fechas-feria-nombre"></p>
+    <input type="hidden" id="fechas-feria-id">
+
+    <!-- Navegación de mes -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px">
+      <button onclick="cambiarMes(-1)" style="background:none;border:2px solid var(--tinta);border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:16px">←</button>
+      <span id="cal-mes-label" style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px"></span>
+      <button onclick="cambiarMes(1)" style="background:none;border:2px solid var(--tinta);border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:16px">→</button>
+    </div>
+
+    <!-- Días de la semana -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px">
+      ${['D','L','M','M','J','V','S'].map(d=>`<div style="text-align:center;font-size:11px;font-weight:800;color:#9A8B76;padding:3px 0">${d}</div>`).join('')}
+    </div>
+
+    <!-- Grilla de días -->
+    <div id="cal-grilla" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+
+    <p style="font-size:12px;color:#7A6A55;font-weight:700;margin-top:10px">Tocá los días para marcarlos. Tocá de nuevo para desmarcar.</p>
+
+    <div id="fechas-seleccionadas" style="margin-top:10px;min-height:24px"></div>
+
+    <div class="login-error" id="fechas-error"></div>
+    <div class="login-spinner" id="fechas-spinner">Guardando fechas… 📅</div>
+    <div class="acciones" style="margin-top:12px">
+      <button class="m-no" onclick="cerrarFechas()">Cancelar</button>
+      <button class="m-ok" onclick="guardarFechas()">✅ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL SUBIR FLYER -->
 <div class="velo" id="velo-flyer">
   <div class="modal">
@@ -1194,7 +1229,7 @@ function renderPanelOrganizador(cont){
         ${flyerBadge(f.flyerEstado, f.flyerImg)}
         <div class="org-acciones">
           <button class="org-btn principal" onclick="abrirSubirFlyer('${f.id}','${f.nombre}')">📸 Actualizar flyer</button>
-          <button class="org-btn sec" onclick="mostrarToast('📅 Confirmar fecha — próximamente!')">📅 Confirmar fecha</button>
+          <button class="org-btn sec" onclick="abrirFechas('${f.id}','${f.nombre}')">📅 Confirmar fecha</button>
         </div>
       </div>
     </div>`).join("") :
@@ -2091,6 +2126,119 @@ async function toggleFeriaEdic(checkbox, feriaId){
     mostrarToast('❌ Error: ' + e.message);
   }
 }
+// ================== CONFIRMAR FECHAS ==================
+let calMes = new Date();
+let fechasSeleccionadas = new Set();
+let fechasFeriaId = null;
+
+const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function abrirFechas(feriaId, feriaNombre){
+  fechasFeriaId = feriaId;
+  document.getElementById('fechas-feria-id').value = feriaId;
+  document.getElementById('fechas-feria-nombre').textContent = feriaNombre;
+  fechasSeleccionadas = new Set();
+  calMes = new Date();
+  calMes.setDate(1);
+  document.getElementById('fechas-error').classList.remove('on');
+  document.getElementById('fechas-spinner').classList.remove('on');
+  renderCalendario();
+  document.getElementById('velo-fechas').classList.add('on');
+}
+
+function cerrarFechas(){
+  document.getElementById('velo-fechas').classList.remove('on');
+}
+
+function cambiarMes(delta){
+  calMes.setMonth(calMes.getMonth() + delta);
+  renderCalendario();
+}
+
+function renderCalendario(){
+  const anio = calMes.getFullYear();
+  const mes = calMes.getMonth();
+  document.getElementById('cal-mes-label').textContent = `${MESES_ES[mes]} ${anio}`;
+
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasEnMes = new Date(anio, mes+1, 0).getDate();
+  const hoy = new Date();
+
+  let html = '';
+  // Celdas vacías al inicio
+  for(let i=0; i<primerDia; i++) html += '<div></div>';
+
+  for(let d=1; d<=diasEnMes; d++){
+    const fecha = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esPasado = new Date(anio, mes, d) < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const seleccionado = fechasSeleccionadas.has(fecha);
+    const esHoy = d===hoy.getDate() && mes===hoy.getMonth() && anio===hoy.getFullYear();
+
+    html += `<button onclick="${esPasado?'':(`toggleFecha('${fecha}')`)}" 
+      style="
+        aspect-ratio:1;border-radius:8px;border:2px solid ${seleccionado?'var(--verde)':esHoy?'var(--fucsia)':'var(--tinta)'};
+        background:${seleccionado?'var(--verde)':esHoy?'#FDE7F2':'var(--blanco)'};
+        color:${seleccionado?'#fff':esPasado?'#DCCFB6':'var(--tinta)'};
+        font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;
+        cursor:${esPasado?'default':'pointer'};padding:0;
+        opacity:${esPasado?'0.4':'1'}
+      ">${d}</button>`;
+  }
+  document.getElementById('cal-grilla').innerHTML = html;
+  actualizarResumenFechas();
+}
+
+function toggleFecha(fecha){
+  if(fechasSeleccionadas.has(fecha)) fechasSeleccionadas.delete(fecha);
+  else fechasSeleccionadas.add(fecha);
+  renderCalendario();
+}
+
+function actualizarResumenFechas(){
+  const cont = document.getElementById('fechas-seleccionadas');
+  if(!fechasSeleccionadas.size){ cont.innerHTML=''; return; }
+  const sorted = [...fechasSeleccionadas].sort();
+  cont.innerHTML = `<div style="background:#DFF5EC;border:2px solid var(--verde);border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:800;color:#007453">
+    ✅ ${sorted.length} fecha${sorted.length>1?'s':''} seleccionada${sorted.length>1?'s':''}: 
+    ${sorted.map(f=>{ const d=new Date(f+'T12:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; }).join(', ')}
+  </div>`;
+}
+
+async function guardarFechas(){
+  if(!fechasSeleccionadas.size){
+    document.getElementById('fechas-error').textContent = 'Seleccioná al menos una fecha';
+    document.getElementById('fechas-error').classList.add('on'); return;
+  }
+  const spin = document.getElementById('fechas-spinner');
+  spin.classList.add('on');
+
+  try{
+    // Insertar asistencias para cada fecha seleccionada
+    const inserts = [...fechasSeleccionadas].map(fecha=>({
+      feria_id: fechasFeriaId,
+      fecha,
+      // Sin puesto_id — es la feria la que confirma, no un puesto
+    }));
+
+    // Actualizar proxima_fecha de la feria con la fecha más próxima
+    const proxima = [...fechasSeleccionadas].sort()[0];
+    await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${fechasFeriaId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({ proxima_fecha: proxima })
+    });
+
+    cerrarFechas();
+    mostrarToast(`✅ ${fechasSeleccionadas.size} fecha${fechasSeleccionadas.size>1?'s':''} confirmada${fechasSeleccionadas.size>1?'s':''}. ¡Los seguidores van a recibir una alerta!`);
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){
+    document.getElementById('fechas-error').textContent = 'Error: ' + e.message;
+    document.getElementById('fechas-error').classList.add('on');
+  }finally{
+    spin.classList.remove('on');
+  }
+}
+
 // ================== FLYER DEL ORGANIZADOR ==================
 let flyerArchivo = null;
 
