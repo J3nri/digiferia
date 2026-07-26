@@ -781,6 +781,17 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
+<!-- MODAL ESTADÍSTICAS -->
+<div class="velo" id="velo-stats">
+  <div class="modal">
+    <h3>📊 Tus estadísticas</h3>
+    <div id="stats-contenido" style="margin-top:12px"></div>
+    <div class="acciones" style="margin-top:14px">
+      <button class="m-no" onclick="cerrarStats()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <nav id="nav-principal">
   <button class="on" data-p="p-home" onclick="tab(this)"><span>🎪</span>La Feria</button>
   <button data-p="p-buscar" onclick="tab(this)"><span>🔍</span>Buscar</button>
@@ -1197,7 +1208,7 @@ function renderPanelFeriante(cont){
         <div><b>Editar mi puesto</b><small>Fotos, descripción, productos, precios</small></div>
         <div class="flecha-r">→</div>
       </div>
-      <div class="accion-row" onclick="mostrarToast('📊 Estadísticas — disponibles en Plan Plus y Pro')">
+      <div class="accion-row" onclick="verEstadisticas()">
         <div class="ic">📊</div>
         <div><b>Ver estadísticas</b><small>Visitas y consultas recibidas</small></div>
         <div class="flecha-r">→</div>
@@ -1296,6 +1307,52 @@ function dispararAlerta(datos){
   .then(d=>console.log("📬 Alerta a seguidores:", d))
   .catch(e=>console.warn("No se pudo enviar la alerta:", e));
 }
+
+// ================== ESTADÍSTICAS (visitas y consultas) ==================
+// Registra un evento sin bloquear la interfaz. No cuenta al dueño mirándose a sí mismo.
+function registrarEvento(puestoId, tipo){
+  if(!puestoId) return;
+  if(usuario && String(usuario.puestoId) === String(puestoId)) return; // el dueño no se cuenta
+  fetch(`${SUPABASE_URL}/rest/v1/eventos_puesto`, {
+    method: "POST",
+    headers: { ...sbHeaders(), Prefer: "return=minimal" },
+    body: JSON.stringify({ puesto_id: puestoId, tipo })
+  }).catch(()=>{});
+}
+
+async function verEstadisticas(){
+  if(!usuario || !usuario.puestoId) return;
+  if(usuario.puestoPlan !== 'plus' && usuario.puestoPlan !== 'pro'){
+    mostrarToast('📊 Estadísticas — disponibles en Plan Plus y Pro');
+    return;
+  }
+  const cont = document.getElementById('stats-contenido');
+  cont.innerHTML = `<p style="font-size:13.5px;color:#7A6A55;font-weight:700">Cargando tus números… ⏳</p>`;
+  document.getElementById('velo-stats').classList.add('on');
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/eventos_puesto?select=tipo,creado_en&puesto_id=eq.${usuario.puestoId}&order=creado_en.desc&limit=5000`, {
+      headers: sbHeaders(tokenActual)
+    });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const evs = await r.json();
+    const hace7 = Date.now() - 7*24*60*60*1000;
+    const tot = t => evs.filter(e=>e.tipo===t).length;
+    const sem = t => evs.filter(e=>e.tipo===t && new Date(e.creado_en).getTime() >= hace7).length;
+    const fila = (emoji, titulo, semana, total) => `
+      <div style="display:flex;align-items:center;gap:10px;background:#FFF;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;margin-bottom:8px">
+        <span style="font-size:22px">${emoji}</span>
+        <div style="flex:1"><b style="font-family:'Fredoka';font-weight:600;font-size:14px;display:block">${titulo}</b>
+        <small style="font-size:12px;color:#7A6A55;font-weight:700">${semana} esta semana · ${total} en total</small></div>
+      </div>`;
+    cont.innerHTML =
+      fila('👁️','Visitas a tu puesto', sem('visita'), tot('visita')) +
+      fila('💬','Consultas por WhatsApp', sem('whatsapp'), tot('whatsapp')) +
+      `<p style="font-size:11.5px;color:#9A8B76;font-weight:700;margin-top:6px">Se cuentan las visitas y consultas de tus clientes (las tuyas no suman 😉).</p>`;
+  }catch(e){
+    cont.innerHTML = `<p style="font-size:13.5px;color:#E91E8C;font-weight:800">No pudimos cargar las estadísticas. Probá de nuevo en un ratito.</p>`;
+  }
+}
+function cerrarStats(){ document.getElementById('velo-stats').classList.remove('on'); }
 
 // ================== CONFIRMAR ASISTENCIA ==================
 const asistenciasConfirmadas = new Set();
@@ -1442,6 +1499,7 @@ function verPerfil(id){
   perfilActualId = id;
   const f = FERIANTES.find(x=>String(x.id)===String(id));
   if(!f) return;
+  registrarEvento(id, 'visita');
   const r = rubroDe(f.rubro);
   const pt = document.getElementById('perfil-toldo');
   pt.className = "toldo-grande toldo";
@@ -1483,7 +1541,7 @@ function verPerfil(id){
   }).join("");
   const btnW = document.getElementById('btn-wsp');
   if(f.whatsapp){
-    btnW.onclick = ()=>window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent("Hola "+f.nombre+"! 👋 Vi tu puesto en La Digi Feria y quería consultarte.")}`, "_blank");
+    btnW.onclick = ()=>{ registrarEvento(f.id, 'whatsapp'); window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent("Hola "+f.nombre+"! 👋 Vi tu puesto en La Digi Feria y quería consultarte.")}`, "_blank"); };
   } else { btnW.onclick = null; }
   const av = document.getElementById('perfil-emoji');
   if(f.foto){ av.style.backgroundImage=`url('${f.foto}')`;av.style.backgroundSize="cover";av.style.backgroundPosition="center";av.textContent=""; }
@@ -2457,6 +2515,7 @@ function enviarCarritoWsp(){
   let total=0;
   carrito.forEach(x=>{ const precio=Number(x.producto.p.replace(/[^0-9]/g,'')); const subtotal=precio*x.cantidad; total+=subtotal; msg+=`• ${x.producto.n} x${x.cantidad} = $${subtotal.toLocaleString('es-AR')}\n`; });
   msg+=`\n*Total: $${total.toLocaleString('es-AR')}*\n\n¿Podés confirmarme disponibilidad y forma de pago? 🙏`;
+  registrarEvento(f.id, 'whatsapp');
   window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank');
   cerrarCarrito();
 }
