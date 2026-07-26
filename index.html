@@ -1159,6 +1159,7 @@ function renderMiPuesto(){
     renderPanelFeriante(cont);
   } else if(usuario.rol === 'organizador'){
     renderPanelOrganizador(cont);
+    cargarFechasOrganizador();
   } else {
     cont.innerHTML = `<div class="mipuesto-login"><div class="emoji-grande">👑</div><h2>Panel de admin</h2><p>Accedé desde <a href="admin.html" style="color:var(--fucsia)">admin.html</a>.</p></div>`;
   }
@@ -1262,6 +1263,7 @@ function renderPanelOrganizador(cont){
           <button class="org-btn principal" onclick="abrirSubirFlyer('${f.id}','${f.nombre}')">📸 Actualizar flyer</button>
           <button class="org-btn sec" onclick="abrirFechas('${f.id}','${f.nombre}')">📅 Confirmar fecha</button>
         </div>
+        <div class="fechas-org" id="fechas-org-${f.id}" data-nombre="${f.nombre.replace(/"/g,'')}" data-lugar="${(f.lugar||'').replace(/"/g,'')}"><small style="font-size:12px;color:#7A6A55;font-weight:700">Cargando fechas…</small></div>
       </div>
     </div>`).join("") :
     `<div style="margin:18px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:16px;text-align:center">
@@ -1286,6 +1288,63 @@ function renderPanelOrganizador(cont){
         <div class="flecha-r">→</div>
       </div>
     </div>`;
+}
+
+// ================== FECHAS DEL ORGANIZADOR ==================
+// Trae TODAS las fechas futuras de sus ferias y las lista en el panel
+async function cargarFechasOrganizador(){
+  if(!usuario || usuario.rol !== 'organizador' || !(usuario.feriaOrg||[]).length) return;
+  const ids = usuario.feriaOrg.map(f=>f.id).join(',');
+  const hoy = new Date().toISOString().slice(0,10);
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=id,feria_id,fecha&feria_id=in.(${ids})&fecha=gte.${hoy}&order=fecha.asc`, {
+      headers: sbHeaders(tokenActual)
+    });
+    const fechas = r.ok ? await r.json() : [];
+    usuario.feriaOrg.forEach(f=>{
+      const cont = document.getElementById('fechas-org-' + f.id);
+      if(!cont) return;
+      const mias = fechas.filter(x=>x.feria_id === f.id);
+      if(!mias.length){
+        cont.innerHTML = `<small style="font-size:12px;color:#7A6A55;font-weight:700">Sin fechas futuras cargadas. Tocá "Confirmar fecha" 📅</small>`;
+        return;
+      }
+      cont.innerHTML = `<b style="font-family:'Fredoka';font-weight:600;font-size:13px;display:block;margin:8px 0 6px">📅 Tus próximas fechas (${mias.length})</b>` +
+        mias.map(x=>{
+          const fc = fechaCorta(x.fecha);
+          return `<div style="display:flex;align-items:center;gap:8px;background:#FFF;border:2px solid var(--tinta);border-radius:10px;padding:6px 10px;margin-bottom:6px">
+            <b style="font-family:'Fredoka';font-weight:600;font-size:13px;flex:1">${fc.texto}</b>
+            <button onclick="compartirFechaOrg('${f.id}','${x.fecha}')" style="border:2px solid var(--tinta);border-radius:999px;background:var(--amarillo);font-family:'Nunito';font-weight:800;font-size:11px;padding:4px 10px;cursor:pointer">🔗 Compartir</button>
+            <button onclick="borrarFechaOrg('${x.id}','${fc.texto}')" style="border:2px solid var(--tinta);border-radius:50%;background:var(--blanco);width:26px;height:26px;font-size:12px;cursor:pointer">✕</button>
+          </div>`;
+        }).join('');
+    });
+  }catch(e){ console.warn('No se pudieron cargar las fechas del organizador', e); }
+}
+
+// Copia el posteo listo para pegar en WhatsApp/Instagram
+function compartirFechaOrg(feriaId, fecha){
+  const cont = document.getElementById('fechas-org-' + feriaId);
+  const nombre = cont ? cont.dataset.nombre : 'la feria';
+  const lugar = cont ? cont.dataset.lugar : '';
+  const fc = fechaCorta(fecha);
+  const texto = `🎪 ¡HAY FERIA! 🎪\n\n${nombre}\n📅 ${fc.texto}${lugar ? `\n📍 ${lugar}` : ''}\n\nMirá los puestos que van y pedí por WhatsApp 👉 https://digiferia.ar\n\n#LaDigiFeria — La Feria Digital en Gutiérrez`;
+  navigator.clipboard.writeText(texto).then(()=>{
+    mostrarToast('🔗 ¡Posteo copiado! Pegalo en WhatsApp, Instagram o donde quieras.');
+  }).catch(()=>{ mostrarToast('No se pudo copiar. Probá de nuevo.'); });
+}
+
+async function borrarFechaOrg(fechaId, textoFecha){
+  if(!confirm(`¿Borrar la fecha ${textoFecha}? Los visitantes dejarán de verla.`)) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?id=eq.${fechaId}`, {
+      method: 'DELETE',
+      headers: sbHeaders(tokenActual)
+    });
+    mostrarToast('🗑️ Fecha borrada');
+    cargarFechasOrganizador();
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){ mostrarToast('No se pudo borrar: ' + e.message); }
 }
 
 // Ver mi propio perfil como si fuera un visitante
@@ -1637,6 +1696,7 @@ function renderFerias(){
         <h3>${fe.nombre}</h3>
         <p>${fe.lugar}</p>
         <span class="frec">🔁 ${fe.frec}</span>
+        ${(fe.fechas&&fe.fechas.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">${fe.fechas.map(x=>`<span style="font-size:11px;font-weight:800;background:#DFF5EC;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px">📅 ${fechaCorta(x).texto}</span>`).join('')}</div>` : ''}
         <div class="puestos-n">🎪 ${n} puestos en la Digi Feria</div>
       </div>
       <button class="seguir-mini ${siguiendo.has('feria:'+fe.id)?'on':''}" onclick="event.stopPropagation();seguir('feria','${fe.id}','${fe.nombre}',this)" style="align-self:flex-start">🔔</button>
@@ -1777,11 +1837,17 @@ async function cargarFeriaYPuestosEnVivo(){
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
     const flyers = rfl.ok ? await rfl.json() : [];
+    // Fechas públicas: solo los próximos 30 días
+    const hoyISO = new Date().toISOString().slice(0,10);
+    const en30 = new Date(); en30.setDate(en30.getDate()+30);
+    const rfe = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=feria_id,fecha&fecha=gte.${hoyISO}&fecha=lte.${en30.toISOString().slice(0,10)}&order=fecha.asc`,{headers:cab});
+    const fechasPub = rfe.ok ? await rfe.json() : [];
     if(!puestos.length){ console.warn("Sin puestos en vivo; usando ejemplos."); return; }
     if(ferias.length){
       FERIAS = ferias.map(f=>{
         const fc=fechaCorta(f.proxima_fecha);
-        return {id:f.id, nombre:f.nombre, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
+        const fpub = fechasPub.filter(x=>x.feria_id===f.id).map(x=>x.fecha);
+        return {id:f.id, nombre:f.nombre, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
       });
     }
     const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
@@ -2352,12 +2418,13 @@ async function guardarFechas(){
   spin.classList.add('on');
 
   try{
-    // Insertar asistencias para cada fecha seleccionada
-    const inserts = [...fechasSeleccionadas].map(fecha=>({
-      feria_id: fechasFeriaId,
-      fecha,
-      // Sin puesto_id — es la feria la que confirma, no un puesto
-    }));
+    // Guardar TODAS las fechas seleccionadas en fechas_feria
+    const inserts = [...fechasSeleccionadas].map(fecha=>({ feria_id: fechasFeriaId, fecha }));
+    await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?on_conflict=feria_id,fecha`, {
+      method: 'POST',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify(inserts)
+    });
 
     // Actualizar proxima_fecha de la feria con la fecha más próxima
     const proxima = [...fechasSeleccionadas].sort()[0];
@@ -2372,6 +2439,7 @@ async function guardarFechas(){
     // Avisar por email a los seguidores de la feria (una sola alerta, con la fecha más próxima)
     dispararAlerta({ tipo:"fecha_feria", feria_id: fechasFeriaId, fecha: proxima });
     cargarFeriaYPuestosEnVivo();
+    cargarFechasOrganizador();
   }catch(e){
     document.getElementById('fechas-error').textContent = 'Error: ' + e.message;
     document.getElementById('fechas-error').classList.add('on');
