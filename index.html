@@ -496,6 +496,8 @@ nav button.on span{filter:none;opacity:1}
     <div id="detalle-fotos" style="position:relative;background:#FDF1DC;border-bottom:2px solid var(--tinta)">
       <div id="detalle-fotos-wrap" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:260px">
       </div>
+      <button id="detalle-flecha-izq" onclick="moverFotoDetalle(-1)" style="display:none;position:absolute;left:10px;top:112px;width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:rgba(255,255,255,.92);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);z-index:2">‹</button>
+      <button id="detalle-flecha-der" onclick="moverFotoDetalle(1)" style="display:none;position:absolute;right:10px;top:112px;width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:rgba(255,255,255,.92);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);z-index:2">›</button>
       <div id="detalle-puntos" style="display:flex;gap:6px;justify-content:center;padding:8px 0;background:var(--fondo)"></div>
     </div>
     <!-- Info -->
@@ -765,7 +767,7 @@ nav button.on span{filter:none;opacity:1}
 
     <input type="text" id="prod-nombre" placeholder="Nombre del producto" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;margin-bottom:8px">
     <textarea id="prod-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;resize:none;margin-bottom:8px"></textarea>
-    <input type="number" id="prod-precio" placeholder="Precio en $" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
+    <input type="number" id="prod-precio" placeholder="Precio en $" min="1" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
     <div class="login-error" id="prod-error" style="margin-top:8px"></div>
     <div class="acciones" style="margin-top:12px">
       <button class="m-no" onclick="cerrarFormProducto()">Cancelar</button>
@@ -1503,7 +1505,7 @@ function cardPuesto(f){
 }
 
 function renderDestacados(){
-  const lista = FERIANTES.filter(f=>f.plan==="pro");
+  const lista = FERIANTES.filter(f=>f.plan==="pro").sort((a,b)=>((a.creadoEn?new Date(a.creadoEn).getTime():9e15))-((b.creadoEn?new Date(b.creadoEn).getTime():9e15)));
   document.getElementById('destacados-row').innerHTML = lista.map(cardPuesto).join("");
   const lbl = document.getElementById('label-destacados');
   if(lbl) lbl.style.display = lista.length ? "" : "none";
@@ -1511,7 +1513,9 @@ function renderDestacados(){
 
 function renderGrilla(){
   let lista = filtroActivo==="todos" ? FERIANTES : filtroActivo==="finde" ? FERIANTES.filter(f=>f.confirmado) : FERIANTES.filter(f=>f.rubro===filtroActivo);
-  lista = [...lista].sort((a,b)=>(a.plan==="pro"?2:a.plan==="plus"?1:0) < (b.plan==="pro"?2:b.plan==="plus"?1:0) ? 1 : -1);
+  const rango = f => f.plan==="pro"?2 : f.plan==="plus"?1 : 0;
+  const alta  = f => f.creadoEn ? new Date(f.creadoEn).getTime() : 9e15;
+  lista = [...lista].sort((a,b)=> rango(b)-rango(a) || alta(a)-alta(b));
   const g = document.getElementById('grilla-puestos');
   g.innerHTML = lista.length ? lista.map(cardPuesto).join("") : `<div class="vacio">Todavía no hay puestos acá 🙈</div>`;
   const c = document.getElementById('contador-puestos');
@@ -1768,7 +1772,7 @@ async function cargarFeriaYPuestosEnVivo(){
   try{
     const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
-    const sel = "id,nombre,slug,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
@@ -2145,7 +2149,7 @@ async function guardarProducto(){
   const err = document.getElementById('prod-error');
   err.classList.remove('on');
   if(!nombre){ err.textContent='Ingresá el nombre del producto'; err.classList.add('on'); return; }
-  if(!precio){ err.textContent='Ingresá el precio'; err.classList.add('on'); return; }
+  if(!precio || Number(precio) <= 0){ err.textContent='Ingresá un precio mayor a $0'; err.classList.add('on'); return; }
 
   const id = document.getElementById('prod-id').value;
   const guardarBtn = document.querySelector('#velo-producto .m-fucsia');
@@ -2503,11 +2507,18 @@ function verProducto(idx){
   let fotos = [];
   if(p.fotos && p.fotos.length) fotos = p.fotos.filter(Boolean);
   else if(p.foto) fotos = [p.foto];
+  const fIzq = document.getElementById('detalle-flecha-izq');
+  const fDer = document.getElementById('detalle-flecha-der');
   if(fotos.length){
     wrap.innerHTML = fotos.map(url=>`<div style="min-width:100%;scroll-snap-align:center;height:260px;background:#FDF1DC;flex-shrink:0"><img src="${url}" style="width:100%;height:100%;object-fit:cover"></div>`).join('');
     puntos.innerHTML = fotos.length>1 ? fotos.map((_,i)=>`<span style="width:8px;height:8px;border-radius:50%;background:${i===0?'var(--fucsia)':'#DCCFB6'};display:inline-block;transition:background .2s"></span>`).join('') : '';
     wrap.onscroll = ()=>{ const i=Math.round(wrap.scrollLeft/wrap.offsetWidth); puntos.querySelectorAll('span').forEach((s,j)=>{ s.style.background=j===i?'var(--fucsia)':'#DCCFB6'; }); };
+    const varias = fotos.length > 1;
+    fIzq.style.display = varias ? '' : 'none';
+    fDer.style.display = varias ? '' : 'none';
   } else {
+    fIzq.style.display = 'none';
+    fDer.style.display = 'none';
     wrap.innerHTML = `<div style="min-width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:72px">${p.e||'🛍️'}</div>`;
     puntos.innerHTML = '';
   }
@@ -2516,6 +2527,13 @@ function verProducto(idx){
   document.getElementById('velo-detalle-prod').classList.add('on');
 }
 function cerrarDetalleProd(){ document.getElementById('velo-detalle-prod').classList.remove('on'); }
+function moverFotoDetalle(dir){
+  const wrap = document.getElementById('detalle-fotos-wrap');
+  const i = Math.round(wrap.scrollLeft / wrap.offsetWidth) + dir;
+  const total = wrap.children.length;
+  const destino = Math.max(0, Math.min(total - 1, i));
+  wrap.scrollTo({ left: destino * wrap.offsetWidth, behavior: 'smooth' });
+}
 
 // ================== CARRITO ==================
 function agregarAlCarrito(){
