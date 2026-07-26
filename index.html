@@ -799,6 +799,7 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
+<input type="file" id="input-logo-feria" accept="image/*" style="display:none" onchange="subirLogoFeria(this)">
 <nav id="nav-principal">
   <button class="on" data-p="p-home" onclick="tab(this)"><span>🎪</span>La Feria</button>
   <button data-p="p-buscar" onclick="tab(this)"><span>🔍</span>Buscar</button>
@@ -946,7 +947,7 @@ async function cargarPerfil(userId, token){
   // Si es organizador, busca sus ferias
   let feriaOrg = [];
   if(rol === 'organizador'){
-    const rfo = await fetch(`${SUPABASE_URL}/rest/v1/organizador_feria?usuario_id=eq.${userId}&select=ferias(id,nombre,lugar,frecuencia,estado)`, {
+    const rfo = await fetch(`${SUPABASE_URL}/rest/v1/organizador_feria?usuario_id=eq.${userId}&select=ferias(id,nombre,lugar,frecuencia,estado,logo_url)`, {
       headers: sbHeaders(token)
     });
     const fo = rfo.ok ? await rfo.json() : [];
@@ -965,6 +966,7 @@ async function cargarPerfil(userId, token){
     feriaOrg = fo.filter(x=>x.ferias).map(x=>({
       id: x.ferias.id, nombre: x.ferias.nombre,
       lugar: x.ferias.lugar||"", frec: x.ferias.frecuencia||"",
+      logo: x.ferias.logo_url||null,
       flyerEstado: flyersMap[x.ferias.id]?.estado || null,
       flyerImg: flyersMap[x.ferias.id]?.imagen_url || null,
     }));
@@ -1256,6 +1258,10 @@ function renderPanelOrganizador(cont){
     <div class="org-feria-card">
       <div class="toldo fl${(i%4)+1}" style="height:18px"></div>
       <div class="org-feria-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div id="logo-feria-${f.id}" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--tinta);background:#FDF1DC;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;${f.logo?`background-image:url('${f.logo}');background-size:cover;background-position:center`:''}">${f.logo?'':'📣'}</div>
+          <button onclick="elegirLogoFeria('${f.id}')" style="border:2px solid var(--tinta);border-radius:999px;background:var(--blanco);font-family:'Nunito';font-weight:800;font-size:11px;padding:5px 11px;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9)">🖼️ ${f.logo?'Cambiar logo':'Subir logo'}</button>
+        </div>
         <h3>${f.nombre}</h3>
         <p>📍 ${f.lugar} · 🔁 ${f.frec}</p>
         ${flyerBadge(f.flyerEstado, f.flyerImg)}
@@ -1350,6 +1356,34 @@ async function borrarFechaOrg(fechaId, textoFecha){
     cargarFechasOrganizador();
     cargarFeriaYPuestosEnVivo();
   }catch(e){ mostrarToast('No se pudo borrar: ' + e.message); }
+}
+
+// ================== LOGO DE LA FERIA ==================
+let logoFeriaId = null;
+function elegirLogoFeria(feriaId){
+  logoFeriaId = feriaId;
+  document.getElementById('input-logo-feria').click();
+}
+async function subirLogoFeria(input){
+  const file = input.files && input.files[0];
+  input.value = '';
+  if(!file || !logoFeriaId) return;
+  if(!file.type.startsWith('image/')){ mostrarToast('Elegí una imagen (JPG o PNG)'); return; }
+  mostrarToast('⏳ Subiendo logo…');
+  try{
+    const url = await subirFoto(file, 'ferias');
+    await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${logoFeriaId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({ logo_url: url })
+    });
+    const f = (usuario.feriaOrg||[]).find(x=>x.id===logoFeriaId);
+    if(f) f.logo = url;
+    const el = document.getElementById('logo-feria-' + logoFeriaId);
+    if(el){ el.style.backgroundImage = `url('${url}')`; el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.textContent=''; }
+    mostrarToast('🖼️ ¡Logo actualizado!');
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){ mostrarToast('No se pudo subir el logo: ' + e.message); }
 }
 
 // Ver mi propio perfil como si fuera un visitante
@@ -1698,7 +1732,7 @@ function renderFerias(){
     return `<div class="feria-item">
       <div class="feria-dia ${fe.fd}"><small>${fe.dia}</small><b>${fe.num}</b></div>
       <div class="feria-info">
-        <h3>${fe.nombre}</h3>
+        <h3 style="display:flex;align-items:center;gap:8px">${fe.logo?`<span style="width:34px;height:34px;border-radius:50%;border:2px solid var(--tinta);background-image:url('${fe.logo}');background-size:cover;background-position:center;flex-shrink:0;display:inline-block"></span>`:''}${fe.nombre}</h3>
         <p>${fe.lugar}</p>
         <span class="frec">🔁 ${fe.frec}</span>
         ${(fe.fechas&&fe.fechas.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">${fe.fechas.map(x=>`<span style="font-size:11px;font-weight:800;background:#DFF5EC;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px">📅 ${fechaCorta(x).texto}</span>`).join('')}</div>` : ''}
@@ -1835,7 +1869,7 @@ async function cargarRubrosEnVivo(){
 async function cargarFeriaYPuestosEnVivo(){
   const cab = {apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`};
   try{
-    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha&order=proxima_fecha.asc.nullslast`,{headers:cab});
+    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
     const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
@@ -1852,7 +1886,7 @@ async function cargarFeriaYPuestosEnVivo(){
       FERIAS = ferias.map(f=>{
         const fc=fechaCorta(f.proxima_fecha);
         const fpub = fechasPub.filter(x=>x.feria_id===f.id).map(x=>x.fecha);
-        return {id:f.id, nombre:f.nombre, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
+        return {id:f.id, nombre:f.nombre, logo:f.logo_url||null, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
       });
     }
     const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
