@@ -419,8 +419,8 @@ nav button.on span{filter:none;opacity:1}
       <p style="font-size:13.5px;color:#7A6A55;font-weight:700">Armá tu puesto virtual gratis y recibí pedidos por WhatsApp.</p>
       <span class="flyer-fecha" style="background:var(--fucsia);color:#fff">🎪 Sumá tu puesto gratis</span>
       <div class="fundadores">
-        <div class="num">3<span style="font-size:13px;color:#9A8B76">/20</span></div>
-        <small>🌱 Puestos Fundadores ocupados — quedan 17<br>Voto de confianza: 6 meses de Plus gratis + insignia única</small>
+        <div class="num"><span id="fund-num">1</span><span style="font-size:13px;color:#9A8B76">/20</span></div>
+        <small id="fund-txt">🌱 Puestos Fundadores ocupados — quedan 19<br>Voto de confianza: Plan Pro gratis por 6 meses + insignia permanente</small>
       </div>
     </div>
   </div>
@@ -454,6 +454,11 @@ nav button.on span{filter:none;opacity:1}
   <div class="seccion" style="padding-bottom:10px"><h2>Sus productos</h2></div>
   <div class="grilla-prod" id="perfil-productos"></div>
   <button class="cta-wsp" id="btn-wsp">💬 Pedir por WhatsApp</button>
+  <div style="margin:0 18px 22px;background:linear-gradient(135deg,#FFF0D6,#FDE7F2);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px;text-align:center">
+    <h3 style="font-family:'Fredoka';font-weight:600;font-size:16px">¿Te gustó este puesto? 🎪</h3>
+    <p style="font-size:13px;color:#5C4F3E;font-weight:700;margin-top:4px">La feria sigue: hay más puestos, más rubros y más finds esperándote.</p>
+    <button onclick="ir('p-home')" style="margin-top:10px;font-family:'Fredoka';font-weight:600;font-size:14px;padding:10px 20px;border-radius:999px;border:2px solid var(--tinta);background:var(--fucsia);color:#fff;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">Seguí recorriendo la feria →</button>
+  </div>
 </section>
 
 <!-- BUSCAR -->
@@ -912,7 +917,7 @@ async function cargarPerfil(userId, token){
   // Si es feriante, busca su puesto
   let puestoData = {};
   if(rol === 'feriante'){
-    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,bio,foto_url,plan,whatsapp,puesto_feria(ferias(id,nombre,frecuencia))`, {
+    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,slug,codigo_referido,bio,foto_url,plan,whatsapp,puesto_feria(ferias(id,nombre,frecuencia))`, {
       headers: sbHeaders(token)
     });
     const puestos = await rpu.json();
@@ -921,6 +926,8 @@ async function cargarPerfil(userId, token){
       const esUrl = p.foto_url && p.foto_url.startsWith("http");
       puestoData = {
         puestoId: p.id,
+        puestoSlug: p.slug || null,
+        codigoReferido: p.codigo_referido || null,
         puestoNombre: p.nombre,
         puestoBio: p.bio || "",
         puestoEmoji: (!esUrl && p.foto_url) ? p.foto_url : "🎪",
@@ -1215,7 +1222,12 @@ function renderPanelFeriante(cont){
       </div>
       <div class="accion-row" onclick="copiarLinkPuesto()">
         <div class="ic">🔗</div>
-        <div><b>Compartir mi puesto</b><small>digiferia.ar — copiá y compartí</small></div>
+        <div><b>Compartir mi puesto</b><small>Tu link directo para clientes: copiá y compartí</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+      <div class="accion-row" onclick="copiarLinkReferido()">
+        <div class="ic">🤝</div>
+        <div><b>Invitá feriantes y ganá</b><small>Por cada feriante que sumes y complete su primer mes: 30 días de upgrade de regalo</small></div>
         <div class="flecha-r">→</div>
       </div>
 
@@ -1282,12 +1294,42 @@ function verMiPuesto(){
 }
 
 // Copiar link del puesto
+function linkDeMiPuesto(){
+  return usuario && usuario.puestoSlug
+    ? `https://digiferia.ar/#puesto=${usuario.puestoSlug}`
+    : `https://digiferia.ar`;
+}
 function copiarLinkPuesto(){
-  const link = `https://digiferia.ar`;
+  const link = linkDeMiPuesto();
   navigator.clipboard.writeText(link).then(()=>{
-    mostrarToast("🔗 ¡Link copiado! Compartilo con tus clientes.");
+    mostrarToast("🔗 ¡Link copiado! Va directo a tu puesto: compartilo con tus clientes.");
   }).catch(()=>{
-    mostrarToast("🔗 Tu link: digiferia.ar");
+    mostrarToast("🔗 Tu link: " + link);
+  });
+}
+
+// Link de referido: invita feriantes y suma el premio de 30 días de upgrade
+async function copiarLinkReferido(){
+  if(!usuario || !usuario.puestoId) return;
+  let cod = usuario.codigoReferido;
+  if(!cod){
+    // Generar el código a partir del nombre del puesto y guardarlo
+    cod = (usuario.puestoNombre||"MIPUESTO").toUpperCase().normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"").replace(/[^A-Z0-9]/g,"").slice(0,16) || "MIPUESTO";
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
+        method: "PATCH",
+        headers: { ...sbHeaders(tokenActual), Prefer: "return=minimal" },
+        body: JSON.stringify({ codigo_referido: cod })
+      });
+      usuario.codigoReferido = cod;
+    }catch(e){ console.warn("No se pudo guardar el código de referido", e); }
+  }
+  const link = `https://digiferia.ar/unirse.html?ref=${cod}`;
+  navigator.clipboard.writeText(link).then(()=>{
+    mostrarToast("🤝 ¡Link de invitación copiado! Por cada feriante que se sume y complete su primer mes, ganás 30 días de upgrade.");
+  }).catch(()=>{
+    mostrarToast("🤝 Tu link: " + link);
   });
 }
 
@@ -1726,7 +1768,7 @@ async function cargarFeriaYPuestosEnVivo(){
   try{
     const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
-    const sel = "id,nombre,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const sel = "id,nombre,slug,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
@@ -1763,6 +1805,16 @@ async function cargarFeriaYPuestosEnVivo(){
       return {feriaId:fl.feria_id, estilo:"fl"+(i%4+1), fecha:(fe.dia!=="—"?fe.dia+" "+fe.num:"Próximamente")};
     });
     renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+    // Contador real de Puestos Fundadores 🌱 (cuenta las insignias en vivo)
+    (function(){
+      const n = FERIANTES.filter(f=>(f.pinesDB||[]).some(p=>(p.nombre||"").toLowerCase().includes("fundador"))).length;
+      const en = document.getElementById('fund-num');
+      const et = document.getElementById('fund-txt');
+      if(en && et && n > 0){
+        en.textContent = n;
+        et.innerHTML = `🌱 Puestos Fundadores ocupados — quedan ${Math.max(0, 20 - n)}<br>Voto de confianza: Plan Pro gratis por 6 meses + insignia permanente`;
+      }
+    })();
     const b=document.getElementById('badge-vivo'); if(b){b.style.display="inline-block";b.textContent="🟢 datos en vivo";}
   }catch(e){ console.warn("Error cargando datos en vivo:", e); }
 }
@@ -2522,7 +2574,14 @@ function enviarCarritoWsp(){
 
 // ================== INIT ==================
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
-cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo);
+cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
+  // Link profundo: digiferia.ar/#puesto=<slug>
+  const m = location.hash.match(/^#puesto=(.+)$/);
+  if(m){
+    const f = FERIANTES.find(x=>x.slug===decodeURIComponent(m[1]));
+    if(f) verPerfil(f.id);
+  }
+});
 recuperarSesionLocal();
 detectarTokenInvitacion();
 </script>
