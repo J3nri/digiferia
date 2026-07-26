@@ -1463,17 +1463,11 @@ async function imprimirQRPuesto(){
     ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#E91E8C';
     ctx.fillText(nombre, cw/2, ay + 15.5*S);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 ${8.5*S}px Nunito, sans-serif`;
-    ctx.fillText(link.replace('https://',''), cw/2, ay + 37*S);
-
     // Armar el PDF A4 con la tarjeta centrada
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a4' });
     const wmm = 100, hmm = wmm * ch / cw;
     doc.addImage(cv.toDataURL('image/png'), 'PNG', (210-wmm)/2, (297-hmm)/2, wmm, hmm);
-    doc.setFontSize(10); doc.setTextColor(130);
-    doc.text('Imprimí, recortá por el borde y plastificá — tenela visible en tu puesto 🎪', 105, (297+hmm)/2 + 12, { align:'center' });
     doc.save(`QR-${usuario.puestoSlug}.pdf`);
     mostrarToast('📄 ¡Tarjeta QR descargada! Buscala en tus descargas.');
   }catch(e){
