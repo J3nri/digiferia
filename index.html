@@ -2282,13 +2282,16 @@ function renderProductosEdic(){
     const fotoHtml = esUrl
       ? `<img src="${foto}" style="width:100%;height:100%;object-fit:cover">`
       : `<span>${foto || '📦'}</span>`;
-    return `<div class="prod-card">
+    const oculto = p.visible === false;
+    return `<div class="prod-card" style="${oculto?'opacity:.55':''}">
       <div class="prod-foto">${fotoHtml}</div>
       <div class="prod-info">
         <b>${p.nombre}</b>
         <small>$${Number(p.precio).toLocaleString('es-AR')}</small>
+        ${oculto?'<small style="display:block;color:#B3572B;font-weight:800">🙈 Oculto — los visitantes no lo ven</small>':''}
       </div>
       <div class="prod-acciones">
+        <button class="prod-btn" onclick="alternarVisibleProducto('${p.id}', ${oculto})" title="${oculto?'Mostrar':'Ocultar'}" style="${oculto?'background:#DFF5EC':''}">${oculto?'👁️':'🙈'}</button>
         <button class="prod-btn" onclick="editarProducto('${p.id}')" title="Editar">✏️</button>
         <button class="prod-btn" onclick="borrarProducto('${p.id}')" title="Borrar" style="background:#FDE7F2">🗑️</button>
       </div>
@@ -2320,6 +2323,23 @@ function abrirFormProducto(id){
 }
 
 function editarProducto(id){ abrirFormProducto(id); }
+
+// Ocultar / mostrar un producto (sin borrarlo — ideal para faltantes de stock)
+async function alternarVisibleProducto(id, estabaOculto){
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({ visible: estabaOculto })
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const p = productosEdic.find(x=>x.id===id);
+    if(p) p.visible = estabaOculto;
+    renderProductosEdic();
+    mostrarToast(estabaOculto ? '👁️ Producto visible de nuevo' : '🙈 Producto oculto. Cuando vuelva el stock, lo mostrás con un toque.');
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){ mostrarToast('No se pudo cambiar la visibilidad: ' + e.message); }
+}
 
 function cerrarFormProducto(){
   document.getElementById('velo-producto').classList.remove('on');
