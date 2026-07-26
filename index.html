@@ -1235,6 +1235,11 @@ function renderPanelFeriante(cont){
         <div><b>Invitá feriantes y ganá</b><small>Por cada feriante que sumes y complete su primer mes: 30 días de upgrade de regalo</small></div>
         <div class="flecha-r">→</div>
       </div>
+      <div class="accion-row" onclick="imprimirQRPuesto()">
+        <div class="ic">🖨️</div>
+        <div><b>Imprimí tu QR</b><small>Descargá la tarjeta en PDF, plastificala y tenela en tu puesto de la feria</small></div>
+        <div class="flecha-r">→</div>
+      </div>
 
       <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Colección de pines 📌</h2></div>
       ${Object.values(PINES).map(p=>
@@ -1384,6 +1389,96 @@ async function subirLogoFeria(input){
     mostrarToast('🖼️ ¡Logo actualizado!');
     cargarFeriaYPuestosEnVivo();
   }catch(e){ mostrarToast('No se pudo subir el logo: ' + e.message); }
+}
+
+// ================== QR IMPRIMIBLE DEL PUESTO ==================
+function cargarScript(url){
+  return new Promise((res, rej)=>{
+    if(document.querySelector(`script[src="${url}"]`)) return res();
+    const s = document.createElement('script');
+    s.src = url; s.onload = res; s.onerror = ()=>rej(new Error('No se pudo cargar ' + url));
+    document.head.appendChild(s);
+  });
+}
+function trazoRedondeado(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+async function imprimirQRPuesto(){
+  if(!usuario || !usuario.puestoSlug){
+    mostrarToast('Tu puesto todavía no tiene link propio. Escribinos y lo revisamos.');
+    return;
+  }
+  mostrarToast('⏳ Preparando tu tarjeta QR…');
+  try{
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const link = linkDeMiPuesto();
+
+    // Generar el QR en un contenedor invisible
+    const tmp = document.createElement('div');
+    tmp.style.position = 'fixed'; tmp.style.left = '-9999px';
+    document.body.appendChild(tmp);
+    new QRCode(tmp, { text: link, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.H });
+    await new Promise(r=>setTimeout(r, 200));
+    const qrEl = tmp.querySelector('canvas') || tmp.querySelector('img');
+    const qrData = qrEl.tagName === 'CANVAS' ? qrEl.toDataURL('image/png') : qrEl.src;
+    tmp.remove();
+
+    // Dibujar la tarjeta (estilo Digi Feria)
+    const S = 3, cw = 190*S, ch = 272*S;
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const ctx = cv.getContext('2d');
+    trazoRedondeado(ctx, 1*S, 1*S, cw-2*S, ch-2*S, 22*S);
+    ctx.fillStyle = '#E91E8C'; ctx.fill();
+    ctx.lineWidth = 2*S; ctx.strokeStyle = '#2B2118'; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#FFFFFF';
+    ctx.font = `800 ${17*S}px Fredoka, Nunito, sans-serif`;
+    ctx.fillText('LA DIGI FERIA', cw/2, 26*S);
+    ctx.font = `700 ${9.5*S}px Nunito, sans-serif`;
+    ctx.fillText('La Feria Digital en Gutiérrez', cw/2, 46*S);
+
+    const lado = 134*S, px = (cw-lado)/2, py = 66*S, pad = 9*S;
+    trazoRedondeado(ctx, px-pad, py-pad, lado+2*pad, lado+2*pad, 14*S);
+    ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
+    const im = new Image();
+    await new Promise((r, j)=>{ im.onload = r; im.onerror = j; im.src = qrData; });
+    ctx.drawImage(im, px, py, lado, lado);
+
+    // Píldora con el nombre del puesto (se achica si es largo)
+    const nombre = usuario.puestoNombre || 'Mi puesto';
+    let fz = 12*S;
+    ctx.font = `800 ${fz}px Fredoka, Nunito, sans-serif`;
+    while(ctx.measureText(nombre).width > cw - 40*S && fz > 7*S){
+      fz -= S; ctx.font = `800 ${fz}px Fredoka, Nunito, sans-serif`;
+    }
+    const tw = ctx.measureText(nombre).width + 24*S;
+    const ax = (cw-tw)/2, ay = py + lado + pad + 8*S;
+    trazoRedondeado(ctx, ax, ay, tw, 22*S, 11*S);
+    ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#E91E8C';
+    ctx.fillText(nombre, cw/2, ay + 15.5*S);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `800 ${8.5*S}px Nunito, sans-serif`;
+    ctx.fillText(link.replace('https://',''), cw/2, ay + 37*S);
+
+    // Armar el PDF A4 con la tarjeta centrada
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const wmm = 100, hmm = wmm * ch / cw;
+    doc.addImage(cv.toDataURL('image/png'), 'PNG', (210-wmm)/2, (297-hmm)/2, wmm, hmm);
+    doc.setFontSize(10); doc.setTextColor(130);
+    doc.text('Imprimí, recortá por el borde y plastificá — tenela visible en tu puesto 🎪', 105, (297+hmm)/2 + 12, { align:'center' });
+    doc.save(`QR-${usuario.puestoSlug}.pdf`);
+    mostrarToast('📄 ¡Tarjeta QR descargada! Buscala en tus descargas.');
+  }catch(e){
+    mostrarToast('No se pudo generar el QR: ' + e.message);
+  }
 }
 
 // Ver mi propio perfil como si fuera un visitante
