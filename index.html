@@ -1280,6 +1280,23 @@ function copiarLinkPuesto(){
   });
 }
 
+// ================== ALERTAS POR EMAIL (Edge Function enviar-alerta) ==================
+// Dispara el aviso a los seguidores. No bloquea la interfaz: si falla,
+// solo lo anota en la consola (la confirmación en la base ya se guardó igual).
+function dispararAlerta(datos){
+  fetch(`${SUPABASE_URL}/functions/v1/enviar-alerta`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_KEY}`
+    },
+    body: JSON.stringify(datos)
+  })
+  .then(r=>r.json())
+  .then(d=>console.log("📬 Alerta a seguidores:", d))
+  .catch(e=>console.warn("No se pudo enviar la alerta:", e));
+}
+
 // ================== CONFIRMAR ASISTENCIA ==================
 const asistenciasConfirmadas = new Set();
 
@@ -1313,6 +1330,8 @@ async function toggleAsistencia(feriaId, feriaName){
     asistenciasConfirmadas.add(feriaId);
     if(btn){ btn.classList.add('confirmado'); btn.innerHTML = `✅ ${feriaName} — Confirmado!`; }
     mostrarToast("🔥 ¡Asistencia confirmada! Tus seguidores van a recibir una notificación.");
+    // Avisar por email a los seguidores del puesto
+    dispararAlerta({ tipo:"asistencia", puesto_id: usuario.puestoId, feria_id: feriaId, fecha: fechaStr });
   }catch(e){
     mostrarToast("❌ No se pudo confirmar. Intentá de nuevo.");
   }
@@ -2236,6 +2255,8 @@ async function guardarFechas(){
 
     cerrarFechas();
     mostrarToast(`✅ ${fechasSeleccionadas.size} fecha${fechasSeleccionadas.size>1?'s':''} confirmada${fechasSeleccionadas.size>1?'s':''}. ¡Los seguidores van a recibir una alerta!`);
+    // Avisar por email a los seguidores de la feria (una sola alerta, con la fecha más próxima)
+    dispararAlerta({ tipo:"fecha_feria", feria_id: fechasFeriaId, fecha: proxima });
     cargarFeriaYPuestosEnVivo();
   }catch(e){
     document.getElementById('fechas-error').textContent = 'Error: ' + e.message;
