@@ -1880,6 +1880,35 @@ document.addEventListener('click', ()=>document.querySelectorAll('.pin.abierto')
 
 // ================== SEGUIR / NEWSLETTER ==================
 let emailVisitante = null;
+
+// ---- Campanita real: memoria del navegador + Supabase ----
+function emailNotificaciones(){
+  return emailVisitante || (usuario && usuario.email) || null;
+}
+function guardarSeguimientosLocal(){
+  try{
+    localStorage.setItem('digi_email', emailVisitante || '');
+    localStorage.setItem('digi_sigue', JSON.stringify([...siguiendo]));
+  }catch(e){}
+}
+function restaurarSeguimientosLocal(){
+  try{
+    const e = localStorage.getItem('digi_email');
+    if(e) emailVisitante = e;
+    JSON.parse(localStorage.getItem('digi_sigue') || '[]').forEach(x=>siguiendo.add(x));
+  }catch(e){}
+}
+async function sincronizarSeguimiento(fn, tipo, ref){
+  const em = emailNotificaciones();
+  if(!em) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: em, p_tipo: tipo, p_ref: (tipo === 'general' ? null : ref) })
+    });
+  }catch(e){ console.warn('Seguimiento sin sincronizar:', e); }
+}
 const siguiendo = new Set();
 let pendiente = null;
 
@@ -1889,9 +1918,12 @@ function seguir(tipo, id, nombre, boton){
     siguiendo.delete(clave);
     if(boton) boton.classList.remove('on');
     if(tipo==='puesto') actualizarBtnPerfil(id);
+    sincronizarSeguimiento('dejar_de_seguir', tipo, id);
+    guardarSeguimientosLocal();
+    mostrarToast(`🔕 Dejaste de seguir ${nombre||'esto'}`);
     return;
   }
-  if(!emailVisitante && !usuario){
+  if(!emailNotificaciones()){
     pendiente = {tipo, id, nombre, boton};
     document.getElementById('modal-texto').textContent = `Dejanos tu email y te avisamos las novedades de ${nombre}: fechas confirmadas, productos nuevos y más.`;
     document.getElementById('velo').classList.add('on');
@@ -1900,12 +1932,16 @@ function seguir(tipo, id, nombre, boton){
   siguiendo.add(clave);
   if(boton) boton.classList.add('on');
   if(tipo==='puesto') actualizarBtnPerfil(id);
+  sincronizarSeguimiento('seguir_publico', tipo, id);
+  guardarSeguimientosLocal();
+  mostrarToast(`🔔 ¡Siguiendo ${nombre||''}! Te llegan las novedades por email.`);
 }
 
 function confirmarEmail(){
   const em = document.getElementById('modal-email').value.trim();
   if(!em||!em.includes('@')){ document.getElementById('modal-email').style.borderColor='#E91E8C'; return; }
   emailVisitante = em;
+  guardarSeguimientosLocal();
   cerrarModal();
   if(pendiente){ seguir(pendiente.tipo, pendiente.id, pendiente.nombre, pendiente.boton); pendiente=null; }
   renderFerias();
@@ -1929,6 +1965,8 @@ function suscribirGeneral(){
   if(!em||!em.includes('@')){ document.getElementById('news-email').style.borderColor='#E91E8C'; return; }
   emailVisitante = em;
   siguiendo.add('general:digiferia');
+  sincronizarSeguimiento('seguir_publico', 'general', null);
+  guardarSeguimientosLocal();
   const card = document.querySelector('.news-card');
   card.innerHTML = '<h3>🎉 ¡Listo!</h3><p>Cada semana te va a llegar lo mejor de La Digi Feria. Podés seguir también puestos, ferias o rubros puntuales con la campanita 🔔.</p>';
 }
@@ -2787,6 +2825,7 @@ function enviarCarritoWsp(){
 }
 
 // ================== INIT ==================
+restaurarSeguimientosLocal();
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
