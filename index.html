@@ -146,6 +146,9 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 /* MODALES */
 .velo{position:fixed;inset:0;background:rgba(43,33,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
 .velo.on{display:flex}
+#velo-detalle-prod.on,#velo-carrito.on{align-items:flex-end}
+#velo-detalle-prod,#velo-carrito{overflow-y:auto}
+#velo-detalle-prod>div,#velo-carrito>div{margin-top:auto}
 .modal{background:var(--fondo);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:6px 6px 0 rgba(43,33,24,.9);padding:20px;max-width:340px;width:100%}
 .modal h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px}
 .modal p{font-size:13.5px;color:#5C4F3E;margin-top:6px;line-height:1.45}
@@ -490,8 +493,8 @@ nav button.on span{filter:none;opacity:1}
 </main>
 
 <!-- MODAL DETALLE PRODUCTO -->
-<div class="velo" id="velo-detalle-prod" style="align-items:flex-end;padding:0">
-  <div style="background:var(--fondo);width:100%;max-width:480px;border-radius:24px 24px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:90vh;overflow-y:auto">
+<div class="velo" id="velo-detalle-prod" style="align-items:flex-end;padding:0;overflow-y:auto">
+  <div style="background:var(--fondo);width:100%;max-width:480px;border-radius:24px 24px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <!-- Carrusel de fotos -->
     <div id="detalle-fotos" style="position:relative;background:#FDF1DC;border-bottom:2px solid var(--tinta)">
       <div id="detalle-fotos-wrap" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:380px">
@@ -524,7 +527,7 @@ nav button.on span{filter:none;opacity:1}
 </div>
 
 <!-- MODAL CARRITO -->
-<div class="velo" id="velo-carrito" style="align-items:flex-end;padding:0">
+<div class="velo" id="velo-carrito" style="align-items:flex-end;padding:0;overflow-y:auto">
   <div style="background:var(--fondo);width:100%;max-width:480px;border-radius:24px 24px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:85vh;overflow-y:auto;padding-bottom:20px">
     <div style="padding:18px 18px 12px;border-bottom:2px solid #F0E4CE;display:flex;align-items:center;justify-content:space-between">
       <h2 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px">🛒 Tu pedido</h2>
