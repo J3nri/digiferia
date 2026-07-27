@@ -494,17 +494,20 @@ nav button.on span{filter:none;opacity:1}
   <div style="background:var(--fondo);width:100%;max-width:480px;border-radius:24px 24px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:90vh;overflow-y:auto">
     <!-- Carrusel de fotos -->
     <div id="detalle-fotos" style="position:relative;background:#FDF1DC;border-bottom:2px solid var(--tinta)">
-      <div id="detalle-fotos-wrap" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:260px">
+      <div id="detalle-fotos-wrap" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:380px">
       </div>
-      <button id="detalle-flecha-izq" onclick="moverFotoDetalle(-1)" style="display:none;position:absolute;left:10px;top:112px;width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:rgba(255,255,255,.92);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);z-index:2">‹</button>
-      <button id="detalle-flecha-der" onclick="moverFotoDetalle(1)" style="display:none;position:absolute;right:10px;top:112px;width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:rgba(255,255,255,.92);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);z-index:2">›</button>
+      <button id="detalle-flecha-izq" onclick="moverFotoDetalle(-1)" style="display:none;position:absolute;left:10px;top:172px;width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:rgba(255,255,255,.92);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);z-index:2">‹</button>
+      <button id="detalle-flecha-der" onclick="moverFotoDetalle(1)" style="display:none;position:absolute;right:10px;top:172px;width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:rgba(255,255,255,.92);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);z-index:2">›</button>
       <div id="detalle-puntos" style="display:flex;gap:6px;justify-content:center;padding:8px 0;background:var(--fondo)"></div>
     </div>
     <!-- Info -->
     <div style="padding:18px">
       <h2 id="detalle-nombre" style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px;line-height:1.2"></h2>
       <div id="detalle-precio" style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--verde);margin-top:6px"></div>
-      <p id="detalle-desc" style="font-size:14px;color:#5C4F3E;font-weight:700;margin-top:10px;line-height:1.5"></p>
+      <div id="detalle-desc-bloque" style="margin-top:14px;display:none">
+        <h3 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;color:#7A6A55">📝 Descripción</h3>
+        <p id="detalle-desc" style="font-size:14.5px;color:#5C4F3E;font-weight:700;margin-top:5px;line-height:1.55"></p>
+      </div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button onclick="cerrarDetalleProd()" style="flex:1;padding:13px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer">← Volver</button>
         <button id="btn-agregar-carrito" onclick="agregarAlCarrito()" style="flex:2;padding:13px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🛒 Agregar al carrito</button>
@@ -2755,7 +2758,9 @@ function verProducto(idx){
   const p = productoActual;
   document.getElementById('detalle-nombre').textContent = p.n;
   document.getElementById('detalle-precio').textContent = p.p;
-  document.getElementById('detalle-desc').textContent = p.desc || '';
+  const descTxt = (p.desc || '').trim();
+  document.getElementById('detalle-desc').textContent = descTxt;
+  document.getElementById('detalle-desc-bloque').style.display = descTxt ? 'block' : 'none';
   const wrap = document.getElementById('detalle-fotos-wrap');
   const puntos = document.getElementById('detalle-puntos');
   let fotos = [];
@@ -2764,7 +2769,7 @@ function verProducto(idx){
   const fIzq = document.getElementById('detalle-flecha-izq');
   const fDer = document.getElementById('detalle-flecha-der');
   if(fotos.length){
-    wrap.innerHTML = fotos.map(url=>`<div style="min-width:100%;scroll-snap-align:center;height:260px;background:#FDF1DC;flex-shrink:0;display:flex;align-items:center;justify-content:center"><img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`).join('');
+    wrap.innerHTML = fotos.map(url=>`<div style="min-width:100%;scroll-snap-align:center;height:380px;background:#FDF1DC;flex-shrink:0;display:flex;align-items:center;justify-content:center"><img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`).join('');
     puntos.innerHTML = fotos.length>1 ? fotos.map((_,i)=>`<span style="width:8px;height:8px;border-radius:50%;background:${i===0?'var(--fucsia)':'#DCCFB6'};display:inline-block;transition:background .2s"></span>`).join('') : '';
     wrap.onscroll = ()=>{ const i=Math.round(wrap.scrollLeft/wrap.offsetWidth); puntos.querySelectorAll('span').forEach((s,j)=>{ s.style.background=j===i?'var(--fucsia)':'#DCCFB6'; }); };
     const varias = fotos.length > 1;
@@ -2773,7 +2778,7 @@ function verProducto(idx){
   } else {
     fIzq.style.display = 'none';
     fDer.style.display = 'none';
-    wrap.innerHTML = `<div style="min-width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:72px">${p.e||'🛍️'}</div>`;
+    wrap.innerHTML = `<div style="min-width:100%;height:380px;display:flex;align-items:center;justify-content:center;font-size:96px">${p.e||'🛍️'}</div>`;
     puntos.innerHTML = '';
   }
   const btnC = document.getElementById('btn-agregar-carrito');
