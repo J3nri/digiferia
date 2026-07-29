@@ -151,6 +151,7 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .flyer-con-img .flyer-img-wrap{width:100%;background:#FDF1DC;border-bottom:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;max-height:300px;overflow:hidden}
 .flyer-con-img .flyer-img-wrap img{width:100%;height:auto;display:block;object-fit:cover}
 .flyer.fijo.flyer-con-img{min-width:auto}
+.mini-flyer{width:76px;height:96px;border-radius:10px;border:2px solid var(--tinta);background-size:cover;background-position:center;flex-shrink:0;box-shadow:2px 2px 0 rgba(43,33,24,.5)}
 #velo-detalle-prod.on,#velo-carrito.on{align-items:flex-end}
 #velo-detalle-prod,#velo-carrito{overflow-y:auto}
 #velo-detalle-prod>div,#velo-carrito>div{margin-top:auto}
@@ -1882,12 +1883,16 @@ function renderFerias(){
       const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
       const fx = (fe.fechasFull||[]).find(x=>x.destacada && x.flyer_url) || proximaFechaConFlyer(fe);
       const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
-      return `<div class="flyer fijo flyer-con-img" style="margin:0 18px 16px" onclick="verFlyerGrande('${fx.flyer_url}','${nombreEsc}','${fechaCorta(fx.fecha).texto}')">
-        <div class="flyer-img-wrap"><img src="${fx.flyer_url}" alt="${fe.nombre}"></div>
-        <div class="flyer-body">
-          <span class="flyer-fecha">📅 ${fechaCorta(fx.fecha).texto}</span>
-          <h3>${fe.nombre}</h3>
-          <div class="flyer-lugar">📍 ${(fe.lugar||'').split("·")[0].trim()} · 🎪 ${n} puestos</div>
+      return `<div class="flyer fijo fl1" style="margin:0 18px 16px" onclick="verFlyerGrande('${fx.flyer_url}','${nombreEsc}','${fechaCorta(fx.fecha).texto}')">
+        <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="flyer-body" style="display:flex;gap:12px;align-items:center">
+          <div class="mini-flyer" style="background-image:url('${fx.flyer_url}')"></div>
+          <div style="flex:1;min-width:0">
+            <span class="flyer-fecha">📅 ${fechaCorta(fx.fecha).texto}</span>
+            <h3 style="margin-top:4px">${fe.nombre}</h3>
+            <div class="flyer-lugar">📍 ${(fe.lugar||'').split("·")[0].trim()} · 🎪 ${n} puestos</div>
+            <div style="font-size:11px;font-weight:800;color:#B3572B;margin-top:6px">👆 Tocá para ver el flyer</div>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -1949,12 +1954,16 @@ function renderCarrusel(){
     if(!fe) return "";
     const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
     const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
-    return `<div class="flyer flyer-con-img" onclick="verFlyerGrande('${fl.flyerUrl}','${nombreEsc}','${fl.textoFecha}')">
-      <div class="flyer-img-wrap"><img src="${fl.flyerUrl}" alt="${fe.nombre}"></div>
-      <div class="flyer-body">
-        <span class="flyer-fecha">📅 ${fl.textoFecha}</span>
-        <h3>${fe.nombre}</h3>
-        <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n} puestos</div>
+    return `<div class="flyer fl1" onclick="verFlyerGrande('${fl.flyerUrl}','${nombreEsc}','${fl.textoFecha}')">
+      <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="flyer-body" style="display:flex;gap:12px;align-items:center">
+        <div class="mini-flyer" style="background-image:url('${fl.flyerUrl}')"></div>
+        <div style="flex:1;min-width:0">
+          <span class="flyer-fecha">📅 ${fl.textoFecha}</span>
+          <h3 style="margin-top:4px">${fe.nombre}</h3>
+          <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n} puestos</div>
+          <div style="font-size:11px;font-weight:800;color:#B3572B;margin-top:6px">👆 Tocá para ver el flyer</div>
+        </div>
       </div>
     </div>`;
   }).join("");
