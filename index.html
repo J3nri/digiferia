@@ -146,6 +146,11 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 /* MODALES */
 .velo{position:fixed;inset:0;background:rgba(43,33,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
 .velo.on{display:flex}
+#velo-ver-flyer{overflow-y:auto;align-items:center}
+.flyer-con-img{display:flex;flex-direction:column;overflow:hidden}
+.flyer-con-img .flyer-img-wrap{width:100%;background:#FDF1DC;border-bottom:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;max-height:300px;overflow:hidden}
+.flyer-con-img .flyer-img-wrap img{width:100%;height:auto;display:block;object-fit:cover}
+.flyer.fijo.flyer-con-img{min-width:auto}
 #velo-detalle-prod.on,#velo-carrito.on{align-items:flex-end}
 #velo-detalle-prod,#velo-carrito{overflow-y:auto}
 #velo-detalle-prod>div,#velo-carrito>div{margin-top:auto}
@@ -604,6 +609,15 @@ nav button.on span{filter:none;opacity:1}
       <button class="m-no" onclick="cerrarFechaFlyer()">Cancelar</button>
       <button class="m-ok" id="ff-btn" onclick="guardarFechaConFlyer()">✅ Confirmar fecha</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: ver flyer en grande -->
+<div class="velo" id="velo-ver-flyer" onclick="cerrarVerFlyer(event)" style="padding:16px">
+  <div style="max-width:440px;width:100%;position:relative">
+    <button onclick="cerrarVerFlyer()" style="position:absolute;top:-10px;right:-10px;z-index:2;width:40px;height:40px;border-radius:50%;border:2px solid var(--tinta);background:var(--blanco);font-size:18px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9)">✕</button>
+    <img id="ver-flyer-img" src="" style="width:100%;border-radius:16px;border:2px solid var(--tinta);box-shadow:6px 6px 0 rgba(43,33,24,.5);display:block">
+    <div id="ver-flyer-info" style="text-align:center;margin-top:12px;color:#FFF8EC;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px"></div>
   </div>
 </div>
 
@@ -1847,21 +1861,63 @@ function buscarTexto(q){
 }
 
 // ================== FERIAS ==================
+function proximaFechaConFlyer(fe){
+  // Devuelve la primera fecha futura que tenga flyer (para abrir al tocar)
+  const conFlyer = (fe.fechasFull||[]).filter(x=>x.flyer_url);
+  return conFlyer.length ? conFlyer[0] : null;
+}
+
 function renderFerias(){
-  document.getElementById('lista-ferias').innerHTML = FERIAS.map(fe=>{
-    const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
-    return `<div class="feria-item">
-      <div class="feria-dia ${fe.fd}"><small>${fe.dia}</small><b>${fe.num}</b></div>
-      <div class="feria-info">
-        <h3 style="display:flex;align-items:center;gap:8px">${fe.logo?`<span style="width:34px;height:34px;border-radius:50%;border:2px solid var(--tinta);background-image:url('${fe.logo}');background-size:cover;background-position:center;flex-shrink:0;display:inline-block"></span>`:''}${fe.nombre}</h3>
-        <p>${fe.lugar}</p>
-        <span class="frec">🔁 ${fe.frec}</span>
-        ${(fe.fechas&&fe.fechas.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">${fe.fechas.map(x=>`<span style="font-size:11px;font-weight:800;background:#DFF5EC;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px">📅 ${fechaCorta(x).texto}</span>`).join('')}</div>` : ''}
-        <div class="puestos-n">🎪 ${n} puestos en la Digi Feria</div>
-      </div>
-      <button class="seguir-mini ${siguiendo.has('feria:'+fe.id)?'on':''}" onclick="event.stopPropagation();seguir('feria','${fe.id}','${fe.nombre}',this)" style="align-self:flex-start">🔔</button>
-    </div>`;
-  }).join("");
+  // Separar en dos sectores: destacadas (pagan la vidriera) y el resto
+  const destacadas = FERIAS.filter(fe => (fe.fechasFull||[]).some(x=>x.destacada && x.flyer_url));
+  const normales   = FERIAS.filter(fe => !(fe.fechasFull||[]).some(x=>x.destacada && x.flyer_url));
+
+  const cont = document.getElementById('lista-ferias');
+  let html = '';
+
+  // ---- Sector destacado ----
+  if(destacadas.length){
+    html += `<div style="padding:0 18px 4px"><h2 style="display:flex;justify-content:space-between;align-items:baseline">Ferias destacadas 🎉 <small style="font-size:11px;font-weight:800;color:#B3A48C;text-transform:uppercase;letter-spacing:.5px">Espacio pago</small></h2></div>`;
+    html += destacadas.map(fe=>{
+      const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
+      const fx = (fe.fechasFull||[]).find(x=>x.destacada && x.flyer_url) || proximaFechaConFlyer(fe);
+      const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
+      return `<div class="flyer fijo flyer-con-img" style="margin:0 18px 16px" onclick="verFlyerGrande('${fx.flyer_url}','${nombreEsc}','${fechaCorta(fx.fecha).texto}')">
+        <div class="flyer-img-wrap"><img src="${fx.flyer_url}" alt="${fe.nombre}"></div>
+        <div class="flyer-body">
+          <span class="flyer-fecha">📅 ${fechaCorta(fx.fecha).texto}</span>
+          <h3>${fe.nombre}</h3>
+          <div class="flyer-lugar">📍 ${(fe.lugar||'').split("·")[0].trim()} · 🎪 ${n} puestos</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ---- Sector normal (programadas, sin destaque) ----
+  if(normales.length){
+    if(destacadas.length) html += `<div style="padding:14px 18px 4px"><h2>Otras ferias programadas 📅</h2></div>`;
+    html += normales.map(fe=>{
+      const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
+      const fx = proximaFechaConFlyer(fe);
+      const tocable = fx ? `onclick="verFlyerGrande('${fx.flyer_url}','${(fe.nombre||'').replace(/'/g,"\\'")}','${fechaCorta(fx.fecha).texto}')" style="cursor:pointer"` : '';
+      return `<div class="feria-item" ${tocable}>
+        <div class="feria-dia ${fe.fd}"><small>${fe.dia}</small><b>${fe.num}</b></div>
+        <div class="feria-info">
+          <h3 style="display:flex;align-items:center;gap:8px">${fe.logo?`<span style="width:34px;height:34px;border-radius:50%;border:2px solid var(--tinta);background-image:url('${fe.logo}');background-size:cover;background-position:center;flex-shrink:0;display:inline-block"></span>`:''}${fe.nombre}</h3>
+          <p>${fe.lugar}</p>
+          <span class="frec">🔁 ${fe.frec}</span>
+          ${(fe.fechas&&fe.fechas.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">${fe.fechas.map(x=>`<span style="font-size:11px;font-weight:800;background:#DFF5EC;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px">📅 ${fechaCorta(x).texto}</span>`).join('')}</div>` : ''}
+          <div class="puestos-n">🎪 ${n} puestos en la Digi Feria</div>
+        </div>
+        <button class="seguir-mini ${siguiendo.has('feria:'+fe.id)?'on':''}" onclick="event.stopPropagation();seguir('feria','${fe.id}','${fe.nombre}',this)" style="align-self:flex-start">🔔</button>
+      </div>`;
+    }).join('');
+  }
+
+  if(!destacadas.length && !normales.length){
+    html = `<div class="vacio" style="padding:30px 18px">Todavía no hay ferias con fecha confirmada 🗓️</div>`;
+  }
+  cont.innerHTML = html;
 }
 
 // ================== CARRUSEL ==================
@@ -1872,6 +1928,17 @@ let FLYERS = [
   {feriaId:"artesanal", estilo:"fl4", fecha:"Dom 26 · 17 a 22 hs"},
 ];
 
+function verFlyerGrande(flyerUrl, nombre, textoFecha){
+  if(!flyerUrl) return;
+  document.getElementById('ver-flyer-img').src = flyerUrl;
+  document.getElementById('ver-flyer-info').innerHTML = `${nombre||''}${textoFecha?` · 📅 ${textoFecha}`:''}`;
+  document.getElementById('velo-ver-flyer').classList.add('on');
+}
+function cerrarVerFlyer(ev){
+  if(ev && ev.target && ev.target.tagName === 'IMG') return; // no cerrar al tocar la imagen
+  document.getElementById('velo-ver-flyer').classList.remove('on');
+}
+
 function renderCarrusel(){
   const wrap = document.querySelector('.carrusel-wrap');
   if(!FLYERS.length){ if(wrap) wrap.style.display="none"; return; }
@@ -1881,13 +1948,13 @@ function renderCarrusel(){
     const fe = feriaPorId(fl.feriaId);
     if(!fe) return "";
     const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
-    return `<div class="flyer ${fl.estilo}" onclick="ir('p-ferias')">
-      <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
+    return `<div class="flyer flyer-con-img" onclick="verFlyerGrande('${fl.flyerUrl}','${nombreEsc}','${fl.textoFecha}')">
+      <div class="flyer-img-wrap"><img src="${fl.flyerUrl}" alt="${fe.nombre}"></div>
       <div class="flyer-body">
-        <span class="flyer-fecha">📅 ${fl.fecha}</span>
+        <span class="flyer-fecha">📅 ${fl.textoFecha}</span>
         <h3>${fe.nombre}</h3>
         <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n} puestos</div>
-        <span class="flecha">→</span>
       </div>
     </div>`;
   }).join("");
@@ -2038,14 +2105,15 @@ async function cargarFeriaYPuestosEnVivo(){
     // Fechas públicas: solo los próximos 30 días
     const hoyISO = new Date().toISOString().slice(0,10);
     const en30 = new Date(); en30.setDate(en30.getDate()+30);
-    const rfe = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=feria_id,fecha&fecha=gte.${hoyISO}&fecha=lte.${en30.toISOString().slice(0,10)}&order=fecha.asc`,{headers:cab});
+    const rfe = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=feria_id,fecha,flyer_url,destacada&fecha=gte.${hoyISO}&fecha=lte.${en30.toISOString().slice(0,10)}&order=fecha.asc`,{headers:cab});
     const fechasPub = rfe.ok ? await rfe.json() : [];
     if(!puestos.length){ console.warn("Sin puestos en vivo; usando ejemplos."); return; }
     if(ferias.length){
       FERIAS = ferias.map(f=>{
         const fc=fechaCorta(f.proxima_fecha);
-        const fpub = fechasPub.filter(x=>x.feria_id===f.id).map(x=>x.fecha);
-        return {id:f.id, nombre:f.nombre, logo:f.logo_url||null, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
+        const misFechas = fechasPub.filter(x=>x.feria_id===f.id);
+        const fpub = misFechas.map(x=>x.fecha);
+        return {id:f.id, nombre:f.nombre, logo:f.logo_url||null, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, fechasFull:misFechas, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
       });
     }
     const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
@@ -2068,10 +2136,14 @@ async function cargarFeriaYPuestosEnVivo(){
         confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
       };
     });
-    FLYERS = flyers.filter(fl=>FERIAS.some(fe=>fe.id===fl.feria_id)).map((fl,i)=>{
-      const fe=FERIAS.find(x=>x.id===fl.feria_id);
-      return {feriaId:fl.feria_id, estilo:"fl"+(i%4+1), fecha:(fe.dia!=="—"?fe.dia+" "+fe.num:"Próximamente")};
+    // El carrusel de la home = fechas DESTACADAS próximas, con su flyer real
+    FLYERS = [];
+    FERIAS.forEach(fe=>{
+      (fe.fechasFull||[]).filter(x=>x.destacada && x.flyer_url).forEach(x=>{
+        FLYERS.push({ feriaId: fe.id, fecha: x.fecha, flyerUrl: x.flyer_url, textoFecha: fechaCorta(x.fecha).texto });
+      });
     });
+    FLYERS.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
     renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
     // Contador real de Puestos Fundadores 🌱 (cuenta las insignias en vivo)
     (function(){
