@@ -570,15 +570,39 @@ nav button.on span{filter:none;opacity:1}
     <!-- Grilla de días -->
     <div id="cal-grilla" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
 
-    <p style="font-size:12px;color:#7A6A55;font-weight:700;margin-top:10px">Tocá los días para marcarlos. Tocá de nuevo para desmarcar.</p>
+    <p style="font-size:12px;color:#7A6A55;font-weight:700;margin-top:10px">Tocá un día para confirmarlo y subirle su flyer.</p>
 
     <div id="fechas-seleccionadas" style="margin-top:10px;min-height:24px"></div>
 
     <div class="login-error" id="fechas-error"></div>
     <div class="login-spinner" id="fechas-spinner">Guardando fechas… 📅</div>
     <div class="acciones" style="margin-top:12px">
-      <button class="m-no" onclick="cerrarFechas()">Cancelar</button>
-      <button class="m-ok" onclick="guardarFechas()">✅ Confirmar</button>
+      <button class="m-no" onclick="cerrarFechas()" style="flex:1">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: confirmar UNA fecha con su flyer (obligatorio) -->
+<div class="velo" id="velo-fecha-flyer">
+  <div class="modal">
+    <h3>📅 Confirmar fecha</h3>
+    <p style="font-size:14px;color:#2B2118;font-weight:800;margin-top:6px" id="ff-fecha-label"></p>
+    <p style="font-size:12.5px;color:#5C4F3E;font-weight:700;margin-top:4px">Subí el flyer de esta fecha. Es obligatorio: es la imagen que van a ver los visitantes.</p>
+    <div style="margin:14px 0">
+      <div id="ff-preview" style="width:100%;height:180px;border-radius:14px;border:2px dashed var(--tinta);background:#FDF1DC;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden" onclick="document.getElementById('ff-input').click()">
+        <div style="text-align:center">
+          <div style="font-size:36px">🖼️</div>
+          <p style="font-size:13px;font-weight:800;color:#7A6A55;margin-top:6px">Tocá para elegir el flyer</p>
+          <p style="font-size:11px;color:#9A8B76;font-weight:700">JPG o PNG · Máx 3MB<br>Tamaño ideal: 800x1000px (vertical)</p>
+        </div>
+      </div>
+      <input type="file" id="ff-input" accept="image/*" style="display:none" onchange="previewFechaFlyer(this)">
+    </div>
+    <div class="login-error" id="ff-error"></div>
+    <div class="login-spinner" id="ff-spinner">Guardando fecha y flyer… 📅</div>
+    <div class="acciones" style="margin-top:12px">
+      <button class="m-no" onclick="cerrarFechaFlyer()">Cancelar</button>
+      <button class="m-ok" id="ff-btn" onclick="guardarFechaConFlyer()">✅ Confirmar fecha</button>
     </div>
   </div>
 </div>
@@ -1319,7 +1343,7 @@ async function cargarFechasOrganizador(){
   const ids = usuario.feriaOrg.map(f=>f.id).join(',');
   const hoy = new Date().toISOString().slice(0,10);
   try{
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=id,feria_id,fecha&feria_id=in.(${ids})&fecha=gte.${hoy}&order=fecha.asc`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=id,feria_id,fecha,flyer_url&feria_id=in.(${ids})&fecha=gte.${hoy}&order=fecha.asc`, {
       headers: sbHeaders(tokenActual)
     });
     const fechas = r.ok ? await r.json() : [];
@@ -1334,7 +1358,9 @@ async function cargarFechasOrganizador(){
       cont.innerHTML = `<b style="font-family:'Fredoka';font-weight:600;font-size:13px;display:block;margin:8px 0 6px">📅 Tus próximas fechas (${mias.length})</b>` +
         mias.map(x=>{
           const fc = fechaCorta(x.fecha);
+          const mini = x.flyer_url ? `<div style="width:34px;height:34px;border-radius:8px;border:2px solid var(--tinta);background-image:url('${x.flyer_url}');background-size:cover;background-position:center;flex-shrink:0"></div>` : '';
           return `<div style="display:flex;align-items:center;gap:8px;background:#FFF;border:2px solid var(--tinta);border-radius:10px;padding:6px 10px;margin-bottom:6px">
+            ${mini}
             <b style="font-family:'Fredoka';font-weight:600;font-size:13px;flex:1">${fc.texto}</b>
             <button onclick="compartirFechaOrg('${f.id}','${x.fecha}')" style="border:2px solid var(--tinta);border-radius:999px;background:var(--amarillo);font-family:'Nunito';font-weight:800;font-size:11px;padding:4px 10px;cursor:pointer">🔗 Compartir</button>
             <button onclick="borrarFechaOrg('${x.id}','${fc.texto}')" style="border:2px solid var(--tinta);border-radius:50%;background:var(--blanco);width:26px;height:26px;font-size:12px;cursor:pointer">✕</button>
@@ -2586,9 +2612,8 @@ function renderCalendario(){
 }
 
 function toggleFecha(fecha){
-  if(fechasSeleccionadas.has(fecha)) fechasSeleccionadas.delete(fecha);
-  else fechasSeleccionadas.add(fecha);
-  renderCalendario();
+  // Nuevo flujo: una fecha por vez, con su flyer obligatorio
+  abrirFechaFlyer(fecha);
 }
 
 function actualizarResumenFechas(){
@@ -2599,6 +2624,87 @@ function actualizarResumenFechas(){
     ✅ ${sorted.length} fecha${sorted.length>1?'s':''} seleccionada${sorted.length>1?'s':''}: 
     ${sorted.map(f=>{ const d=new Date(f+'T12:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; }).join(', ')}
   </div>`;
+}
+
+let ffFecha = null;
+let ffArchivo = null;
+
+function abrirFechaFlyer(fecha){
+  ffFecha = fecha;
+  ffArchivo = null;
+  const d = new Date(fecha + 'T12:00:00');
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  document.getElementById('ff-fecha-label').textContent =
+    `${dias[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  document.getElementById('ff-error').classList.remove('on');
+  document.getElementById('ff-spinner').classList.remove('on');
+  document.getElementById('ff-preview').innerHTML = `
+    <div style="text-align:center">
+      <div style="font-size:36px">🖼️</div>
+      <p style="font-size:13px;font-weight:800;color:#7A6A55;margin-top:6px">Tocá para elegir el flyer</p>
+      <p style="font-size:11px;color:#9A8B76;font-weight:700">JPG o PNG · Máx 3MB<br>Tamaño ideal: 800x1000px (vertical)</p>
+    </div>`;
+  document.getElementById('velo-fecha-flyer').classList.add('on');
+}
+function cerrarFechaFlyer(){ document.getElementById('velo-fecha-flyer').classList.remove('on'); }
+
+function previewFechaFlyer(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){
+    document.getElementById('ff-error').textContent = 'Elegí una imagen (JPG o PNG)';
+    document.getElementById('ff-error').classList.add('on'); return;
+  }
+  if(file.size > 3*1024*1024){
+    document.getElementById('ff-error').textContent = 'La imagen es muy pesada (máx 3MB)';
+    document.getElementById('ff-error').classList.add('on'); return;
+  }
+  document.getElementById('ff-error').classList.remove('on');
+  ffArchivo = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById('ff-preview').innerHTML =
+    `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+}
+
+async function guardarFechaConFlyer(){
+  if(!ffFecha) return;
+  if(!ffArchivo){
+    document.getElementById('ff-error').textContent = 'Subí el flyer de esta fecha (es obligatorio)';
+    document.getElementById('ff-error').classList.add('on'); return;
+  }
+  const spin = document.getElementById('ff-spinner');
+  const btn = document.getElementById('ff-btn');
+  spin.classList.add('on'); btn.disabled = true;
+  try{
+    // 1. Subir el flyer al Storage
+    const flyerUrl = await subirFoto(ffArchivo, 'ferias');
+
+    // 2. Guardar la fecha con su flyer (upsert por feria+fecha)
+    await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?on_conflict=feria_id,fecha`, {
+      method: 'POST',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify([{ feria_id: fechasFeriaId, fecha: ffFecha, flyer_url: flyerUrl }])
+    });
+
+    // 3. Actualizar proxima_fecha si esta es más próxima
+    await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${fechasFeriaId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({ proxima_fecha: ffFecha })
+    });
+
+    cerrarFechaFlyer();
+    cerrarFechas();
+    mostrarToast('✅ ¡Fecha confirmada con su flyer! Los seguidores van a recibir una alerta.');
+    dispararAlerta({ tipo:"fecha_feria", feria_id: fechasFeriaId, fecha: ffFecha });
+    cargarFeriaYPuestosEnVivo();
+    cargarFechasOrganizador();
+  }catch(e){
+    document.getElementById('ff-error').textContent = 'Error: ' + e.message;
+    document.getElementById('ff-error').classList.add('on');
+  }finally{
+    spin.classList.remove('on'); btn.disabled = false;
+  }
 }
 
 async function guardarFechas(){
