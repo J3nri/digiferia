@@ -1248,12 +1248,17 @@ function renderPanelFeriante(cont){
         </div>
       </div>
 
-      <!-- Confirmar asistencia -->
+      <!-- Confirmar asistencia (exclusivo Pro) -->
+      ${u.puestoPlan === 'pro' ? `
       <div class="confirmar-box">
         <h3>🔥 ¿Vas a la feria este finde?</h3>
         <p>Confirmá tu asistencia para que los clientes sepan que vas a estar y para activar el badge en tu puesto.</p>
         <div class="confirmar-ferias">${feriasList}</div>
-      </div>
+      </div>` : `
+      <div class="confirmar-box" style="opacity:.95">
+        <h3>🔥 Confirmá tu asistencia</h3>
+        <p>Avisá a tus clientes que vas a estar en la feria y mostrá el badge 🔥 en tu puesto. <b>Disponible en el Plan Pro ⭐</b></p>
+      </div>`}
 
       <!-- Acciones -->
       <div class="accion-row" onclick="verMiPuesto()">
@@ -1623,10 +1628,20 @@ async function verEstadisticas(){
         <div style="flex:1"><b style="font-family:'Fredoka';font-weight:600;font-size:14px;display:block">${titulo}</b>
         <small style="font-size:12px;color:#7A6A55;font-weight:700">${semana} esta semana · ${total} en total</small></div>
       </div>`;
-    cont.innerHTML =
-      fila('👁️','Visitas a tu puesto', sem('visita'), tot('visita')) +
-      fila('💬','Consultas por WhatsApp', sem('whatsapp'), tot('whatsapp')) +
-      `<p style="font-size:11.5px;color:#9A8B76;font-weight:700;margin-top:6px">Se cuentan las visitas y consultas de tus clientes (las tuyas no suman 😉).</p>`;
+    const esPro = usuario.puestoPlan === 'pro';
+    let filas = fila('👁️','Visitas a tu puesto', sem('visita'), tot('visita'));
+    if(esPro){
+      filas += fila('💬','Consultas por WhatsApp', sem('whatsapp'), tot('whatsapp'));
+    } else {
+      // Plus: las consultas son un beneficio Pro. Mostramos un cartelito invitando a mejorar.
+      filas += `<div style="display:flex;align-items:center;gap:10px;background:#FFF6E5;border:2px dashed var(--tinta);border-radius:12px;padding:10px 12px;margin-bottom:8px;opacity:.9">
+        <span style="font-size:22px">🔒</span>
+        <div style="flex:1"><b style="font-family:'Fredoka';font-weight:600;font-size:14px;display:block">Consultas por WhatsApp</b>
+        <small style="font-size:12px;color:#B3572B;font-weight:800">Disponible en el Plan Pro ⭐</small></div>
+      </div>`;
+    }
+    cont.innerHTML = filas +
+      `<p style="font-size:11.5px;color:#9A8B76;font-weight:700;margin-top:6px">Se cuentan las visitas de tus clientes (las tuyas no suman 😉).</p>`;
   }catch(e){
     cont.innerHTML = `<p style="font-size:13.5px;color:#E91E8C;font-weight:800">No pudimos cargar las estadísticas. Probá de nuevo en un ratito.</p>`;
   }
@@ -2413,7 +2428,20 @@ function renderProductosEdic(){
   }).join('');
 }
 
+const MAX_PRODUCTOS = { gratis: 10, plus: 20, pro: 100 };
 function abrirFormProducto(id){
+  // Tope de productos por plan (solo al crear uno nuevo, no al editar)
+  if(!id){
+    const tope = MAX_PRODUCTOS[usuario?.puestoPlan || 'gratis'] || 10;
+    if(productosEdic.length >= tope){
+      const plan = usuario?.puestoPlan || 'gratis';
+      const sugerencia = plan === 'gratis' ? 'Pasá a Plus o Pro para cargar más.'
+                       : plan === 'plus'   ? 'Pasá a Pro para cargar hasta 100.'
+                       : 'Llegaste al máximo de tu plan.';
+      mostrarToast(`🛍️ Tu plan permite hasta ${tope} productos. ${sugerencia}`);
+      return;
+    }
+  }
   document.getElementById('prod-id').value = id || '';
   document.getElementById('prod-modal-titulo').textContent = id ? '✏️ Editar producto' : '➕ Nuevo producto';
   document.getElementById('prod-nombre').value = '';
