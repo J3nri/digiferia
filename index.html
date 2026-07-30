@@ -845,6 +845,32 @@ nav button.on span{filter:none;opacity:1}
   </div>
 </div>
 
+<!-- MODAL ELIMINAR CUENTA (doble confirmación) -->
+<div class="velo" id="velo-eliminar">
+  <div class="modal">
+    <h3 style="color:#B04A4A">⚠️ Eliminar mi cuenta</h3>
+    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-top:8px">
+      Esta acción <b>no se puede deshacer</b>. Se van a borrar para siempre:
+    </p>
+    <ul style="font-size:13px;color:#5C4F3E;font-weight:700;margin:8px 0 8px 4px;list-style:none;line-height:1.7">
+      <li>🗑️ Tu cuenta y tu acceso</li>
+      <li>🗑️ Tu puesto, con todos sus productos y fotos</li>
+      <li>🗑️ Tus estadísticas y tus vínculos con ferias</li>
+    </ul>
+    <p style="font-size:13px;color:#5C4F3E;font-weight:700">
+      Tus clientes ya no van a poder encontrarte. Si estás seguro, escribí <b>ELIMINAR</b> abajo para confirmar.
+    </p>
+    <input type="text" id="eliminar-confirma" placeholder="Escribí ELIMINAR" autocomplete="off"
+      style="width:100%;margin-top:12px;padding:12px;border:2px solid var(--tinta);border-radius:12px;font-family:'Nunito';font-weight:800;font-size:15px;text-align:center;box-sizing:border-box">
+    <div class="login-error" id="eliminar-error"></div>
+    <div class="login-spinner" id="eliminar-spinner">Eliminando tu cuenta…</div>
+    <div class="acciones" style="margin-top:14px">
+      <button class="m-no" onclick="cerrarEliminarCuenta()">Cancelar, me quedo</button>
+      <button class="m-ok" id="eliminar-btn" onclick="confirmarEliminarCuenta()" style="background:#B04A4A">Eliminar para siempre</button>
+    </div>
+  </div>
+</div>
+
 <input type="file" id="input-logo-feria" accept="image/*" style="display:none" onchange="subirLogoFeria(this)">
 <nav id="nav-principal">
   <button class="on" data-p="p-home" onclick="tab(this)"><span>🎪</span>La Feria</button>
@@ -1118,6 +1144,49 @@ async function hacerRecuperar(){
   }
 }
 
+// ================== ELIMINAR CUENTA ==================
+function abrirEliminarCuenta(){
+  document.getElementById('eliminar-confirma').value = '';
+  document.getElementById('eliminar-error').classList.remove('on');
+  document.getElementById('eliminar-spinner').classList.remove('on');
+  document.getElementById('velo-eliminar').classList.add('on');
+}
+function cerrarEliminarCuenta(){ document.getElementById('velo-eliminar').classList.remove('on'); }
+
+async function confirmarEliminarCuenta(){
+  const txt = (document.getElementById('eliminar-confirma').value || '').trim().toUpperCase();
+  const err = document.getElementById('eliminar-error');
+  if(txt !== 'ELIMINAR'){
+    err.textContent = 'Escribí ELIMINAR (en mayúsculas) para confirmar.';
+    err.classList.add('on');
+    return;
+  }
+  err.classList.remove('on');
+  const spin = document.getElementById('eliminar-spinner');
+  const btn = document.getElementById('eliminar-btn');
+  spin.classList.add('on'); btn.disabled = true;
+  try{
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/eliminar-cuenta`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${tokenActual}`
+      }
+    });
+    const data = await r.json();
+    if(!data.ok) throw new Error(data.error || 'No se pudo eliminar');
+    // Éxito: limpiar sesión local y avisar
+    try{ localStorage.removeItem('digi_email'); localStorage.removeItem('digi_sigue'); }catch(e){}
+    alert('Tu cuenta fue eliminada. ¡Gracias por haber sido parte de La Digi Feria! 🎪');
+    location.href = 'https://digiferia.ar';
+  }catch(e){
+    spin.classList.remove('on'); btn.disabled = false;
+    err.textContent = 'No se pudo eliminar: ' + e.message;
+    err.classList.add('on');
+  }
+}
+
 async function cerrarSesion(){
   cerrarAvatarMenu();
   try{
@@ -1296,6 +1365,12 @@ function renderPanelFeriante(cont){
       ${Object.values(PINES).map(p=>
         `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
       ).join("")}
+
+      <div style="margin:24px 18px 8px;padding-top:16px;border-top:1px dashed #D8C9AE">
+        <button onclick="abrirEliminarCuenta()" style="width:100%;background:none;border:none;color:#B04A4A;font-family:'Nunito';font-weight:800;font-size:13px;cursor:pointer;padding:8px;text-align:center">
+          Eliminar mi cuenta
+        </button>
+      </div>
     </div>`;
 }
 
@@ -1353,6 +1428,12 @@ function renderPanelOrganizador(cont){
         <div class="ic">📊</div>
         <div><b>Ver estadísticas</b><small>Clicks en tu flyer este mes</small></div>
         <div class="flecha-r">→</div>
+      </div>
+
+      <div style="margin:24px 18px 8px;padding-top:16px;border-top:1px dashed #D8C9AE">
+        <button onclick="abrirEliminarCuenta()" style="width:100%;background:none;border:none;color:#B04A4A;font-family:'Nunito';font-weight:800;font-size:13px;cursor:pointer;padding:8px;text-align:center">
+          Eliminar mi cuenta
+        </button>
       </div>
     </div>`;
 }
