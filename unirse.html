@@ -161,13 +161,21 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
     </div>
 
     <div class="campo" id="c-localidad">
-      <label>Localidad</label>
-      <div class="loc-chips">
-        <button type="button" class="loc-chip" onclick="elegirLoc(this,'Juan María Gutiérrez')">Juan María Gutiérrez</button>
-        <button type="button" class="loc-chip" onclick="elegirLoc(this,'Berazategui')">Berazategui</button>
-        <button type="button" class="loc-chip" onclick="elegirLoc(this,'Otra')">Otra</button>
-      </div>
-      <input type="text" id="f-localidad-otra" placeholder="¿De dónde sos?" style="display:none;margin-top:10px">
+      <label>¿De qué zona sos?</label>
+      <select id="f-partido" onchange="cargarLocalidades()" style="width:100%;margin-bottom:10px">
+        <option value="">Elegí tu partido…</option>
+        <option value="Avellaneda">Avellaneda</option>
+        <option value="Berazategui">Berazategui</option>
+        <option value="Florencio Varela">Florencio Varela</option>
+        <option value="Lanús">Lanús</option>
+        <option value="Lomas de Zamora">Lomas de Zamora</option>
+        <option value="Quilmes">Quilmes</option>
+        <option value="Otro">Otro partido…</option>
+      </select>
+      <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%;display:none">
+        <option value="">Elegí tu localidad…</option>
+      </select>
+      <input type="text" id="f-localidad-otra" placeholder="Escribí tu localidad y partido" style="display:none;margin-top:10px">
       <span class="msg-error">Por favor elegí tu localidad</span>
     </div>
 
@@ -408,16 +416,60 @@ function actualizarRubro(){
   }
 }
 
-function elegirLoc(btn, val){
-  document.querySelectorAll('.loc-chip').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  window.localidadElegida = val;
+const LOCALIDADES = {
+  "Avellaneda": ["Avellaneda","Crucecita","Dock Sud","Gerli","Piñeyro","Sarandí","Villa Domínico","Wilde"],
+  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"],
+  "Florencio Varela": ["Florencio Varela","Bosques","Gobernador Costa","Ingeniero Allan","La Capilla","Villa San Luis","Villa Vatteone","Zeballos"],
+  "Lanús": ["Lanús Este","Lanús Oeste","Gerli","Monte Chingolo","Remedios de Escalada","Valentín Alsina","Villa Caraza","Villa Diamante"],
+  "Lomas de Zamora": ["Lomas de Zamora","Banfield","Ingeniero Budge","Llavallol","Temperley","Turdera","Villa Albertina","Villa Centenario","Villa Fiorito","Villa Independencia"],
+  "Quilmes": ["Quilmes","Quilmes Oeste","Bernal","Bernal Oeste","Don Bosco","Ezpeleta","Ezpeleta Oeste","San Francisco Solano","Villa La Florida"]
+};
+
+function cargarLocalidades(){
+  const partido = document.getElementById('f-partido').value;
+  const selLoc = document.getElementById('f-localidad-sel');
   const otra = document.getElementById('f-localidad-otra');
-  if(val === 'Otra'){ otra.style.display='block'; window.localidadElegida=''; }
-  else { otra.style.display='none'; }
+  window.localidadElegida = "";
+
+  if(partido === 'Otro'){
+    selLoc.style.display = 'none';
+    otra.style.display = 'block';
+    otra.placeholder = 'Escribí tu localidad y partido';
+    return;
+  }
+  otra.style.display = 'none';
+  if(!partido || !LOCALIDADES[partido]){
+    selLoc.style.display = 'none';
+    return;
+  }
+  // Llenar el select de localidades
+  selLoc.innerHTML = '<option value="">Elegí tu localidad…</option>'
+    + LOCALIDADES[partido].map(l=>`<option value="${l}">${l}</option>`).join('')
+    + '<option value="__otra__">No está mi localidad…</option>';
+  selLoc.style.display = 'block';
 }
+
+function elegirLocalidad(){
+  const partido = document.getElementById('f-partido').value;
+  const loc = document.getElementById('f-localidad-sel').value;
+  const otra = document.getElementById('f-localidad-otra');
+  if(loc === '__otra__'){
+    otra.style.display = 'block';
+    otra.placeholder = `Tu localidad en ${partido}`;
+    window.localidadElegida = "";
+    return;
+  }
+  otra.style.display = 'none';
+  // Guardamos "Localidad, Partido"
+  window.localidadElegida = loc ? `${loc}, ${partido}` : "";
+}
+
 document.getElementById('f-localidad-otra').addEventListener('input', function(){
-  window.localidadElegida = this.value.trim();
+  const partido = document.getElementById('f-partido').value;
+  const txt = this.value.trim();
+  if(!txt){ window.localidadElegida = ""; return; }
+  // Si eligió un partido de la lista, lo agregamos; si es "Otro", lo dejamos tal cual
+  window.localidadElegida = (partido && partido !== 'Otro') ? `${txt}, ${partido}` : txt;
 });
 
 function validar(){
