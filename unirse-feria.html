@@ -194,8 +194,23 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
     </div>
 
     <div class="campo">
-      <label>Localidad / Barrio <span class="req">*</span></label>
-      <input type="text" id="f-localidad" placeholder="Ej: Berazategui, Juan María Gutiérrez">
+      <label>¿De qué zona es la feria? <span class="req">*</span></label>
+      <select id="f-partido" onchange="cargarLocalidades()" style="width:100%;margin-bottom:10px">
+        <option value="">Elegí el partido…</option>
+        <option value="Avellaneda">Avellaneda</option>
+        <option value="Berazategui">Berazategui</option>
+        <option value="Florencio Varela">Florencio Varela</option>
+        <option value="Lanús">Lanús</option>
+        <option value="Lomas de Zamora">Lomas de Zamora</option>
+        <option value="Quilmes">Quilmes</option>
+        <option value="Otro">Otro partido…</option>
+      </select>
+      <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%;display:none">
+        <option value="">Elegí la localidad…</option>
+      </select>
+      <input type="text" id="f-localidad-otra" placeholder="Escribí la localidad y el partido" style="display:none;margin-top:10px">
+      <!-- input oculto que conserva el valor final para validación y envío -->
+      <input type="hidden" id="f-localidad">
     </div>
 
     <div class="campo">
@@ -441,14 +456,72 @@ function previewFoto(input){
 }
 
 // ── Validación ──
+const LOCALIDADES = {
+  "Avellaneda": ["Avellaneda","Crucecita","Dock Sud","Gerli","Piñeyro","Sarandí","Villa Domínico","Wilde"],
+  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"],
+  "Florencio Varela": ["Florencio Varela","Bosques","Gobernador Costa","Ingeniero Allan","La Capilla","Villa San Luis","Villa Vatteone","Zeballos"],
+  "Lanús": ["Lanús Este","Lanús Oeste","Gerli","Monte Chingolo","Remedios de Escalada","Valentín Alsina","Villa Caraza","Villa Diamante"],
+  "Lomas de Zamora": ["Lomas de Zamora","Banfield","Ingeniero Budge","Llavallol","Temperley","Turdera","Villa Albertina","Villa Centenario","Villa Fiorito","Villa Independencia"],
+  "Quilmes": ["Quilmes","Quilmes Oeste","Bernal","Bernal Oeste","Don Bosco","Ezpeleta","Ezpeleta Oeste","San Francisco Solano","Villa La Florida"]
+};
+
+function cargarLocalidades(){
+  const partido = document.getElementById('f-partido').value;
+  const selLoc = document.getElementById('f-localidad-sel');
+  const otra = document.getElementById('f-localidad-otra');
+  const hidden = document.getElementById('f-localidad');
+  hidden.value = "";
+
+  if(partido === 'Otro'){
+    selLoc.style.display = 'none';
+    otra.style.display = 'block';
+    otra.placeholder = 'Escribí la localidad y el partido';
+    return;
+  }
+  otra.style.display = 'none';
+  if(!partido || !LOCALIDADES[partido]){ selLoc.style.display = 'none'; return; }
+  selLoc.innerHTML = '<option value="">Elegí la localidad…</option>'
+    + LOCALIDADES[partido].map(l=>`<option value="${l}">${l}</option>`).join('')
+    + '<option value="__otra__">No está mi localidad…</option>';
+  selLoc.style.display = 'block';
+}
+
+function elegirLocalidad(){
+  const partido = document.getElementById('f-partido').value;
+  const loc = document.getElementById('f-localidad-sel').value;
+  const otra = document.getElementById('f-localidad-otra');
+  const hidden = document.getElementById('f-localidad');
+  if(loc === '__otra__'){
+    otra.style.display = 'block';
+    otra.placeholder = `La localidad en ${partido}`;
+    hidden.value = "";
+    return;
+  }
+  otra.style.display = 'none';
+  hidden.value = loc ? `${loc}, ${partido}` : "";
+}
+
+document.getElementById('f-localidad-otra').addEventListener('input', function(){
+  const partido = document.getElementById('f-partido').value;
+  const txt = this.value.trim();
+  const hidden = document.getElementById('f-localidad');
+  if(!txt){ hidden.value = ""; return; }
+  hidden.value = (partido && partido !== 'Otro') ? `${txt}, ${partido}` : txt;
+});
+
 function validar(){
   let ok = true;
-  const campos = ['f-nombre','f-descripcion','f-lugar','f-localidad','f-horario','f-contacto-nombre','f-email','f-wsp','f-puestos'];
+  const campos = ['f-nombre','f-descripcion','f-lugar','f-horario','f-contacto-nombre','f-email','f-wsp','f-puestos'];
   campos.forEach(id=>{
     const el = document.getElementById(id);
     if(!el.value.trim()){ el.classList.add('error'); ok=false; }
     else el.classList.remove('error');
   });
+  // Localidad: el valor real está en el input oculto f-localidad; el error se marca en el select de partido (visible)
+  const locVal = document.getElementById('f-localidad').value.trim();
+  const partidoSel = document.getElementById('f-partido');
+  if(!locVal){ partidoSel.classList.add('error'); ok=false; }
+  else partidoSel.classList.remove('error');
   const frec = document.querySelector('.frec-chip.on');
   if(!frec){ document.getElementById('frec-grid').style.outline='2px solid var(--fucsia)'; ok=false; }
   else document.getElementById('frec-grid').style.outline='';
