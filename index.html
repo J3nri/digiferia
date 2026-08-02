@@ -893,52 +893,10 @@ let RUBROS = {
 };
 const rubroDe = clave => RUBROS[clave] || {nombre:clave, emoji:"🎪", color:"#E91E8C", clase:"rc1"};
 
-let FERIAS = [
-  {id:"plaza", nombre:"Feria de Plaza Italia", lugar:"Av. Sarmiento y Las Heras · 10 a 19 hs", frec:"Todos los sáb y dom", dia:"Sáb", num:"18", fd:"fd1"},
-  {id:"parque", nombre:"Feria del Parque", lugar:"Parque central · 9 a 14 hs", frec:"2° y 4° sábado del mes", dia:"Sáb", num:"25", fd:"fd2"},
-  {id:"anden", nombre:"Feria del Andén", lugar:"Estación vieja · 11 a 20 hs", frec:"1° y 3° domingo del mes", dia:"Dom", num:"19", fd:"fd3"},
-  {id:"artesanal", nombre:"Paseo Artesanal Municipal", lugar:"Peatonal · 17 a 22 hs", frec:"Último finde del mes", dia:"Dom", num:"26", fd:"fd1"},
-];
+let FERIAS = [];   // se llenan desde Supabase (sin datos de ejemplo)
 
-let FERIANTES = [
-  {id:1, nombre:"Cueros del Sur", emoji:"🧵", rubro:"marroquineria", plan:"pro", pines:["fundador","embajador","presente"],
-   confirmado:{feriaId:"plaza", texto:"Sáb 18"},
-   redes:{instagram:"cuerosdelsur", tiktok:"cuerosdelsur.ok", facebook:"CuerosDelSurOficial"},
-   bio:"Marroquinería artesanal hecha a mano: billeteras, cintos y bolsos en cuero genuino. 12 años feriando. Envíos a todo el país.",
-   ferias:["plaza","parque","artesanal"],
-   productos:[{n:"Billetera clásica",e:"👛",p:"$28.500"},{n:"Cinto trenzado",e:"🪢",p:"$19.900"},{n:"Bolso bandolera",e:"👜",p:"$52.000"},{n:"Llavero grabado",e:"🔑",p:"$6.500"}]},
-  {id:2, nombre:"Suculentas Mora", emoji:"🌵", rubro:"plantas_suculentas", pines:["fundador"],
-   redes:{instagram:"suculentas.mora", web:"suculentasmora.com.ar"},
-   bio:"Suculentas, cactus y macetas pintadas a mano. Armamos regalos y souvenirs para eventos.",
-   ferias:["parque","anden"],
-   productos:[{n:"Suculenta mini",e:"🪴",p:"$3.500"},{n:"Combo x3 + maceta",e:"🌵",p:"$12.000"},{n:"Terrario chico",e:"🫙",p:"$18.000"}]},
-  {id:3, nombre:"Dulce Rosario", emoji:"🍰", rubro:"gastronomia",
-   confirmado:{feriaId:"plaza", texto:"Dom 19"},
-   bio:"Tortas, budines y alfajores artesanales. Tomamos pedidos con 48 hs de anticipación.",
-   ferias:["plaza"],
-   productos:[{n:"Budín de limón",e:"🍋",p:"$8.000"},{n:"Alfajores x6",e:"🍪",p:"$7.500"},{n:"Torta por kilo",e:"🎂",p:"$22.000"}]},
-  {id:4, nombre:"Vintage Lú", emoji:"👗", rubro:"ropa_circular",
-   bio:"Ropa vintage seleccionada y prendas recicladas únicas. Talles del S al XXL.",
-   ferias:["anden","artesanal"],
-   productos:[{n:"Camisa retro",e:"👔",p:"$15.000"},{n:"Campera denim",e:"🧥",p:"$32.000"},{n:"Vestido floreado",e:"👗",p:"$24.000"}]},
-  {id:5, nombre:"El Matero", emoji:"🧉", rubro:"mate_termo", plan:"pro", pines:["fundador","fiel","rapido"],
-   confirmado:{feriaId:"anden", texto:"Dom 19"},
-   bio:"Mates imperiales, camioneros y bombillas de alpaca. Grabados personalizados en el día.",
-   ferias:["plaza","parque","anden","artesanal"],
-   productos:[{n:"Mate imperial",e:"🧉",p:"$45.000"},{n:"Bombilla alpaca",e:"🥄",p:"$14.000"},{n:"Set matero completo",e:"🎒",p:"$78.000"}]},
-  {id:6, nombre:"Velas Luz de Luna", emoji:"🕯️", rubro:"velas",
-   bio:"Velas de soja con aromas naturales, sahumerios y difusores artesanales.",
-   ferias:["anden"],
-   productos:[{n:"Vela de soja 200g",e:"🕯️",p:"$9.500"},{n:"Sahumerios x10",e:"🪵",p:"$4.000"},{n:"Difusor de caña",e:"🫗",p:"$13.500"}]},
-  {id:7, nombre:"Tejidos de la Abuela", emoji:"🧶", rubro:"tejidos", plan:"plus",
-   bio:"Tejidos a mano en lana de oveja: ruanas, gorros y medias. Encargos a medida.",
-   ferias:["parque"],
-   productos:[{n:"Gorro de lana",e:"🧢",p:"$11.000"},{n:"Ruana clásica",e:"🧣",p:"$48.000"}]},
-  {id:8, nombre:"Panes del Valle", emoji:"🥖", rubro:"gastronomia",
-   bio:"Panadería de masa madre: panes de campo, focaccias y facturas de manteca.",
-   ferias:["parque","artesanal"],
-   productos:[{n:"Pan de campo",e:"🍞",p:"$6.000"},{n:"Focaccia",e:"🫓",p:"$7.500"},{n:"Facturas x12",e:"🥐",p:"$9.000"}]},
-];
+let FERIANTES = [];   // se llenan desde Supabase (sin datos de ejemplo)
+
 
 const PINES = {
   fundador:  {emoji:"🌱", nombre:"Puesto Fundador",   detalle:"Estuvo entre los primeros 20 puestos de La Digi Feria · Permanente, nunca se pierde"},
@@ -2063,18 +2021,18 @@ function renderFerias(){
   }
 
   if(!destacadas.length && !normales.length){
-    html = `<div class="vacio" style="padding:30px 18px">Todavía no hay ferias con fecha confirmada 🗓️</div>`;
+    html = `<div style="margin:0 18px;background:var(--blanco);border:2px dashed var(--tinta);border-radius:var(--radius);padding:26px 20px;text-align:center">
+      <div style="font-size:38px;line-height:1">🗓️</div>
+      <b style="font-family:'Fredoka';font-weight:600;font-size:17px;display:block;margin-top:8px">Todavía no hay ferias programadas</b>
+      <small style="font-size:13px;color:#7A6A55;font-weight:700;display:block;margin-top:6px;line-height:1.45">Estamos sumando las ferias de la zona. Cuando un organizador confirme su próxima fecha, la vas a ver acá con su flyer.</small>
+      <a href="unirse-feria.html" style="display:inline-block;margin-top:14px;font-family:'Fredoka';font-weight:600;font-size:14px;color:#fff;background:var(--naranja);border:2px solid var(--tinta);border-radius:999px;padding:10px 20px;text-decoration:none;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📣 ¿Organizás una feria? Sumala</a>
+    </div>`;
   }
   cont.innerHTML = html;
 }
 
 // ================== CARRUSEL ==================
-let FLYERS = [
-  {feriaId:"plaza", estilo:"fl1", fecha:"Sáb 18 y Dom 19 · 10 a 19 hs"},
-  {feriaId:"anden", estilo:"fl2", fecha:"Dom 19 · 11 a 20 hs"},
-  {feriaId:"parque", estilo:"fl3", fecha:"Sáb 25 · 9 a 14 hs"},
-  {feriaId:"artesanal", estilo:"fl4", fecha:"Dom 26 · 17 a 22 hs"},
-];
+let FLYERS = [];   // se llenan desde Supabase (sin datos de ejemplo)
 
 function verFlyerGrande(flyerUrl, nombre, textoFecha){
   if(!flyerUrl) return;
@@ -2259,8 +2217,8 @@ async function cargarFeriaYPuestosEnVivo(){
     const en30 = new Date(); en30.setDate(en30.getDate()+30);
     const rfe = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=feria_id,fecha,flyer_url,destacada&fecha=gte.${hoyISO}&fecha=lte.${en30.toISOString().slice(0,10)}&order=fecha.asc`,{headers:cab});
     const fechasPub = rfe.ok ? await rfe.json() : [];
-    if(!puestos.length){ console.warn("Sin puestos en vivo; usando ejemplos."); return; }
-    if(ferias.length){
+    if(!puestos.length){ console.warn("Sin puestos publicados en la base."); }
+    {
       FERIAS = ferias.map(f=>{
         const fc=fechaCorta(f.proxima_fecha);
         const misFechas = fechasPub.filter(x=>x.feria_id===f.id);
