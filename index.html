@@ -462,6 +462,7 @@ nav button.on span{filter:none;opacity:1}
   <div class="seccion" style="padding-bottom:10px"><h2>📅 ¿Dónde encontrarlo?</h2></div>
   <div class="agenda" id="perfil-agenda"></div>
   <div class="seccion" style="padding-bottom:10px"><h2>Sus productos</h2></div>
+  <div class="chips" id="perfil-cats" style="display:none"></div>
   <div class="grilla-prod" id="perfil-productos"></div>
   <button class="cta-wsp" id="btn-wsp">💬 Pedir por WhatsApp</button>
   <div style="margin:0 18px 22px;background:linear-gradient(135deg,#FFF0D6,#FDE7F2);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px;text-align:center">
@@ -728,6 +729,7 @@ nav button.on span{filter:none;opacity:1}
       <button class="solapa on" id="sol-0" onclick="cambiarSolapa(0)">🎪 Mi puesto</button>
       <button class="solapa" id="sol-1" onclick="cambiarSolapa(1)">🛍️ Productos</button>
       <button class="solapa" id="sol-2" onclick="cambiarSolapa(2)">📅 Ferias</button>
+      <button class="solapa" id="sol-3" onclick="cambiarSolapa(3)">🗂️ Categorías</button>
     </div>
 
     <!-- SOLAPA 0: Mi puesto -->
@@ -784,6 +786,11 @@ nav button.on span{filter:none;opacity:1}
       </div>
     </div>
 
+    <!-- SOLAPA 3: Categorías -->
+    <div id="edic-3" class="edic-panel" style="display:none">
+      <div style="padding:18px" id="edic-categorias"></div>
+    </div>
+
     <!-- SOLAPA 2: Ferias -->
     <div id="edic-2" class="edic-panel" style="display:none">
       <div style="padding:18px">
@@ -813,6 +820,9 @@ nav button.on span{filter:none;opacity:1}
 
     <input type="text" id="prod-nombre" placeholder="Nombre del producto" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;margin-bottom:8px">
     <textarea id="prod-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;resize:none;margin-bottom:8px"></textarea>
+    <div id="prod-cat-caja" style="display:none;margin-bottom:8px">
+      <select id="prod-categoria" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco);font-weight:700"></select>
+    </div>
     <input type="number" id="prod-precio" placeholder="Precio en $" min="1" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
     <div class="login-error" id="prod-error" style="margin-top:8px"></div>
     <div class="acciones" style="margin-top:12px">
@@ -982,7 +992,7 @@ async function cargarPerfil(userId, token){
   // Si es feriante, busca su puesto
   let puestoData = {};
   if(rol === 'feriante'){
-    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,slug,codigo_referido,bio,foto_url,plan,whatsapp,puesto_feria(ferias(id,nombre,frecuencia))`, {
+    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,slug,codigo_referido,bio,foto_url,plan,whatsapp,categorias,puesto_feria(ferias(id,nombre,frecuencia))`, {
       headers: sbHeaders(token)
     });
     const puestos = await rpu.json();
@@ -998,6 +1008,7 @@ async function cargarPerfil(userId, token){
         puestoEmoji: (!esUrl && p.foto_url) ? p.foto_url : "🎪",
         puestoFoto: esUrl ? p.foto_url : null,
         puestoPlan: p.plan || "gratis",
+        puestoCategorias: Array.isArray(p.categorias) ? p.categorias : [],
         puestoWhatsapp: p.whatsapp,
         puestoFerias: (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({
           id: x.ferias.id, nombre: x.ferias.nombre, frec: x.ferias.frecuencia||""
@@ -1916,10 +1927,9 @@ function verPerfil(id){
   window.perfilActual = f;
   const esPro = f.plan === 'pro';
 
-  document.getElementById('perfil-productos').innerHTML = f.productos.map((p,i)=>{
-    const foto = p.foto ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>` : `<div class="foto">${p.e||"🛍️"}</div>`;
-    return `<div class="prod" onclick="verProducto(${i})" style="cursor:pointer">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
-  }).join("");
+  catActiva = "__todos__";
+  renderCatsPerfil(f);
+  renderProductosPerfil(f);
   const btnW = document.getElementById('btn-wsp');
   if(f.whatsapp){
     btnW.onclick = ()=>{ registrarEvento(f.id, 'whatsapp'); window.open(`https://wa.me/${f.whatsapp}?text=${encodeURIComponent("Hola "+f.nombre+"! 👋 Vi tu puesto en La Digi Feria y quería consultarte.")}`, "_blank"); };
@@ -1929,6 +1939,63 @@ function verPerfil(id){
   else{ av.style.backgroundImage=""; av.textContent=f.emoji; }
   actualizarBtnPerfil(id);
   ir('p-perfil');
+}
+
+
+// ── Categorías del puesto en el perfil público (solapas de productos) ──
+let catActiva = "__todos__";
+
+function catsDelPuesto(f){
+  // Solo Plus y Pro muestran solapas
+  if(f.plan !== 'plus' && f.plan !== 'pro') return [];
+  const prods = f.productos || [];
+  const usadas = new Set(prods.map(p=>(p.cat||"").trim()).filter(Boolean));
+  if(!usadas.size) return [];
+  // Orden: el que definió el feriante en su panel; el resto, alfabético
+  const definidas = (f.categorias||[]).filter(c=>usadas.has(c));
+  const sueltas = [...usadas].filter(c=>!definidas.includes(c)).sort((a,b)=>a.localeCompare(b,'es'));
+  const lista = [...definidas, ...sueltas];
+  // "Otros" al final si hay productos sin categoría
+  if(prods.some(p=>!(p.cat||"").trim())) lista.push("__otros__");
+  return lista;
+}
+
+function renderCatsPerfil(f){
+  const cont = document.getElementById('perfil-cats');
+  const lista = catsDelPuesto(f);
+  if(!lista.length){ cont.style.display = "none"; cont.innerHTML = ""; return; }
+  cont.style.display = "flex";
+  const chip = (valor, texto) =>
+    `<button class="chip ${catActiva===valor?"on":""}" onclick="filtrarCatPerfil('${valor.replace(/'/g,"\\'")}')">${texto}</button>`;
+  cont.innerHTML = chip("__todos__", "Todos")
+    + lista.map(c => chip(c, c==="__otros__" ? "Otros" : c)).join("");
+}
+
+function filtrarCatPerfil(valor){
+  catActiva = valor;
+  const f = FERIANTES.find(x=>String(x.id)===String(perfilActualId));
+  if(!f) return;
+  renderCatsPerfil(f);
+  renderProductosPerfil(f);
+}
+
+function renderProductosPerfil(f){
+  const cont = document.getElementById('perfil-productos');
+  // Guardamos el índice original para que el detalle del producto siga funcionando
+  const conIndice = (f.productos||[]).map((p,i)=>({p,i}));
+  const visibles = catActiva === "__todos__"
+    ? conIndice
+    : catActiva === "__otros__"
+      ? conIndice.filter(x=>!(x.p.cat||"").trim())
+      : conIndice.filter(x=>(x.p.cat||"").trim() === catActiva);
+  if(!visibles.length){
+    cont.innerHTML = `<div class="vacio" style="grid-column:1/-1">Todavía no hay productos en esta categoría 🙈</div>`;
+    return;
+  }
+  cont.innerHTML = visibles.map(({p,i})=>{
+    const foto = p.foto ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>` : `<div class="foto">${p.e||"🛍️"}</div>`;
+    return `<div class="prod" onclick="verProducto(${i})" style="cursor:pointer">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
+  }).join("");
 }
 
 // ================== BUSCAR ==================
@@ -2207,7 +2274,7 @@ async function cargarFeriaYPuestosEnVivo(){
   try{
     const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
-    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
@@ -2241,7 +2308,8 @@ async function cargarFeriaYPuestosEnVivo(){
         whatsapp:p.whatsapp||null,
         redes:(p.redes&&Object.keys(p.redes).length)?p.redes:null,
         ferias:fdet.map(x=>x.id), feriasDetalle:fdet,
-        productos:(p.productos||[]).filter(x=>x.visible!==false).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
+        categorias: Array.isArray(p.categorias) ? p.categorias : [],
+        productos:(p.productos||[]).filter(x=>x.visible!==false).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",cat:(x.categoria||"").trim(),foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
         pinesDB:(p.puesto_insignia||[]).filter(x=>x.vigente!==false&&x.insignias).map(x=>x.insignias),
         confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
       };
@@ -2387,12 +2455,13 @@ function cerrarEdicion(){
 }
 
 function cambiarSolapa(n){
-  [0,1,2].forEach(i=>{
+  [0,1,2,3].forEach(i=>{
     document.getElementById(`sol-${i}`).classList.toggle('on', i===n);
     document.getElementById(`edic-${i}`).style.display = i===n ? '' : 'none';
   });
   if(n===1) cargarProductosEdic();
   if(n===2) cargarFeriasEdic();
+  if(n===3) cargarCategoriasEdic();
 }
 
 function previewLogoEdic(input){
@@ -2502,6 +2571,7 @@ function renderProductosEdic(){
       <div class="prod-info">
         <b>${p.nombre}</b>
         <small>$${Number(p.precio).toLocaleString('es-AR')}</small>
+        ${p.categoria ? `<small style="display:block;color:var(--fucsia);font-weight:800">🗂️ ${p.categoria}</small>` : ''}
         ${oculto?'<small style="display:block;color:#B3572B;font-weight:800">🙈 Oculto — los visitantes no lo ven</small>':''}
       </div>
       <div class="prod-acciones">
@@ -2533,6 +2603,7 @@ function abrirFormProducto(id){
   document.getElementById('prod-descripcion').value = '';
   document.getElementById('prod-precio').value = '';
   document.getElementById('prod-error').classList.remove('on');
+  llenarSelectCategoria('');
   fotosProducto = [];
 
   if(id){
@@ -2541,6 +2612,7 @@ function abrirFormProducto(id){
       document.getElementById('prod-nombre').value = p.nombre || '';
       document.getElementById('prod-descripcion').value = p.descripcion || '';
       document.getElementById('prod-precio').value = p.precio || '';
+      llenarSelectCategoria(p.categoria || '');
       // Cargar fotos existentes
       fotosProducto = (p.fotos||[]).filter(Boolean).map(url=>({url, preview:null, file:null}));
     }
@@ -2652,6 +2724,7 @@ async function guardarProducto(){
       descripcion: document.getElementById('prod-descripcion').value.trim(),
       precio: Number(precio),
       fotos: fotosFinales,
+      categoria: (planTieneCategorias() ? (document.getElementById('prod-categoria').value || null) : undefined),
       visible: true,
       orden: id ? productosEdic.find(x=>x.id===id)?.orden || 0 : productosEdic.length
     };
@@ -2688,6 +2761,262 @@ async function borrarProducto(id){
   });
   mostrarToast('🗑️ Producto borrado');
   cargarProductosEdic();
+}
+
+// ══════════════════ CATEGORÍAS DEL PUESTO ══════════════════
+// Cada feriante arma sus propias solapas (perfumes, decants, billeteras...).
+// Beneficio de los planes Plus y Pro.
+
+function planTieneCategorias(){
+  const plan = usuario?.puestoPlan || 'gratis';
+  return plan === 'plus' || plan === 'pro';
+}
+
+function misCategorias(){
+  return Array.isArray(usuario?.puestoCategorias) ? usuario.puestoCategorias : [];
+}
+
+function llenarSelectCategoria(valor){
+  const caja = document.getElementById('prod-cat-caja');
+  const sel  = document.getElementById('prod-categoria');
+  if(!planTieneCategorias() || !misCategorias().length){
+    caja.style.display = 'none';
+    sel.innerHTML = '';
+    return;
+  }
+  caja.style.display = '';
+  sel.innerHTML = '<option value="">🗂️ Sin categoría (va a “Otros”)</option>'
+    + misCategorias().map(c=>`<option value="${escaparHtml(c)}">${escaparHtml(c)}</option>`).join('');
+  sel.value = valor || '';
+}
+
+function escaparHtml(t){
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function guardarListaCategorias(lista){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
+    method: 'PATCH',
+    headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+    body: JSON.stringify({ categorias: lista })
+  });
+  if(!r.ok) throw new Error('No se pudo guardar');
+  usuario.puestoCategorias = lista;
+}
+
+async function cargarCategoriasEdic(){
+  const cont = document.getElementById('edic-categorias');
+
+  if(!planTieneCategorias()){
+    cont.innerHTML = `<div style="background:#FFFDF4;border:2px dashed #B8860B;border-radius:14px;padding:22px 18px;text-align:center">
+      <div style="font-size:36px;line-height:1">🗂️</div>
+      <b style="font-family:'Fredoka';font-weight:600;font-size:17px;display:block;margin-top:8px">Ordená tus productos en solapas</b>
+      <small style="font-size:13px;color:#5C4F3E;font-weight:700;display:block;margin-top:6px;line-height:1.5">
+        Con Plus o Pro podés armar tus propias categorías (perfumes, decants, billeteras…) para que tus clientes encuentren lo que buscan en dos toques.
+      </small>
+      <button class="edic-btn-guardar" style="margin-top:14px" onclick="cerrarEdicion();ir('p-mipuesto')">✨ Ver planes</button>
+    </div>`;
+    return;
+  }
+
+  cont.innerHTML = '<p style="font-size:13px;color:#7A6A55;font-weight:700">Cargando...</p>';
+  // Traemos los productos frescos para el asignador
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&order=orden.asc`, {
+      headers: sbHeaders(tokenActual)
+    });
+    productosEdic = r.ok ? await r.json() : [];
+  }catch(e){ productosEdic = []; }
+  renderCategoriasEdic();
+}
+
+function renderCategoriasEdic(){
+  const cont = document.getElementById('edic-categorias');
+  const cats = misCategorias();
+
+  // ── 1. Mis solapas ──
+  let html = `<p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:12px">
+    Armá las solapas de tu puesto. Tus clientes las van a ver arriba de tus productos.
+  </p>`;
+
+  html += `<div style="display:flex;gap:8px;margin-bottom:14px">
+    <input type="text" id="cat-nueva" placeholder="Ej: Perfumes, Decants, Billeteras..." maxlength="28"
+      onkeydown="if(event.key==='Enter')agregarCategoria()"
+      style="flex:1;min-width:0;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
+    <button onclick="agregarCategoria()" style="border:2px solid var(--tinta);border-radius:12px;background:var(--fucsia);color:#fff;font-family:'Fredoka';font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap">+ Crear</button>
+  </div>`;
+
+  if(!cats.length){
+    html += `<p style="font-size:13px;color:#7A6A55;font-weight:700;text-align:center;padding:14px 0">
+      Todavía no creaste ninguna solapa. Escribí la primera arriba 👆</p>`;
+  } else {
+    html += cats.map((c,i)=>{
+      const cuantos = productosEdic.filter(p=>(p.categoria||'')===c).length;
+      return `<div class="prod-card" style="align-items:center">
+        <div class="prod-info" style="flex:1">
+          <b>🗂️ ${escaparHtml(c)}</b>
+          <small>${cuantos} producto${cuantos!==1?'s':''}</small>
+        </div>
+        <div class="prod-acciones">
+          <button class="prod-btn" onclick="moverCategoria(${i},-1)" title="Subir" ${i===0?'disabled style="opacity:.3"':''}>↑</button>
+          <button class="prod-btn" onclick="moverCategoria(${i},1)" title="Bajar" ${i===cats.length-1?'disabled style="opacity:.3"':''}>↓</button>
+          <button class="prod-btn" onclick="renombrarCategoria(${i})" title="Renombrar">✏️</button>
+          <button class="prod-btn" onclick="borrarCategoria(${i})" title="Borrar" style="background:#FDE7F2">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── 2. Asignador rápido ──
+  if(cats.length && productosEdic.length){
+    const sinCat = productosEdic.filter(p=>!(p.categoria||'').trim()).length;
+    html += `<div style="margin-top:22px;border-top:2px dashed #DCCFB6;padding-top:18px">
+      <b style="font-family:'Fredoka';font-weight:600;font-size:16px;display:block">⚡ Asignador rápido</b>
+      <small style="font-size:12.5px;color:#7A6A55;font-weight:700;display:block;margin-top:4px;line-height:1.5">
+        Elegí la solapa de cada producto y guardá todo junto. ${sinCat ? `Te quedan <b>${sinCat}</b> sin asignar.` : '¡Están todos asignados! 🎉'}
+      </small>
+
+      <div style="display:flex;gap:6px;margin-top:12px;align-items:center;flex-wrap:wrap;background:#FFF8EC;border:2px solid var(--tinta);border-radius:12px;padding:10px">
+        <small style="font-size:12px;font-weight:800;width:100%;color:#5C4F3E">🔎 Atajo: los que digan…</small>
+        <input type="text" id="cat-palabra" placeholder="ej: decant" maxlength="24"
+          style="flex:1;min-width:90px;border:2px solid var(--tinta);border-radius:10px;padding:8px 10px;font-family:'Nunito';font-size:13px">
+        <select id="cat-destino" style="flex:1;min-width:110px;border:2px solid var(--tinta);border-radius:10px;padding:8px 10px;font-family:'Nunito';font-size:13px;font-weight:700;background:var(--blanco)">
+          ${cats.map(c=>`<option value="${escaparHtml(c)}">${escaparHtml(c)}</option>`).join('')}
+        </select>
+        <button onclick="marcarPorPalabra()" style="border:2px solid var(--tinta);border-radius:10px;background:var(--amarillo);font-family:'Fredoka';font-weight:600;font-size:13px;padding:8px 14px;cursor:pointer">Marcar</button>
+      </div>
+
+      <div style="margin-top:12px">
+        ${productosEdic.map(p=>`
+          <div style="display:flex;gap:8px;align-items:center;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:8px 10px;margin-bottom:8px">
+            <div style="flex:1;min-width:0">
+              <b style="font-family:'Fredoka';font-weight:600;font-size:13.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtml(p.nombre)}</b>
+            </div>
+            <select class="cat-asig" data-id="${p.id}"
+              style="width:44%;flex-shrink:0;border:2px solid var(--tinta);border-radius:10px;padding:7px 8px;font-family:'Nunito';font-size:12.5px;font-weight:700;background:var(--fondo)">
+              <option value="">— Otros —</option>
+              ${cats.map(c=>`<option value="${escaparHtml(c)}" ${((p.categoria||'')===c)?'selected':''}>${escaparHtml(c)}</option>`).join('')}
+            </select>
+          </div>`).join('')}
+      </div>
+
+      <button class="edic-btn-guardar" id="btn-guardar-asig" onclick="guardarAsignaciones()">💾 Guardar todo</button>
+    </div>`;
+  }
+
+  cont.innerHTML = html;
+}
+
+async function agregarCategoria(){
+  const input = document.getElementById('cat-nueva');
+  const nombre = input.value.trim();
+  if(!nombre) return;
+  const cats = misCategorias();
+  if(cats.some(c=>c.toLowerCase()===nombre.toLowerCase())){
+    mostrarToast('🗂️ Esa solapa ya existe'); return;
+  }
+  try{
+    await guardarListaCategorias([...cats, nombre]);
+    input.value = '';
+    mostrarToast('✅ Solapa creada');
+    renderCategoriasEdic();
+  }catch(e){ mostrarToast('❌ ' + e.message); }
+}
+
+async function renombrarCategoria(i){
+  const cats = misCategorias();
+  const viejo = cats[i];
+  const nuevo = (prompt('Nuevo nombre para la solapa:', viejo) || '').trim();
+  if(!nuevo || nuevo === viejo) return;
+  if(cats.some((c,j)=>j!==i && c.toLowerCase()===nuevo.toLowerCase())){
+    mostrarToast('🗂️ Ya tenés una solapa con ese nombre'); return;
+  }
+  try{
+    const lista = [...cats]; lista[i] = nuevo;
+    await guardarListaCategorias(lista);
+    // Los productos que estaban en la vieja pasan a la nueva
+    await fetch(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&categoria=eq.${encodeURIComponent(viejo)}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({ categoria: nuevo })
+    });
+    mostrarToast('✅ Solapa renombrada');
+    cargarCategoriasEdic();
+  }catch(e){ mostrarToast('❌ ' + e.message); }
+}
+
+async function borrarCategoria(i){
+  const cats = misCategorias();
+  const nombre = cats[i];
+  const cuantos = productosEdic.filter(p=>(p.categoria||'')===nombre).length;
+  const aviso = cuantos
+    ? `¿Borrar la solapa "${nombre}"?\n\nSus ${cuantos} producto(s) NO se borran: pasan a "Otros".`
+    : `¿Borrar la solapa "${nombre}"?`;
+  if(!confirm(aviso)) return;
+  try{
+    await guardarListaCategorias(cats.filter((c,j)=>j!==i));
+    if(cuantos){
+      await fetch(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&categoria=eq.${encodeURIComponent(nombre)}`, {
+        method: 'PATCH',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify({ categoria: null })
+      });
+    }
+    mostrarToast('🗑️ Solapa borrada');
+    cargarCategoriasEdic();
+  }catch(e){ mostrarToast('❌ ' + e.message); }
+}
+
+async function moverCategoria(i, dir){
+  const cats = [...misCategorias()];
+  const j = i + dir;
+  if(j < 0 || j >= cats.length) return;
+  [cats[i], cats[j]] = [cats[j], cats[i]];
+  try{
+    await guardarListaCategorias(cats);
+    renderCategoriasEdic();
+  }catch(e){ mostrarToast('❌ ' + e.message); }
+}
+
+// Atajo: preselecciona (sin guardar) todos los productos cuyo nombre contenga la palabra
+function marcarPorPalabra(){
+  const palabra = (document.getElementById('cat-palabra').value || '').trim().toLowerCase();
+  const destino = document.getElementById('cat-destino').value;
+  if(!palabra){ mostrarToast('🔎 Escribí una palabra para buscar'); return; }
+  let n = 0;
+  document.querySelectorAll('.cat-asig').forEach(sel=>{
+    const prod = productosEdic.find(p=>p.id === sel.dataset.id);
+    if(prod && (prod.nombre||'').toLowerCase().includes(palabra)){ sel.value = destino; n++; }
+  });
+  mostrarToast(n ? `✅ ${n} producto(s) marcados — revisá y tocá "Guardar todo"` : '🙈 Ninguno coincide con esa palabra');
+}
+
+async function guardarAsignaciones(){
+  const btn = document.getElementById('btn-guardar-asig');
+  btn.textContent = '⏳ Guardando...'; btn.disabled = true;
+  let cambios = 0;
+  try{
+    for(const sel of document.querySelectorAll('.cat-asig')){
+      const prod = productosEdic.find(p=>p.id === sel.dataset.id);
+      const nuevo = sel.value || null;
+      const actual = prod?.categoria || null;
+      if(nuevo === actual) continue;
+      await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${sel.dataset.id}`, {
+        method: 'PATCH',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify({ categoria: nuevo })
+      });
+      if(prod) prod.categoria = nuevo;
+      cambios++;
+    }
+    mostrarToast(cambios ? `✅ ${cambios} producto(s) actualizados` : '👍 No había cambios para guardar');
+    renderCategoriasEdic();
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){
+    mostrarToast('❌ Error: ' + e.message);
+  }finally{
+    btn.textContent = '💾 Guardar todo'; btn.disabled = false;
+  }
 }
 
 // ── Ferias ──
