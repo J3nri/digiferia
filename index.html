@@ -267,6 +267,8 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .puntos i.on{background:var(--fucsia);transform:scale(1.25)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 18px 14px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
+.cats-wrap{position:relative}
+.cats-wrap::after{content:"";position:absolute;top:0;right:0;width:26px;height:100%;pointer-events:none;background:linear-gradient(90deg,rgba(255,248,236,0),var(--fondo))}
 .chip{font-weight:800;font-size:13.5px;white-space:nowrap;padding:8px 14px;border-radius:999px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;transition:transform .1s;font-family:'Nunito',sans-serif}
 .chip:active{transform:scale(.95)}
 .chip.on{background:var(--tinta);color:var(--amarillo)}
@@ -462,7 +464,7 @@ nav button.on span{filter:none;opacity:1}
   <div class="seccion" style="padding-bottom:10px"><h2>📅 ¿Dónde encontrarlo?</h2></div>
   <div class="agenda" id="perfil-agenda"></div>
   <div class="seccion" style="padding-bottom:10px"><h2>Sus productos</h2></div>
-  <div class="chips" id="perfil-cats" style="display:none"></div>
+  <div class="cats-wrap"><div class="chips" id="perfil-cats" style="display:none"></div></div>
   <div class="grilla-prod" id="perfil-productos"></div>
   <button class="cta-wsp" id="btn-wsp">💬 Pedir por WhatsApp</button>
   <div style="margin:0 18px 22px;background:linear-gradient(135deg,#FFF0D6,#FDE7F2);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px;text-align:center">
@@ -2351,7 +2353,7 @@ function arrastrable(el){
   el.addEventListener('click',e=>{if(seMovio){e.stopPropagation();e.preventDefault();seMovio=false;}},true);
   el.addEventListener('wheel',e=>{if(e.deltaY){e.preventDefault();el.scrollLeft+=e.deltaY;}},{passive:false});
 }
-['chips-rubros','destacados-row','carrusel-flyers'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
+['chips-rubros','destacados-row','carrusel-flyers','perfil-cats'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
 
 // ================== NUEVA CONTRASEÑA (invitación por email) ==================
 // Supabase pone el token en el hash: #access_token=xxx&type=invite
