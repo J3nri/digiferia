@@ -1657,84 +1657,100 @@ async function imprimirQRDigiFeria(){
     const qrData = qrEl.tagName === 'CANVAS' ? qrEl.toDataURL('image/png') : qrEl.src;
     tmp.remove();
 
-    // Lienzo A4 vertical
+    // ---- Lienzo A4 (840 x 1188 px) ----
     const S = 4, cw = 210*S, ch = 297*S;
     const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
     const ctx = cv.getContext('2d');
-    const TINTA = '#2B2118', FUCSIA = '#E91E8C', NARANJA = '#FF7A00';
+    const TINTA='#2B2118', FUCSIA='#E91E8C', NARANJA='#FF7A00', GRIS='#7A6A55';
     const PALETA = [FUCSIA,'#FFC93C','#00A878',NARANJA,'#2D9CDB'];
+    const MARGEN = 70, ANCHO_UTIL = cw - MARGEN*2;
 
-    // Fondo
+    // Achica la tipografía hasta que el texto entre en el ancho disponible
+    function fuenteQueEntre(texto, tamInicial, maxAncho, peso, familia){
+      let t = tamInicial;
+      ctx.font = `${peso} ${t}px ${familia}`;
+      while(ctx.measureText(texto).width > maxAncho && t > 10){
+        t -= 1; ctx.font = `${peso} ${t}px ${familia}`;
+      }
+      return t;
+    }
+    const FRED = 'Fredoka, Nunito, sans-serif';
+    const NUNI = 'Nunito, sans-serif';
+
     ctx.fillStyle = '#FFF8EC'; ctx.fillRect(0,0,cw,ch);
 
     // Banderines arriba y abajo
-    const bw = 14*S, bh = 11*S;
+    const bw = 56, bh = 44;
     for(let i=0, x=0; x < cw; i++, x+=bw){
       ctx.fillStyle = PALETA[i%5];
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+bw,0); ctx.lineTo(x+bw/2,bh); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.moveTo(x,ch); ctx.lineTo(x+bw,ch); ctx.lineTo(x+bw/2,ch-bh); ctx.closePath(); ctx.fill();
     }
 
-    ctx.textAlign = 'center';
-
-    // Marca en tres colores
+    // ---- Marca en tres colores (centrada y ajustada) ----
     const partes = [['La ',TINTA],['Digi ',FUCSIA],['Feria',NARANJA]];
-    ctx.font = `800 ${20*S}px Fredoka, Nunito, sans-serif`;
+    const marcaTxt = 'La Digi Feria';
+    const tMarca = fuenteQueEntre(marcaTxt, 76, ANCHO_UTIL, '800', FRED);
+    ctx.font = `800 ${tMarca}px ${FRED}`;
     let total = 0; partes.forEach(([t])=> total += ctx.measureText(t).width);
-    let px0 = (cw-total)/2;
+    let cx = (cw - total)/2;
     ctx.textAlign = 'left';
-    partes.forEach(([t,c])=>{ ctx.fillStyle = c; ctx.fillText(t, px0, 34*S); px0 += ctx.measureText(t).width; });
+    partes.forEach(([t,c])=>{ ctx.fillStyle = c; ctx.fillText(t, cx, 140); cx += ctx.measureText(t).width; });
+
     ctx.textAlign = 'center';
+    const sub = 'La feria del barrio, abierta las 24 horas';
+    const tSub = fuenteQueEntre(sub, 32, ANCHO_UTIL, '700', NUNI);
+    ctx.font = `700 ${tSub}px ${NUNI}`;
+    ctx.fillStyle = GRIS; ctx.fillText(sub, cw/2, 186);
 
-    ctx.fillStyle = '#7A6A55';
-    ctx.font = `700 ${9*S}px Nunito, sans-serif`;
-    ctx.fillText('La feria del barrio, abierta las 24 horas', cw/2, 48*S);
-
-    // Marco blanco con el QR
-    const lado = 118*S, qx = (cw-lado)/2, qy = 62*S, pad = 9*S;
-    trazoRedondeado(ctx, qx-pad, qy-pad, lado+2*pad, lado+2*pad, 12*S);
+    // ---- QR en marco blanco ----
+    const lado = 344, qx = (cw-lado)/2, qy = 214, pad = 28;
+    trazoRedondeado(ctx, qx-pad, qy-pad, lado+2*pad, lado+2*pad, 46);
     ctx.fillStyle = '#FFFFFF'; ctx.fill();
-    ctx.lineWidth = 2*S; ctx.strokeStyle = TINTA; ctx.stroke();
+    ctx.lineWidth = 8; ctx.strokeStyle = TINTA; ctx.stroke();
     const im = new Image();
     await new Promise((r,j)=>{ im.onload = r; im.onerror = j; im.src = qrData; });
     ctx.drawImage(im, qx, qy, lado, lado);
 
-    // Llamado a la acción
-    let y = qy + lado + pad + 22*S;
-    ctx.fillStyle = TINTA;
-    ctx.font = `800 ${15*S}px Fredoka, Nunito, sans-serif`;
-    ctx.fillText('Escaneá y paseá por toda la feria', cw/2, y);
-    y += 13*S;
-    ctx.fillStyle = '#7A6A55';
-    ctx.font = `700 ${9.5*S}px Nunito, sans-serif`;
-    ctx.fillText('Mirá los productos y precios de cada puesto', cw/2, y);
-    y += 11*S;
-    ctx.fillText('y comprá directo por WhatsApp', cw/2, y);
+    // ---- Llamado a la acción ----
+    const cta = 'Escaneá y paseá por toda la feria';
+    const tCta = fuenteQueEntre(cta, 52, ANCHO_UTIL, '800', FRED);
+    ctx.font = `800 ${tCta}px ${FRED}`;
+    ctx.fillStyle = TINTA; ctx.fillText(cta, cw/2, 646);
 
-    // Tres beneficios
-    y += 16*S;
+    ctx.fillStyle = GRIS;
+    ctx.font = `700 ${34}px ${NUNI}`;
+    ctx.fillText('Mirá los productos y precios de cada puesto', cw/2, 696);
+    ctx.fillText('y comprale directo por WhatsApp', cw/2, 736);
+
+    // ---- Tres beneficios ----
+    let y = 768;
     const items = [['Sin registrarte','#00A878'], ['Sin descargar nada','#2D9CDB'], ['Sin comisiones',NARANJA]];
-    ctx.font = `800 ${10*S}px Nunito, sans-serif`;
+    const ALTO_P = 58, PUNTO = 26, SEP = 16;
     items.forEach(([t,c])=>{
-      const tw = ctx.measureText(t).width, pil = tw + 34*S, bx = (cw-pil)/2;
-      trazoRedondeado(ctx, bx, y, pil, 15*S, 7.5*S);
-      ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 1.6*S; ctx.strokeStyle = TINTA; ctx.stroke();
-      ctx.beginPath(); ctx.arc(bx + 12*S, y + 7.5*S, 4*S, 0, Math.PI*2);
-      ctx.fillStyle = c; ctx.fill(); ctx.stroke();
-      ctx.fillStyle = TINTA; ctx.fillText(t, bx + pil/2 + 8*S, y + 11*S);
-      y += 20*S;
+      ctx.font = `800 ${34}px ${NUNI}`;
+      const tw = ctx.measureText(t).width;
+      const pil = tw + PUNTO*2 + 96, bx = (cw-pil)/2;
+      trazoRedondeado(ctx, bx, y, pil, ALTO_P, ALTO_P/2);
+      ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = TINTA; ctx.stroke();
+      ctx.beginPath(); ctx.arc(bx + 46, y + ALTO_P/2, PUNTO/2 + 5, 0, Math.PI*2);
+      ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
+      ctx.fillStyle = TINTA;
+      ctx.fillText(t, bx + 46 + PUNTO + 24 + tw/2, y + ALTO_P/2 + 12);
+      y += ALTO_P + SEP;
     });
 
-    // Píldora final con la web
-    y += 8*S;
-    ctx.font = `800 ${17*S}px Fredoka, Nunito, sans-serif`;
+    // ---- Píldora final con la web ----
+    y += 22;
     const web = 'digiferia.ar';
-    const ww = ctx.measureText(web).width + 44*S, wx = (cw-ww)/2;
-    trazoRedondeado(ctx, wx, y, ww, 26*S, 13*S);
-    ctx.fillStyle = FUCSIA; ctx.fill(); ctx.lineWidth = 2*S; ctx.strokeStyle = TINTA; ctx.stroke();
-    ctx.fillStyle = '#FFFFFF'; ctx.fillText(web, cw/2, y + 19*S);
+    const tWeb = fuenteQueEntre(web, 64, ANCHO_UTIL - 120, '800', FRED);
+    ctx.font = `800 ${tWeb}px ${FRED}`;
+    const ww = ctx.measureText(web).width + 150, wx = (cw-ww)/2, hw = 100;
+    trazoRedondeado(ctx, wx, y, ww, hw, hw/2);
+    ctx.fillStyle = FUCSIA; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = TINTA; ctx.stroke();
+    ctx.fillStyle = '#FFFFFF'; ctx.fillText(web, cw/2, y + hw/2 + 22);
 
-    // PDF A4 a página completa
+    // ---- PDF A4 ----
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a4' });
     doc.addImage(cv.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
