@@ -1377,6 +1377,11 @@ function renderPanelFeriante(cont){
         <div><b>Imprimí tu QR</b><small>Descargá la tarjeta en PDF, plastificala y tenela en tu puesto de la feria</small></div>
         <div class="flecha-r">→</div>
       </div>
+      <div class="accion-row" onclick="imprimirQRDigiFeria()">
+        <div class="ic">🎪</div>
+        <div><b>Descargá el QR de La Digi Feria</b><small>Cartel A4 para imprimir y colgar en tu puesto: quien lo escanea entra a la feria online</small></div>
+        <div class="flecha-r">→</div>
+      </div>
 
       <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Colección de pines 📌</h2></div>
       ${Object.values(PINES).map(p=>
@@ -1444,6 +1449,11 @@ function renderPanelOrganizador(cont){
       <div class="accion-row" onclick="mostrarToast('📊 Estadísticas de flyer — próximamente!')">
         <div class="ic">📊</div>
         <div><b>Ver estadísticas</b><small>Clicks en tu flyer este mes</small></div>
+        <div class="flecha-r">→</div>
+      </div>
+      <div class="accion-row" onclick="imprimirQRDigiFeria()">
+        <div class="ic">🎪</div>
+        <div><b>Descargá el QR de La Digi Feria</b><small>Cartel A4 para imprimir y colgar en tu puesto: quien lo escanea entra a la feria online</small></div>
         <div class="flecha-r">→</div>
       </div>
 
@@ -1623,6 +1633,115 @@ async function imprimirQRPuesto(){
     mostrarToast('📄 ¡Tarjeta QR descargada! Buscala en tus descargas.');
   }catch(e){
     mostrarToast('No se pudo generar el QR: ' + e.message);
+  }
+}
+
+// ============ CARTEL A4 CON EL QR DE LA DIGI FERIA ============
+// Para que el feriante o el organizador lo imprima y lo cuelgue
+// en su puesto: quien lo escanea entra a la feria online.
+async function imprimirQRDigiFeria(){
+  mostrarToast('⏳ Preparando el cartel…');
+  try{
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+    const link = 'https://digiferia.ar';
+
+    // QR en un contenedor invisible
+    const tmp = document.createElement('div');
+    tmp.style.position = 'fixed'; tmp.style.left = '-9999px';
+    document.body.appendChild(tmp);
+    new QRCode(tmp, { text: link, width: 700, height: 700, correctLevel: QRCode.CorrectLevel.M });
+    await new Promise(r=>setTimeout(r, 250));
+    const qrEl = tmp.querySelector('canvas') || tmp.querySelector('img');
+    const qrData = qrEl.tagName === 'CANVAS' ? qrEl.toDataURL('image/png') : qrEl.src;
+    tmp.remove();
+
+    // Lienzo A4 vertical
+    const S = 4, cw = 210*S, ch = 297*S;
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const ctx = cv.getContext('2d');
+    const TINTA = '#2B2118', FUCSIA = '#E91E8C', NARANJA = '#FF7A00';
+    const PALETA = [FUCSIA,'#FFC93C','#00A878',NARANJA,'#2D9CDB'];
+
+    // Fondo
+    ctx.fillStyle = '#FFF8EC'; ctx.fillRect(0,0,cw,ch);
+
+    // Banderines arriba y abajo
+    const bw = 14*S, bh = 11*S;
+    for(let i=0, x=0; x < cw; i++, x+=bw){
+      ctx.fillStyle = PALETA[i%5];
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+bw,0); ctx.lineTo(x+bw/2,bh); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x,ch); ctx.lineTo(x+bw,ch); ctx.lineTo(x+bw/2,ch-bh); ctx.closePath(); ctx.fill();
+    }
+
+    ctx.textAlign = 'center';
+
+    // Marca en tres colores
+    const partes = [['La ',TINTA],['Digi ',FUCSIA],['Feria',NARANJA]];
+    ctx.font = `800 ${20*S}px Fredoka, Nunito, sans-serif`;
+    let total = 0; partes.forEach(([t])=> total += ctx.measureText(t).width);
+    let px0 = (cw-total)/2;
+    ctx.textAlign = 'left';
+    partes.forEach(([t,c])=>{ ctx.fillStyle = c; ctx.fillText(t, px0, 34*S); px0 += ctx.measureText(t).width; });
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = '#7A6A55';
+    ctx.font = `700 ${9*S}px Nunito, sans-serif`;
+    ctx.fillText('La feria del barrio, abierta las 24 horas', cw/2, 48*S);
+
+    // Marco blanco con el QR
+    const lado = 118*S, qx = (cw-lado)/2, qy = 62*S, pad = 9*S;
+    trazoRedondeado(ctx, qx-pad, qy-pad, lado+2*pad, lado+2*pad, 12*S);
+    ctx.fillStyle = '#FFFFFF'; ctx.fill();
+    ctx.lineWidth = 2*S; ctx.strokeStyle = TINTA; ctx.stroke();
+    const im = new Image();
+    await new Promise((r,j)=>{ im.onload = r; im.onerror = j; im.src = qrData; });
+    ctx.drawImage(im, qx, qy, lado, lado);
+
+    // Llamado a la acción
+    let y = qy + lado + pad + 22*S;
+    ctx.fillStyle = TINTA;
+    ctx.font = `800 ${15*S}px Fredoka, Nunito, sans-serif`;
+    ctx.fillText('Escaneá y paseá por toda la feria', cw/2, y);
+    y += 13*S;
+    ctx.fillStyle = '#7A6A55';
+    ctx.font = `700 ${9.5*S}px Nunito, sans-serif`;
+    ctx.fillText('Mirá los productos y precios de cada puesto', cw/2, y);
+    y += 11*S;
+    ctx.fillText('y comprá directo por WhatsApp', cw/2, y);
+
+    // Tres beneficios
+    y += 16*S;
+    const items = [['Sin registrarte','#00A878'], ['Sin descargar nada','#2D9CDB'], ['Sin comisiones',NARANJA]];
+    ctx.font = `800 ${10*S}px Nunito, sans-serif`;
+    items.forEach(([t,c])=>{
+      const tw = ctx.measureText(t).width, pil = tw + 34*S, bx = (cw-pil)/2;
+      trazoRedondeado(ctx, bx, y, pil, 15*S, 7.5*S);
+      ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 1.6*S; ctx.strokeStyle = TINTA; ctx.stroke();
+      ctx.beginPath(); ctx.arc(bx + 12*S, y + 7.5*S, 4*S, 0, Math.PI*2);
+      ctx.fillStyle = c; ctx.fill(); ctx.stroke();
+      ctx.fillStyle = TINTA; ctx.fillText(t, bx + pil/2 + 8*S, y + 11*S);
+      y += 20*S;
+    });
+
+    // Píldora final con la web
+    y += 8*S;
+    ctx.font = `800 ${17*S}px Fredoka, Nunito, sans-serif`;
+    const web = 'digiferia.ar';
+    const ww = ctx.measureText(web).width + 44*S, wx = (cw-ww)/2;
+    trazoRedondeado(ctx, wx, y, ww, 26*S, 13*S);
+    ctx.fillStyle = FUCSIA; ctx.fill(); ctx.lineWidth = 2*S; ctx.strokeStyle = TINTA; ctx.stroke();
+    ctx.fillStyle = '#FFFFFF'; ctx.fillText(web, cw/2, y + 19*S);
+
+    // PDF A4 a página completa
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    doc.addImage(cv.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
+    doc.save('QR-La-Digi-Feria-A4.pdf');
+    mostrarToast('📄 ¡Cartel descargado! Buscalo en tus descargas.');
+  }catch(e){
+    mostrarToast('No se pudo generar el cartel: ' + e.message);
   }
 }
 
