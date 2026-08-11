@@ -1690,21 +1690,21 @@ async function imprimirQRDigiFeria(){
     // ---- Marca en tres colores (centrada y ajustada) ----
     const partes = [['La ',TINTA],['Digi ',FUCSIA],['Feria',NARANJA]];
     const marcaTxt = 'La Digi Feria';
-    const tMarca = fuenteQueEntre(marcaTxt, 76, ANCHO_UTIL, '800', FRED);
+    const tMarca = fuenteQueEntre(marcaTxt, 68, ANCHO_UTIL - 60, '800', FRED);
     ctx.font = `800 ${tMarca}px ${FRED}`;
     let total = 0; partes.forEach(([t])=> total += ctx.measureText(t).width);
     let cx = (cw - total)/2;
     ctx.textAlign = 'left';
-    partes.forEach(([t,c])=>{ ctx.fillStyle = c; ctx.fillText(t, cx, 140); cx += ctx.measureText(t).width; });
+    partes.forEach(([t,c])=>{ ctx.fillStyle = c; ctx.fillText(t, cx, 152); cx += ctx.measureText(t).width; });
 
     ctx.textAlign = 'center';
     const sub = 'La feria del barrio, abierta las 24 horas';
-    const tSub = fuenteQueEntre(sub, 32, ANCHO_UTIL, '700', NUNI);
+    const tSub = fuenteQueEntre(sub, 30, ANCHO_UTIL - 40, '700', NUNI);
     ctx.font = `700 ${tSub}px ${NUNI}`;
-    ctx.fillStyle = GRIS; ctx.fillText(sub, cw/2, 186);
+    ctx.fillStyle = GRIS; ctx.fillText(sub, cw/2, 214);
 
     // ---- QR en marco blanco ----
-    const lado = 344, qx = (cw-lado)/2, qy = 214, pad = 28;
+    const lado = 306, qx = (cw-lado)/2, qy = 272, pad = 26;
     trazoRedondeado(ctx, qx-pad, qy-pad, lado+2*pad, lado+2*pad, 46);
     ctx.fillStyle = '#FFFFFF'; ctx.fill();
     ctx.lineWidth = 8; ctx.strokeStyle = TINTA; ctx.stroke();
