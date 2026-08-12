@@ -194,6 +194,8 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
   border-radius:14px;padding:14px;box-shadow:3px 3px 0 rgba(43,33,24,.9);
   display:flex;align-items:center;gap:12px
 }
+.panel-logo.con-foto{background-size:cover;background-position:center;font-size:0}
+.avatar-mini.con-foto{background-size:cover;background-position:center;font-size:0;color:transparent}
 .panel-logo{
   width:56px;height:56px;border-radius:50%;background:#FDF1DC;
   border:2px solid var(--tinta);display:flex;align-items:center;
@@ -1226,11 +1228,13 @@ function actualizarUI(){
   const label = document.getElementById('nav-mipuesto-label');
 
   if(usuario){
+    const logoAvatar = usuario.puestoFoto || null;
     const ini = usuario.puestoEmoji && usuario.puestoEmoji !== '🎪'
       ? usuario.puestoEmoji
       : (usuario.nombre || "U")[0].toUpperCase();
-    inicial.textContent = ini;
-    btn.className = "avatar-mini " + (usuario.rol === 'organizador' ? 'org' : 'logueado');
+    inicial.textContent = logoAvatar ? '' : ini;
+    btn.className = "avatar-mini " + (usuario.rol === 'organizador' ? 'org' : 'logueado') + (logoAvatar ? ' con-foto' : '');
+    btn.style.backgroundImage = logoAvatar ? `url('${logoAvatar}')` : '';
     document.getElementById('avatar-nombre-menu').textContent = usuario.nombre || usuario.email;
     label.textContent = usuario.rol === 'organizador' ? 'Mi Feria' : 'Mi Puesto';
     // Ocultar newsletter si está logueado como feriante
@@ -1238,7 +1242,7 @@ function actualizarUI(){
     if(nc && usuario.rol === 'feriante') nc.style.display = 'none';
   } else {
     inicial.textContent = "?";
-    btn.className = "avatar-mini";
+    btn.className = "avatar-mini"; btn.style.backgroundImage = "";
     label.textContent = "Mi Puesto";
     const nc = document.getElementById('news-card-wrap');
     if(nc) nc.style.display = '';
@@ -1312,7 +1316,7 @@ function renderPanelFeriante(cont){
       <div class="seccion" style="padding-bottom:8px"><h1>Mi puesto 🎪</h1></div>
 
       <div class="panel-header">
-        <div class="panel-logo">${u.puestoEmoji || "🎪"}</div>
+        <div class="panel-logo${u.puestoFoto ? ' con-foto' : ''}"${u.puestoFoto ? ` style="background-image:url('${u.puestoFoto}')"` : ''}>${u.puestoFoto ? '' : (u.puestoEmoji || "🎪")}</div>
         <div class="panel-info">
           <b>${u.puestoNombre}</b>
           <small>${u.puestoBio ? u.puestoBio.slice(0,60)+"…" : ""}</small>
@@ -1429,11 +1433,12 @@ function renderPanelOrganizador(cont){
       <p style="font-weight:700;color:#7A6A55">Todavía no tenés ferias vinculadas a tu cuenta.<br>Escribinos a hola@digiferia.ar para que te demos el acceso.</p>
     </div>`;
 
+  const logoOrg = (ferias.find(x=>x.logo)||{}).logo || null;
   cont.innerHTML = `
     <div class="panel-org">
       <div class="seccion" style="padding-bottom:8px"><h1>Mi feria 📣</h1></div>
       <div class="panel-header">
-        <div class="panel-logo">📣</div>
+<div class="panel-logo${logoOrg ? ' con-foto' : ''}"${logoOrg ? ` style="background-image:url('${logoOrg}')"` : ''}>${logoOrg ? '' : '📣'}</div>
         <div class="panel-info">
           <b>${u.nombre}</b>
           <small>${ferias.length} feria${ferias.length!==1?"s":""} vinculada${ferias.length!==1?"s":""}</small>
@@ -2663,7 +2668,7 @@ async function guardarInfoPuesto(){
     usuario.puestoBio    = document.getElementById('edic-bio').value.trim();
     usuario.puestoWhatsapp = document.getElementById('edic-wsp').value.trim();
     usuario.puestoRedes  = redes;
-    if(fotoNueva){ usuario.puestoFoto = fotoUrl; usuario.puestoEmoji = ''; }
+    if(fotoNueva){ usuario.puestoFoto = fotoUrl; usuario.puestoEmoji = ''; actualizarUI(); }
 
     mostrarToast('✅ ¡Cambios guardados!');
     cerrarEdicion();
