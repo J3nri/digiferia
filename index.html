@@ -321,7 +321,8 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .edic-campo input:focus,.edic-campo textarea:focus{border-color:var(--fucsia)}
 .edic-campo textarea{resize:vertical}
 .edic-btn-guardar{width:100%;padding:15px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9);margin-top:8px}
-.edic-btn-agregar{width:100%;padding:13px;background:var(--blanco);color:var(--tinta);border:2px dashed var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;cursor:pointer;margin-top:4px}
+.barra-agregar{position:sticky;top:0;z-index:12;background:var(--fondo);padding:2px 0 12px;margin-bottom:4px}
+.edic-btn-agregar{width:100%;padding:13px;background:var(--blanco);color:var(--tinta);border:2px dashed var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;cursor:pointer;margin-top:0}
 .prod-card{background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
 .prod-card .prod-foto{width:52px;height:52px;border-radius:10px;background:#FDF1DC;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden}
 .prod-card .prod-foto img{width:100%;height:100%;object-fit:cover}
@@ -785,8 +786,17 @@ nav button.on span{filter:none;opacity:1}
     <!-- SOLAPA 1: Productos -->
     <div id="edic-1" class="edic-panel" style="display:none">
       <div style="padding:18px">
+        <div class="barra-agregar">
+          <button class="edic-btn-agregar" onclick="abrirFormProducto()">+ Agregar producto</button>
+          <div id="buscador-prod" style="display:none;align-items:center;gap:8px;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:9px 14px;margin-top:8px">
+            <span style="font-size:15px">🔍</span>
+            <input type="text" id="edic-buscar-prod" placeholder="Buscar entre mis productos..." oninput="renderProductosEdic()"
+              style="border:none;outline:none;font-family:'Nunito',sans-serif;font-size:14px;flex:1;min-width:0;background:transparent;font-weight:700">
+            <button onclick="document.getElementById('edic-buscar-prod').value='';renderProductosEdic()"
+              style="border:none;background:none;font-size:15px;cursor:pointer;color:#9A8B76;padding:0">✕</button>
+          </div>
+        </div>
         <div id="edic-lista-productos"></div>
-        <button class="edic-btn-agregar" onclick="abrirFormProducto()">+ Agregar producto</button>
       </div>
     </div>
 
@@ -2699,9 +2709,25 @@ function renderProductosEdic(){
   const cont = document.getElementById('edic-lista-productos');
   if(!productosEdic.length){
     cont.innerHTML = '<p style="font-size:13.5px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">Todavía no tenés productos. ¡Agregá el primero!</p>';
+    document.getElementById('buscador-prod').style.display = 'none';
     return;
   }
-  cont.innerHTML = productosEdic.map(p=>{
+
+  // El buscador aparece recién cuando hay bastantes productos
+  const cajaBusca = document.getElementById('buscador-prod');
+  cajaBusca.style.display = productosEdic.length >= 8 ? 'flex' : 'none';
+  const q = (document.getElementById('edic-buscar-prod')?.value || '').trim().toLowerCase();
+  const lista = q
+    ? productosEdic.filter(p => (p.nombre||'').toLowerCase().includes(q)
+                             || (p.categoria||'').toLowerCase().includes(q))
+    : productosEdic;
+
+  if(!lista.length){
+    cont.innerHTML = `<p style="font-size:13.5px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">No encontramos productos con “${q}” 🙈</p>`;
+    return;
+  }
+
+  cont.innerHTML = lista.map(p=>{
     const foto = p.fotos && p.fotos[0];
     const esUrl = foto && foto.startsWith('http');
     const fotoHtml = esUrl
