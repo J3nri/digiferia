@@ -543,7 +543,7 @@ nav button.on span{filter:none;opacity:1}
 </div>
 
 <!-- ASIGNADOR RÁPIDO DE STOCK -->
-<div class="velo" id="velo-stock" style="align-items:flex-end;padding:0;overflow-y:auto">
+<div class="velo" id="velo-stock" style="align-items:flex-end;padding:0;overflow-y:auto;z-index:70">
   <div style="background:var(--fondo);width:100%;max-width:480px;margin:0 auto;border-radius:22px 22px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:92vh;display:flex;flex-direction:column">
     <div style="padding:16px 18px 10px;border-bottom:2px solid #F0E4CE">
       <h2 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px">📦 Cargar stock de todos</h2>
@@ -2485,7 +2485,7 @@ async function cargarFeriaYPuestosEnVivo(){
       const feriaAsis = asis ? fdet.find(x=>x.id===asis.feria_id) : null;
       const esUrl = p.foto_url&&p.foto_url.startsWith("http");
       return {
-        id:p.id, nombre:p.nombre, bio:p.bio||"",
+        id:p.id, slug:p.slug||null, nombre:p.nombre, bio:p.bio||"",
         emoji:(!esUrl&&p.foto_url)?p.foto_url:"🎪",
         foto:esUrl?p.foto_url:null,
         rubro:p.rubros?p.rubros.clave:null,
@@ -3294,7 +3294,12 @@ function abrirStockRapido(){
       </div>`;
     }).join('');
   }
-  document.getElementById('velo-stock').classList.add('on');
+  const velo = document.getElementById('velo-stock');
+  // El botón vive dentro de una barra 'sticky', que crea su propia capa y
+  // dejaba el modal atrapado detrás del panel. Lo mudamos al body para que
+  // quede siempre por encima de todo.
+  if(velo.parentElement !== document.body) document.body.appendChild(velo);
+  velo.classList.add('on');
 }
 
 function pasoStock(id, delta){
@@ -3850,16 +3855,30 @@ function enviarCarritoWsp(){
   cerrarCarrito();
 }
 
+// Abre directo el perfil cuando la URL trae #puesto=<slug>
+function abrirPuestoDelLink(){
+  const m = location.hash.match(/^#puesto=(.+)$/);
+  if(!m) return;
+  const pedido = decodeURIComponent(m[1]).trim().toLowerCase();
+  const f = FERIANTES.find(x => (x.slug||'').toLowerCase() === pedido)
+         || FERIANTES.find(x => String(x.id) === pedido);   // por si el link viejo traía el id
+  if(f){
+    verPerfil(f.id);
+  } else {
+    console.warn('No se encontró el puesto del link:', pedido);
+    mostrarToast('No encontramos ese puesto 🙈');
+  }
+}
+
+// Si alguien pega otro link estando ya en la app, que también funcione
+window.addEventListener('hashchange', abrirPuestoDelLink);
+
 // ================== INIT ==================
 restaurarSeguimientosLocal();
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
-  const m = location.hash.match(/^#puesto=(.+)$/);
-  if(m){
-    const f = FERIANTES.find(x=>x.slug===decodeURIComponent(m[1]));
-    if(f) verPerfil(f.id);
-  }
+  abrirPuestoDelLink();
 });
 recuperarSesionLocal();
 detectarTokenInvitacion();
