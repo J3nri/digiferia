@@ -520,6 +520,7 @@ nav button.on span{filter:none;opacity:1}
     <div style="padding:18px">
       <h2 id="detalle-nombre" style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px;line-height:1.2"></h2>
       <div id="detalle-precio" style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--verde);margin-top:6px"></div>
+      <div id="detalle-stock" style="display:none;margin-top:10px;font-size:13.5px;font-weight:800"></div>
       <div id="detalle-desc-bloque" style="margin-top:14px;display:none">
         <h3 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;color:#7A6A55">📝 Descripción</h3>
         <p id="detalle-desc" style="font-size:14.5px;color:#5C4F3E;font-weight:700;margin-top:5px;line-height:1.55"></p>
@@ -537,6 +538,23 @@ nav button.on span{filter:none;opacity:1}
         <button onclick="cerrarDetalleProd()" style="flex:1;padding:13px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer">← Volver</button>
         <button id="btn-agregar-carrito" onclick="agregarAlCarrito()" style="flex:2;padding:13px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🛒 Agregar al carrito</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ASIGNADOR RÁPIDO DE STOCK -->
+<div class="velo" id="velo-stock" style="align-items:flex-end;padding:0;overflow-y:auto">
+  <div style="background:var(--fondo);width:100%;max-width:480px;margin:0 auto;border-radius:22px 22px 0 0;border:2px solid var(--tinta);border-bottom:none;max-height:92vh;display:flex;flex-direction:column">
+    <div style="padding:16px 18px 10px;border-bottom:2px solid #F0E4CE">
+      <h2 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px">📦 Cargar stock de todos</h2>
+      <small style="font-size:12.5px;color:#7A6A55;font-weight:700;display:block;margin-top:4px;line-height:1.45">
+        Poné cuántas unidades tenés de cada uno y guardá todo junto. Lo que dejes en 0 deja de verse en tu puesto.
+      </small>
+    </div>
+    <div id="stock-items" style="padding:12px 18px;overflow-y:auto;flex:1"></div>
+    <div style="padding:12px 18px 18px;border-top:2px solid #F0E4CE;background:var(--fondo)">
+      <button id="btn-guardar-stock" onclick="guardarStockRapido()" style="width:100%;padding:13px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">💾 Guardar todo</button>
+      <button onclick="document.getElementById('velo-stock').classList.remove('on')" style="width:100%;margin-top:8px;padding:11px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cerrar</button>
     </div>
   </div>
 </div>
@@ -797,6 +815,7 @@ nav button.on span{filter:none;opacity:1}
       <div style="padding:18px">
         <div class="barra-agregar">
           <button class="edic-btn-agregar" onclick="abrirFormProducto()">+ Agregar producto</button>
+          <button onclick="abrirStockRapido()" style="width:100%;margin-top:8px;padding:10px;background:var(--amarillo);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📦 Cargar stock de todos</button>
           <div id="buscador-prod" style="display:none;align-items:center;gap:8px;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:9px 14px;margin-top:8px">
             <span style="font-size:15px">🔍</span>
             <input type="text" id="edic-buscar-prod" placeholder="Buscar entre mis productos..." oninput="renderProductosEdic()"
@@ -845,6 +864,11 @@ nav button.on span{filter:none;opacity:1}
     <textarea id="prod-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;resize:none;margin-bottom:8px"></textarea>
     <div id="prod-cat-caja" style="display:none;margin-bottom:8px">
       <select id="prod-categoria" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco);font-weight:700"></select>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:9px 12px;margin-bottom:8px">
+      <b style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;flex:1">📦 ¿Cuántos tenés?</b>
+      <input type="number" id="prod-stock" value="1" min="0" step="1"
+        style="width:76px;border:2px solid var(--tinta);border-radius:10px;padding:8px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;text-align:center">
     </div>
     <input type="number" id="prod-precio" placeholder="Precio en $" min="1" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
     <div class="login-error" id="prod-error" style="margin-top:8px"></div>
@@ -2435,7 +2459,7 @@ async function cargarFeriaYPuestosEnVivo(){
   try{
     const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
-    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria,stock),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
@@ -2470,7 +2494,7 @@ async function cargarFeriaYPuestosEnVivo(){
         redes:(p.redes&&Object.keys(p.redes).length)?p.redes:null,
         ferias:fdet.map(x=>x.id), feriasDetalle:fdet,
         categorias: Array.isArray(p.categorias) ? p.categorias : [],
-        productos:(p.productos||[]).filter(x=>x.visible!==false).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",cat:(x.categoria||"").trim(),foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
+        productos:(p.productos||[]).filter(x=>x.visible!==false && (x.stock===null||x.stock===undefined||x.stock>0)).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",cat:(x.categoria||"").trim(),stock:(x.stock===null||x.stock===undefined)?1:x.stock,foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
         pinesDB:(p.puesto_insignia||[]).filter(x=>x.vigente!==false&&x.insignias).map(x=>x.insignias),
         confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
       };
@@ -2797,6 +2821,7 @@ function renderProductosEdic(){
         <b>${p.nombre}</b>
         <small>$${Number(p.precio).toLocaleString('es-AR')}</small>
         ${p.categoria ? `<small style="display:block;color:var(--fucsia);font-weight:800">🗂️ ${p.categoria}</small>` : ''}
+        <small style="display:block;font-weight:800;color:${(p.stock||0)===0 ? '#B3572B' : '#7A6A55'}">📦 ${(p.stock||0)===0 ? 'Sin stock — no se ve en tu puesto' : (p.stock===1 ? 'Queda 1' : p.stock + ' unidades')}</small>
         ${oculto?'<small style="display:block;color:#B3572B;font-weight:800">🙈 Oculto — los visitantes no lo ven</small>':''}
       </div>
       <div class="prod-acciones">
@@ -2828,6 +2853,7 @@ function abrirFormProducto(id){
   document.getElementById('prod-descripcion').value = '';
   document.getElementById('prod-precio').value = '';
   document.getElementById('prod-error').classList.remove('on');
+  document.getElementById('prod-stock').value = 1;
   llenarSelectCategoria('');
   fotosProducto = [];
 
@@ -2838,6 +2864,7 @@ function abrirFormProducto(id){
       document.getElementById('prod-descripcion').value = p.descripcion || '';
       document.getElementById('prod-precio').value = p.precio || '';
       llenarSelectCategoria(p.categoria || '');
+      document.getElementById('prod-stock').value = (p.stock === null || p.stock === undefined) ? 1 : p.stock;
       // Cargar fotos existentes
       fotosProducto = (p.fotos||[]).filter(Boolean).map(url=>({url, preview:null, file:null}));
     }
@@ -2950,6 +2977,7 @@ async function guardarProducto(){
       precio: Number(precio),
       fotos: fotosFinales,
       categoria: (planTieneCategorias() ? (document.getElementById('prod-categoria').value || null) : undefined),
+      stock: Math.max(0, parseInt(document.getElementById('prod-stock').value, 10) || 0),
       visible: true,
       orden: id ? productosEdic.find(x=>x.id===id)?.orden || 0 : productosEdic.length
     };
@@ -3239,6 +3267,70 @@ async function guardarAsignaciones(){
     cargarFeriaYPuestosEnVivo();
   }catch(e){
     mostrarToast('❌ Error: ' + e.message);
+  }finally{
+    btn.textContent = '💾 Guardar todo'; btn.disabled = false;
+  }
+}
+
+// ── Asignador rápido de stock ──────────────────────────────
+function abrirStockRapido(){
+  const cont = document.getElementById('stock-items');
+  if(!productosEdic.length){
+    cont.innerHTML = '<p style="font-size:13.5px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">Todavía no tenés productos.</p>';
+  } else {
+    cont.innerHTML = productosEdic.map(p=>{
+      const st = (p.stock === null || p.stock === undefined) ? 1 : p.stock;
+      return `<div style="display:flex;gap:10px;align-items:center;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:8px 10px;margin-bottom:8px">
+        <div style="flex:1;min-width:0">
+          <b style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtml(p.nombre)}</b>
+          ${p.categoria ? `<small style="font-size:11.5px;color:var(--fucsia);font-weight:800">🗂️ ${escaparHtml(p.categoria)}</small>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button onclick="pasoStock('${p.id}',-1)" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--tinta);background:var(--fondo);font-size:17px;font-weight:800;cursor:pointer;line-height:1">−</button>
+          <input type="number" class="stock-asig" data-id="${p.id}" value="${st}" min="0" step="1"
+            style="width:56px;border:2px solid var(--tinta);border-radius:10px;padding:7px 4px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;text-align:center">
+          <button onclick="pasoStock('${p.id}',1)" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--tinta);background:var(--fondo);font-size:17px;font-weight:800;cursor:pointer;line-height:1">+</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('velo-stock').classList.add('on');
+}
+
+function pasoStock(id, delta){
+  const inp = document.querySelector(`.stock-asig[data-id="${id}"]`);
+  if(!inp) return;
+  inp.value = Math.max(0, (parseInt(inp.value,10) || 0) + delta);
+}
+
+async function guardarStockRapido(){
+  const btn = document.getElementById('btn-guardar-stock');
+  btn.textContent = '⏳ Guardando...'; btn.disabled = true;
+  let cambios = 0, ocultados = 0;
+  try{
+    for(const inp of document.querySelectorAll('.stock-asig')){
+      const prod = productosEdic.find(p => p.id === inp.dataset.id);
+      const nuevo = Math.max(0, parseInt(inp.value,10) || 0);
+      const actual = (prod && prod.stock !== null && prod.stock !== undefined) ? prod.stock : 1;
+      if(nuevo === actual) continue;
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${inp.dataset.id}`, {
+        method: 'PATCH',
+        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        body: JSON.stringify({ stock: nuevo })
+      });
+      if(!r.ok) throw new Error('No se pudo guardar el stock');
+      if(prod) prod.stock = nuevo;
+      cambios++;
+      if(nuevo === 0) ocultados++;
+    }
+    let aviso = cambios ? `✅ ${cambios} producto(s) actualizados` : '👍 No había cambios para guardar';
+    if(ocultados) aviso += ` · ${ocultados} sin stock, ya no se ven en tu puesto`;
+    mostrarToast(aviso);
+    document.getElementById('velo-stock').classList.remove('on');
+    renderProductosEdic();
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){
+    mostrarToast('❌ ' + e.message);
   }finally{
     btn.textContent = '💾 Guardar todo'; btn.disabled = false;
   }
@@ -3649,6 +3741,22 @@ function verProducto(idx){
   btnC.style.display = esPro ? '' : 'none';
 
   // Selector de cantidad: solo tiene sentido si hay carrito (plan Pro)
+  // Stock remanente a la vista del visitante
+  const cajaStock = document.getElementById('detalle-stock');
+  const st = p.stock;
+  if(st === null || st === undefined){
+    cajaStock.style.display = 'none';
+  } else {
+    cajaStock.style.display = 'block';
+    if(st <= 3){
+      cajaStock.style.color = '#B3572B';
+      cajaStock.textContent = st === 1 ? '🔥 ¡Queda 1 disponible!' : `🔥 ¡Quedan solo ${st}!`;
+    } else {
+      cajaStock.style.color = '#7A6A55';
+      cajaStock.textContent = `📦 ${st} disponibles`;
+    }
+  }
+
   cantidadDetalle = 1;
   document.getElementById('detalle-cantidad-caja').style.display = esPro ? 'flex' : 'none';
   document.getElementById('detalle-subtotal').style.display = esPro ? 'block' : 'none';
