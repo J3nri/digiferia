@@ -88,7 +88,7 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .destacados-row{display:flex;gap:14px;overflow-x:auto;padding:2px 18px 18px;scroll-snap-type:x proximity;scrollbar-width:none}
 .destacados-row::-webkit-scrollbar{display:none}
 .destacados-row .puesto{min-width:42%;scroll-snap-align:start}
-.destacados-row .puesto .foto{height:95px;font-size:40px}
+.destacados-row .puesto .foto{height:95px;font-size:40px;background-size:cover}
 /* Los destacados conservan su tamaño original; el achique del 25% es solo para la grilla */
 .destacados-row .puesto .toldo{height:14px}
 .destacados-row .puesto .pinfo{padding:8px 11px 11px}
@@ -100,8 +100,8 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .destacados-row .puesto .sello-destacado{font-size:10.5px;top:6px;right:6px;border-width:2px;padding:2px 8px}
 .puesto.destacado{border-color:#B8860B;border-width:3px;box-shadow:4px 4px 0 #B8860B;position:relative;background:#FFFDF4}
 .sello-destacado{
-  position:absolute;top:5px;right:5px;z-index:2;font-size:8px;font-weight:800;
-  background:var(--amarillo);border:1.5px solid var(--tinta);border-radius:999px;padding:1px 6px
+  position:absolute;top:4px;right:4px;z-index:2;font-size:7px;font-weight:800;
+  background:var(--amarillo);border:1.5px solid var(--tinta);border-radius:999px;padding:1px 5px
 }
 .prox-item{display:flex;align-items:center;gap:12px;margin:0 18px 10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:9px 13px}
 .prox-dia{width:46px;height:46px;border-radius:12px;border:2px solid var(--tinta);background:#FFF0D6;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;flex-shrink:0}
@@ -283,16 +283,16 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .chip{font-weight:800;font-size:13.5px;white-space:nowrap;padding:8px 14px;border-radius:999px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;transition:transform .1s;font-family:'Nunito',sans-serif}
 .chip:active{transform:scale(.95)}
 .chip.on{background:var(--tinta);color:var(--amarillo)}
-.grilla{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:0 18px 24px}
+.grilla{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:0 18px 24px}
 .vacio{grid-column:1/-1;text-align:center;color:#9A8B76;font-weight:700;padding:30px 10px}
 .puesto{background:var(--blanco);border-radius:var(--radius);overflow:hidden;border:2px solid var(--tinta);box-shadow:4px 4px 0 rgba(43,33,24,.9);cursor:pointer;transition:transform .12s}
 .puesto:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
-.toldo{height:11px}
-.foto{height:66px;display:flex;align-items:center;justify-content:center;font-size:29px;background:#FDF1DC;border-bottom:2px solid var(--tinta)}
-.pinfo{padding:6px 8px 8px}
-.pnombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:12.5px;line-height:1.2}
-.prubro{font-size:9.5px;font-weight:800;color:var(--fucsia);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
-.pferia{font-size:9.5px;color:#7A6A55;margin-top:4px;line-height:1.4}
+.toldo{height:9px}
+.foto{height:78px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#FDF1DC;border-bottom:2px solid var(--tinta);background-size:contain;background-repeat:no-repeat;background-position:center}
+.pinfo{padding:5px 7px 7px}
+.pnombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:11.5px;line-height:1.15;word-break:break-word}
+.prubro{font-size:8.5px;font-weight:800;color:var(--fucsia);text-transform:uppercase;letter-spacing:.2px;margin-top:2px;line-height:1.25}
+.pferia{font-size:8.5px;color:#7A6A55;margin-top:3px;line-height:1.35}
 .mas-ferias{display:inline-block;font-size:8.5px;font-weight:800;background:#FFF0D6;border:1.5px solid var(--tinta);border-radius:999px;padding:1px 6px;margin-top:3px}
 .este-finde{
   display:inline-flex;align-items:center;gap:3px;margin-top:5px;
@@ -2029,7 +2029,7 @@ function cardPuesto(f){
     ? `<div><span class="este-finde">🔥 ${nombreFeriaConfirmada(f).replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>` : "";
   const sello = f.plan==="pro" ? `<span class="sello-destacado">⭐ Destacado</span>` : "";
   const foto = f.foto
-    ? `<div class="foto" style="background-image:url('${f.foto}');background-size:cover;background-position:center"></div>`
+    ? `<div class="foto" style="background-image:url('${f.foto}')"></div>`
     : `<div class="foto">${f.emoji}</div>`;
   return `<div class="puesto ${f.plan==="pro"?"destacado":""}" onclick="verPerfil('${f.id}')">
     ${sello}
