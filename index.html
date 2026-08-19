@@ -524,6 +524,15 @@ nav button.on span{filter:none;opacity:1}
         <h3 style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;color:#7A6A55">📝 Descripción</h3>
         <p id="detalle-desc" style="font-size:14.5px;color:#5C4F3E;font-weight:700;margin-top:5px;line-height:1.55"></p>
       </div>
+      <div id="detalle-cantidad-caja" style="display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:11px 14px">
+        <b style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px">¿Cuántos querés?</b>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="cambiarCantidadDetalle(-1)" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:var(--fondo);font-size:20px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);line-height:1">−</button>
+          <span id="detalle-cantidad" style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;min-width:28px;text-align:center">1</span>
+          <button onclick="cambiarCantidadDetalle(1)" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--tinta);background:var(--fondo);font-size:20px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9);line-height:1">+</button>
+        </div>
+      </div>
+      <div id="detalle-subtotal" style="display:none;text-align:right;font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;color:var(--verde);margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button onclick="cerrarDetalleProd()" style="flex:1;padding:13px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer">← Volver</button>
         <button id="btn-agregar-carrito" onclick="agregarAlCarrito()" style="flex:2;padding:13px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🛒 Agregar al carrito</button>
@@ -2631,15 +2640,63 @@ function previewLogoEdic(input){
   reader.readAsDataURL(file);
 }
 
+// Achica la foto en el navegador ANTES de subirla.
+// Las fotos del celular pesan 4-6 MB; para una tarjeta de producto
+// alcanza de sobra con 1200px de lado. Así suben rápido, no se rechazan
+// y el Storage rinde muchísimo más.
+function achicarFoto(file, ladoMax = 1200, calidad = 0.82){
+  return new Promise((resolve)=>{
+    // Los GIF (animados) y los SVG se dejan tal cual
+    if(file.type === 'image/gif' || file.type === 'image/svg+xml') return resolve(file);
+
+    const lector = new FileReader();
+    lector.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let {width:an, height:al} = img;
+        if(an > ladoMax || al > ladoMax){
+          if(an > al){ al = Math.round(al * ladoMax / an); an = ladoMax; }
+          else       { an = Math.round(an * ladoMax / al); al = ladoMax; }
+        }
+        const cv = document.createElement('canvas');
+        cv.width = an; cv.height = al;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,an,al);   // fondo para PNG con transparencia
+        ctx.drawImage(img, 0, 0, an, al);
+        cv.toBlob(blob => {
+          // Si por lo que sea quedó más pesada que la original, usamos la original
+          resolve(blob && blob.size < file.size ? blob : file);
+        }, 'image/jpeg', calidad);
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    lector.onerror = () => resolve(file);
+    lector.readAsDataURL(file);
+  });
+}
+
 async function subirFoto(file, carpeta){
-  const ext = file.name.split('.').pop();
+  const MAX_MB = 8;
+  if(file.size > MAX_MB * 1024 * 1024){
+    throw new Error(`La foto pesa ${(file.size/1024/1024).toFixed(1)} MB. Probá con una más liviana (máximo ${MAX_MB} MB).`);
+  }
+
+  const liviana = await achicarFoto(file);
+  const ext = (liviana.type === 'image/jpeg') ? 'jpg' : (file.name.split('.').pop() || 'jpg');
   const path = `${carpeta}/${usuario.id}-${Date.now()}.${ext}`;
+
   const resp = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${path}`, {
     method: 'POST',
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': file.type },
-    body: file
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': liviana.type || file.type },
+    body: liviana
   });
-  if(!resp.ok) throw new Error('Error subiendo imagen');
+
+  if(!resp.ok){
+    let detalle = '';
+    try{ const j = await resp.json(); detalle = j.message || j.error || ''; }catch(e){}
+    throw new Error('No se pudo subir la imagen' + (detalle ? ': ' + detalle : ` (error ${resp.status})`));
+  }
   return `${SUPABASE_URL}/storage/v1/object/public/imagenes/${path}`;
 }
 
@@ -3492,15 +3549,20 @@ async function guardarFlyer(){
   btn.disabled = true;
 
   try{
-    // 1. Subir imagen a Storage
-    const ext = flyerArchivo.name.split('.').pop();
+    // 1. Subir imagen a Storage (achicada primero; los flyers van un poco más grandes)
+    const flyerLiviano = await achicarFoto(flyerArchivo, 1600, 0.85);
+    const ext = (flyerLiviano.type === 'image/jpeg') ? 'jpg' : (flyerArchivo.name.split('.').pop() || 'jpg');
     const path = `flyers/${feriaId}-${Date.now()}.${ext}`;
     const respStorage = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${path}`, {
       method: 'POST',
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': flyerArchivo.type },
-      body: flyerArchivo
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': flyerLiviano.type || flyerArchivo.type },
+      body: flyerLiviano
     });
-    if(!respStorage.ok) throw new Error('Error subiendo imagen');
+    if(!respStorage.ok){
+      let det = '';
+      try{ const j = await respStorage.json(); det = j.message || j.error || ''; }catch(e){}
+      throw new Error('No se pudo subir el flyer' + (det ? ': ' + det : ` (error ${respStorage.status})`));
+    }
     const imgUrl = `${SUPABASE_URL}/storage/v1/object/public/imagenes/${path}`;
 
     // 2. Ver si ya tiene un flyer activo
@@ -3583,7 +3645,15 @@ function verProducto(idx){
     puntos.innerHTML = '';
   }
   const btnC = document.getElementById('btn-agregar-carrito');
-  btnC.style.display = window.perfilActual?.plan==='pro' ? '' : 'none';
+  const esPro = window.perfilActual?.plan === 'pro';
+  btnC.style.display = esPro ? '' : 'none';
+
+  // Selector de cantidad: solo tiene sentido si hay carrito (plan Pro)
+  cantidadDetalle = 1;
+  document.getElementById('detalle-cantidad-caja').style.display = esPro ? 'flex' : 'none';
+  document.getElementById('detalle-subtotal').style.display = esPro ? 'block' : 'none';
+  if(esPro) refrescarCantidadDetalle();
+
   document.getElementById('velo-detalle-prod').classList.add('on');
 }
 function cerrarDetalleProd(){ document.getElementById('velo-detalle-prod').classList.remove('on'); }
@@ -3596,14 +3666,36 @@ function moverFotoDetalle(dir){
 }
 
 // ================== CARRITO ==================
+let cantidadDetalle = 1;
+
+function cambiarCantidadDetalle(delta){
+  cantidadDetalle = Math.max(1, Math.min(99, cantidadDetalle + delta));
+  refrescarCantidadDetalle();
+}
+
+function refrescarCantidadDetalle(){
+  document.getElementById('detalle-cantidad').textContent = cantidadDetalle;
+  const btn = document.getElementById('btn-agregar-carrito');
+  btn.textContent = cantidadDetalle === 1
+    ? '🛒 Agregar al carrito'
+    : `🛒 Agregar ${cantidadDetalle} al carrito`;
+  // Subtotal en vivo, para que el cliente vea cuánto suma
+  const sub = document.getElementById('detalle-subtotal');
+  const precio = Number((productoActual?.p || '').replace(/[^0-9]/g,''));
+  sub.textContent = (precio && cantidadDetalle > 1)
+    ? `Subtotal: $${(precio*cantidadDetalle).toLocaleString('es-AR')}`
+    : '';
+}
+
 function agregarAlCarrito(){
   if(!productoActual) return;
+  const cant = cantidadDetalle || 1;
   const existe = carrito.find(x=>x.producto.n===productoActual.n);
-  if(existe) existe.cantidad++;
-  else carrito.push({producto:productoActual, cantidad:1});
+  if(existe) existe.cantidad += cant;
+  else carrito.push({producto:productoActual, cantidad:cant});
   actualizarCarritoFlotante();
   cerrarDetalleProd();
-  mostrarToast('✅ Agregado al carrito 🛒');
+  mostrarToast(cant === 1 ? '✅ Agregado al carrito 🛒' : `✅ ${cant} agregados al carrito 🛒`);
 }
 function actualizarCarritoFlotante(){
   const total = carrito.reduce((s,x)=>s+x.cantidad,0);
@@ -3633,7 +3725,7 @@ function renderCarrito(){
   document.getElementById('carrito-total').textContent = `Total: $${totalNum.toLocaleString('es-AR')}`;
 }
 function cambiarCantidad(i,delta){
-  carrito[i].cantidad+=delta;
+  carrito[i].cantidad = Math.min(99, carrito[i].cantidad + delta);
   if(carrito[i].cantidad<=0) carrito.splice(i,1);
   actualizarCarritoFlotante(); renderCarrito();
 }
