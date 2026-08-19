@@ -89,10 +89,19 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .destacados-row::-webkit-scrollbar{display:none}
 .destacados-row .puesto{min-width:42%;scroll-snap-align:start}
 .destacados-row .puesto .foto{height:95px;font-size:40px}
+/* Los destacados conservan su tamaño original; el achique del 25% es solo para la grilla */
+.destacados-row .puesto .toldo{height:14px}
+.destacados-row .puesto .pinfo{padding:8px 11px 11px}
+.destacados-row .puesto .pnombre{font-size:15.5px}
+.destacados-row .puesto .prubro{font-size:12px;letter-spacing:.4px;margin-top:3px}
+.destacados-row .puesto .pferia{font-size:12px;margin-top:5px;line-height:1.5}
+.destacados-row .puesto .mas-ferias{font-size:11px;padding:1px 8px;margin-top:4px}
+.destacados-row .puesto .este-finde{font-size:11px;padding:3px 9px;margin-top:6px;gap:4px}
+.destacados-row .puesto .sello-destacado{font-size:10.5px;top:6px;right:6px;border-width:2px;padding:2px 8px}
 .puesto.destacado{border-color:#B8860B;border-width:3px;box-shadow:4px 4px 0 #B8860B;position:relative;background:#FFFDF4}
 .sello-destacado{
-  position:absolute;top:6px;right:6px;z-index:2;font-size:10.5px;font-weight:800;
-  background:var(--amarillo);border:2px solid var(--tinta);border-radius:999px;padding:2px 8px
+  position:absolute;top:5px;right:5px;z-index:2;font-size:8px;font-weight:800;
+  background:var(--amarillo);border:1.5px solid var(--tinta);border-radius:999px;padding:1px 6px
 }
 .prox-item{display:flex;align-items:center;gap:12px;margin:0 18px 10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:9px 13px}
 .prox-dia{width:46px;height:46px;border-radius:12px;border:2px solid var(--tinta);background:#FFF0D6;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;flex-shrink:0}
@@ -274,21 +283,21 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .chip{font-weight:800;font-size:13.5px;white-space:nowrap;padding:8px 14px;border-radius:999px;border:2px solid var(--tinta);background:var(--blanco);cursor:pointer;transition:transform .1s;font-family:'Nunito',sans-serif}
 .chip:active{transform:scale(.95)}
 .chip.on{background:var(--tinta);color:var(--amarillo)}
-.grilla{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 18px 24px}
+.grilla{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:0 18px 24px}
 .vacio{grid-column:1/-1;text-align:center;color:#9A8B76;font-weight:700;padding:30px 10px}
 .puesto{background:var(--blanco);border-radius:var(--radius);overflow:hidden;border:2px solid var(--tinta);box-shadow:4px 4px 0 rgba(43,33,24,.9);cursor:pointer;transition:transform .12s}
 .puesto:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
-.toldo{height:14px}
-.foto{height:88px;display:flex;align-items:center;justify-content:center;font-size:38px;background:#FDF1DC;border-bottom:2px solid var(--tinta)}
-.pinfo{padding:8px 11px 11px}
-.pnombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15.5px;line-height:1.2}
-.prubro{font-size:12px;font-weight:800;color:var(--fucsia);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
-.pferia{font-size:12px;color:#7A6A55;margin-top:5px;line-height:1.5}
-.mas-ferias{display:inline-block;font-size:11px;font-weight:800;background:#FFF0D6;border:1.5px solid var(--tinta);border-radius:999px;padding:1px 8px;margin-top:4px}
+.toldo{height:11px}
+.foto{height:66px;display:flex;align-items:center;justify-content:center;font-size:29px;background:#FDF1DC;border-bottom:2px solid var(--tinta)}
+.pinfo{padding:6px 8px 8px}
+.pnombre{font-family:'Fredoka',sans-serif;font-weight:600;font-size:12.5px;line-height:1.2}
+.prubro{font-size:9.5px;font-weight:800;color:var(--fucsia);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+.pferia{font-size:9.5px;color:#7A6A55;margin-top:4px;line-height:1.4}
+.mas-ferias{display:inline-block;font-size:8.5px;font-weight:800;background:#FFF0D6;border:1.5px solid var(--tinta);border-radius:999px;padding:1px 6px;margin-top:3px}
 .este-finde{
-  display:inline-flex;align-items:center;gap:4px;margin-top:6px;
-  font-size:11px;font-weight:800;color:#fff;background:var(--fucsia);
-  border:1.5px solid var(--tinta);border-radius:999px;padding:3px 9px;
+  display:inline-flex;align-items:center;gap:3px;margin-top:5px;
+  font-size:8.5px;font-weight:800;color:#fff;background:var(--fucsia);
+  border:1.5px solid var(--tinta);border-radius:999px;padding:2px 7px;
   animation:latido 1.6s ease-in-out infinite
 }
 @keyframes latido{
