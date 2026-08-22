@@ -823,8 +823,11 @@ nav button.on span{filter:none;opacity:1}
     <div id="edic-1" class="edic-panel" style="display:none">
       <div style="padding:18px">
         <div class="barra-agregar">
-          <button class="edic-btn-agregar" onclick="abrirFormProducto()">+ Agregar producto</button>
-          <button onclick="abrirStockRapido()" style="width:100%;margin-top:8px;padding:10px;background:var(--amarillo);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📦 Cargar stock de todos</button>
+          <div style="display:flex;gap:8px">
+            <button class="edic-btn-agregar" style="flex:1;margin:0" onclick="abrirFormProducto()">+ Agregar</button>
+            <button onclick="abrirStockRapido()" style="flex:1;padding:10px;background:var(--amarillo);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📦 Stock</button>
+          </div>
+          <div id="chips-cat-panel" class="chips" style="display:none;padding:8px 0 2px;margin:0"></div>
           <div id="buscador-prod" style="display:none;align-items:center;gap:8px;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:9px 14px;margin-top:8px">
             <span style="font-size:15px">🔍</span>
             <input type="text" id="edic-buscar-prod" placeholder="Buscar entre mis productos..." oninput="renderProductosEdic()"
@@ -2545,7 +2548,7 @@ function arrastrable(el){
   el.addEventListener('click',e=>{if(seMovio){e.stopPropagation();e.preventDefault();seMovio=false;}},true);
   el.addEventListener('wheel',e=>{if(e.deltaY){e.preventDefault();el.scrollLeft+=e.deltaY;}},{passive:false});
 }
-['chips-rubros','destacados-row','carrusel-flyers','perfil-cats'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
+['chips-rubros','destacados-row','carrusel-flyers','perfil-cats','chips-cat-panel'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
 
 // ================== NUEVA CONTRASEÑA (invitación por email) ==================
 // Supabase pone el token en el hash: #access_token=xxx&type=invite
@@ -2655,6 +2658,7 @@ function cambiarSolapa(n){
   });
   if(n===1) cargarProductosEdic();
   if(n===2) cargarFeriasEdic();
+  if(n===1) catPanelActiva = '__todos__';
   if(n===3) cargarCategoriasEdic();
 }
 
@@ -2806,14 +2810,21 @@ function renderProductosEdic(){
   // El buscador aparece recién cuando hay bastantes productos
   const cajaBusca = document.getElementById('buscador-prod');
   cajaBusca.style.display = productosEdic.length >= 8 ? 'flex' : 'none';
+
+  // Chips para filtrar por categoría, así no hay que scrollear todo
+  renderChipsCatPanel();
+
   const q = (document.getElementById('edic-buscar-prod')?.value || '').trim().toLowerCase();
-  const lista = q
-    ? productosEdic.filter(p => (p.nombre||'').toLowerCase().includes(q)
-                             || (p.categoria||'').toLowerCase().includes(q))
-    : productosEdic;
+  let lista = productosEdic;
+
+  if(catPanelActiva === '__otros__')      lista = lista.filter(p => !(p.categoria||'').trim());
+  else if(catPanelActiva !== '__todos__') lista = lista.filter(p => (p.categoria||'').trim() === catPanelActiva);
+
+  if(q) lista = lista.filter(p => (p.nombre||'').toLowerCase().includes(q)
+                               || (p.categoria||'').toLowerCase().includes(q));
 
   if(!lista.length){
-    cont.innerHTML = `<p style="font-size:13.5px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">No encontramos productos con “${q}” 🙈</p>`;
+    cont.innerHTML = `<p style="font-size:13.5px;color:#7A6A55;font-weight:700;text-align:center;padding:20px 0">${q ? `No encontramos productos con “${q}” 🙈` : 'No hay productos en esta categoría 🙈'}</p>`;
     return;
   }
 
@@ -3101,12 +3112,12 @@ function renderCategoriasEdic(){
     Armá las solapas de tu puesto. Tus clientes las van a ver arriba de tus productos.
   </p>`;
 
-  html += `<div style="display:flex;gap:8px;margin-bottom:14px">
+  html += `<div class="barra-agregar" style="padding-bottom:10px"><div style="display:flex;gap:8px">
     <input type="text" id="cat-nueva" placeholder="Ej: Perfumes, Decants, Billeteras..." maxlength="28"
       onkeydown="if(event.key==='Enter')agregarCategoria()"
       style="flex:1;min-width:0;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
     <button onclick="agregarCategoria()" style="border:2px solid var(--tinta);border-radius:12px;background:var(--fucsia);color:#fff;font-family:'Fredoka';font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap">+ Crear</button>
-  </div>`;
+  </div></div>`;
 
   if(!cats.length){
     html += `<p style="font-size:13px;color:#7A6A55;font-weight:700;text-align:center;padding:14px 0">
@@ -3279,6 +3290,41 @@ async function guardarAsignaciones(){
   }finally{
     btn.textContent = '💾 Guardar todo'; btn.disabled = false;
   }
+}
+
+// ── Filtro por categoría dentro del panel de productos ──────
+let catPanelActiva = '__todos__';
+
+function renderChipsCatPanel(){
+  const cont = document.getElementById('chips-cat-panel');
+  if(!cont) return;
+  const cats = misCategorias();
+  const hayOtros = productosEdic.some(p => !(p.categoria||'').trim());
+
+  // Solo tiene sentido si armó categorías y tiene varios productos
+  if(!planTieneCategorias() || !cats.length || productosEdic.length < 6){
+    cont.style.display = 'none';
+    catPanelActiva = '__todos__';
+    return;
+  }
+  cont.style.display = 'flex';
+
+  const cuantos = v => v === '__todos__' ? productosEdic.length
+    : v === '__otros__' ? productosEdic.filter(p=>!(p.categoria||'').trim()).length
+    : productosEdic.filter(p=>(p.categoria||'').trim()===v).length;
+
+  const chip = (valor, texto) =>
+    `<button class="chip ${catPanelActiva===valor?'on':''}" style="font-size:12px;padding:6px 11px"
+      onclick="filtrarCatPanel('${String(valor).replace(/'/g,"\\'")}')">${texto} <b style="opacity:.6">${cuantos(valor)}</b></button>`;
+
+  cont.innerHTML = chip('__todos__','Todos')
+    + cats.map(c => chip(c, escaparHtml(c))).join('')
+    + (hayOtros ? chip('__otros__','Otros') : '');
+}
+
+function filtrarCatPanel(valor){
+  catPanelActiva = valor;
+  renderProductosEdic();
 }
 
 // ── Asignador rápido de stock ──────────────────────────────
