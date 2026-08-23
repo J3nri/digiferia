@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dejar de recibir avisos — La Digi Feria</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
+  --verde:#00A878; --celeste:#2D9CDB; --tinta:#2B2118;
+  --fondo:#FFF8EC; --blanco:#FFFFFF; --radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);padding:0 0 40px}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--fondo);box-shadow:0 0 40px rgba(43,33,24,.15)}
+.banderines{display:flex;height:22px;overflow:hidden}
+.banderines span{flex:1;min-width:26px;clip-path:polygon(0 0,100% 0,50% 100%)}
+.banderines span:nth-child(5n+1){background:var(--fucsia)}
+.banderines span:nth-child(5n+2){background:var(--amarillo)}
+.banderines span:nth-child(5n+3){background:var(--verde)}
+.banderines span:nth-child(5n+4){background:var(--naranja)}
+.banderines span:nth-child(5n+5){background:var(--celeste)}
+header{background:var(--blanco);border-bottom:1px solid #F0E4CE;padding:14px 18px 12px;text-align:center}
+.logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px}
+.logo em{font-style:normal;color:var(--fucsia)}
+.logo .fer{color:var(--naranja)}
+.seccion{padding:22px 18px}
+h1{font-family:'Fredoka',sans-serif;font-weight:600;font-size:23px;line-height:1.2}
+.sub{color:#7A6A55;font-size:14.5px;margin-top:8px;line-height:1.5;font-weight:600}
+.mail{display:inline-block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:5px 14px;margin-top:12px}
+.item{display:flex;align-items:center;gap:12px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.item .ic{font-size:20px;flex-shrink:0}
+.item .txt{flex:1;min-width:0}
+.item b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;display:block;line-height:1.25}
+.item small{font-size:12px;color:#7A6A55;font-weight:700}
+.btn-baja{flex-shrink:0;border:2px solid var(--tinta);background:var(--fondo);border-radius:999px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;padding:7px 13px;cursor:pointer;white-space:nowrap}
+.btn-baja:active{transform:translate(1px,1px)}
+.item.hecho{opacity:.5;box-shadow:none}
+.item.hecho .btn-baja{background:#EFE6D5;border-style:dashed;pointer-events:none}
+.btn-todo{width:100%;margin-top:16px;padding:14px;background:var(--blanco);border:2px solid var(--tinta);
+  border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;
+  box-shadow:4px 4px 0 rgba(43,33,24,.9)}
+.btn-todo:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
+.btn-volver{display:block;width:100%;margin-top:12px;padding:14px;background:var(--fucsia);color:#fff;
+  border:2px solid var(--tinta);border-radius:14px;font-family:'Fredoka',sans-serif;font-weight:600;
+  font-size:15px;text-align:center;text-decoration:none;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
+.aviso{background:#FFFDF4;border:2px dashed #B8860B;border-radius:14px;padding:16px;text-align:center;margin-top:6px}
+.aviso b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;display:block}
+.aviso small{font-size:13px;color:#5C4F3E;font-weight:700;display:block;margin-top:6px;line-height:1.45}
+.cargando{text-align:center;color:#9A8B76;font-weight:700;padding:36px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">La <em>Digi</em> <span class="fer">Feria</span></div>
+  </header>
+  <div class="banderines" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="seccion">
+    <div id="contenido"><div class="cargando">Un segundo…</div></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+
+const cab = {
+  "Content-Type": "application/json",
+  apikey: SUPABASE_KEY,
+  Authorization: `Bearer ${SUPABASE_KEY}`
+};
+
+// El token viene en el link del email: baja.html?t=<uuid>
+const token = new URLSearchParams(location.search).get('t');
+
+const ICONOS = { general:"📬", puesto:"🎪", feria:"📅", rubro:"🏷️" };
+const QUE_ES = {
+  general:"Novedades de toda la feria",
+  puesto:"Avisos de este puesto",
+  feria:"Fechas de esta feria",
+  rubro:"Novedades de este rubro"
+};
+
+const esc = t => String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+async function rpc(fn, body){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST', headers: cab, body: JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error('No se pudo completar la operación');
+  return r.json();
+}
+
+function mostrarError(titulo, texto){
+  document.getElementById('contenido').innerHTML = `
+    <div class="aviso">
+      <div style="font-size:38px;line-height:1">🤔</div>
+      <b>${titulo}</b>
+      <small>${texto}</small>
+    </div>
+    <a class="btn-volver" href="https://digiferia.ar">🎪 Ir a La Digi Feria</a>`;
+}
+
+async function cargar(){
+  if(!token){
+    mostrarError('Nos falta el código del link',
+      'Abrí el enlace tal como viene al pie del email, sin recortarlo.');
+    return;
+  }
+
+  let filas;
+  try{
+    filas = await rpc('datos_baja', { p_token: token });
+  }catch(e){
+    mostrarError('No pudimos leer tus preferencias',
+      'Probá de nuevo en un rato. Si sigue igual, escribinos a soporte@digiferia.ar.');
+    return;
+  }
+
+  if(!filas || !filas.length){
+    mostrarError('Este link ya no tiene avisos activos',
+      'Puede que ya te hayas dado de baja antes. No vas a recibir más correos nuestros.');
+    return;
+  }
+
+  const email = filas[0].email_visible || '';
+  document.getElementById('contenido').innerHTML = `
+    <h1>¿Dejamos de escribirte? 📭</h1>
+    <p class="sub">Podés desactivar solo lo que no te interesa y seguir recibiendo el resto.</p>
+    <span class="mail">✉️ ${esc(email)}</span>
+    <div style="margin-top:20px" id="lista">
+      ${filas.map((f,i)=>`
+        <div class="item" id="it-${i}">
+          <div class="ic">${ICONOS[f.tipo] || "🔔"}</div>
+          <div class="txt">
+            <b>${esc(f.nombre)}</b>
+            <small>${QUE_ES[f.tipo] || "Avisos"}</small>
+          </div>
+          <button class="btn-baja" onclick="quitar(${i},'${esc(f.tipo)}',${f.ref_id ? `'${f.ref_id}'` : 'null'})">Dar de baja</button>
+        </div>`).join('')}
+    </div>
+    <button class="btn-todo" onclick="quitarTodo()">🚫 No quiero recibir ningún aviso</button>
+    <a class="btn-volver" href="https://digiferia.ar">🎪 Volver a la feria</a>`;
+}
+
+async function quitar(i, tipo, ref){
+  const fila = document.getElementById('it-' + i);
+  const btn = fila.querySelector('.btn-baja');
+  btn.textContent = '…';
+  try{
+    await rpc('baja_una', { p_token: token, p_tipo: tipo, p_ref: ref });
+    fila.classList.add('hecho');
+    btn.textContent = '✓ Dado de baja';
+  }catch(e){
+    btn.textContent = 'Reintentar';
+  }
+}
+
+async function quitarTodo(){
+  if(!confirm('Vas a dejar de recibir TODOS los avisos de La Digi Feria y borramos tu email de nuestra base.\n\n¿Confirmás?')) return;
+  try{
+    await rpc('baja_total', { p_token: token });
+    document.getElementById('contenido').innerHTML = `
+      <div class="aviso">
+        <div style="font-size:38px;line-height:1">👋</div>
+        <b>Listo, no te escribimos más</b>
+        <small>Borramos tu email de nuestra base. Si algún día querés volver, podés anotarte de nuevo desde cualquier puesto con la campanita 🔔.</small>
+      </div>
+      <a class="btn-volver" href="https://digiferia.ar">🎪 Seguir paseando por la feria</a>`;
+  }catch(e){
+    alert('No pudimos completar la baja. Probá de nuevo en un rato.');
+  }
+}
+
+cargar();
+</script>
+</body>
+</html>
