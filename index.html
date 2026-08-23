@@ -154,7 +154,7 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .news-form input{flex:1;min-width:0;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco)}
 .news-form button{border:2px solid var(--tinta);border-radius:12px;background:var(--fucsia);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)}
 /* MODALES */
-.velo{position:fixed;inset:0;background:rgba(43,33,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+.velo{position:fixed;inset:0;background:rgba(43,33,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:14px}
 .velo.on{display:flex}
 #velo-ver-flyer{overflow-y:auto;align-items:center}
 .flyer-con-img{display:flex;flex-direction:column;overflow:hidden}
@@ -165,7 +165,7 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 #velo-detalle-prod.on,#velo-carrito.on{align-items:flex-end}
 #velo-detalle-prod,#velo-carrito{overflow-y:auto}
 #velo-detalle-prod>div,#velo-carrito>div{margin-top:auto}
-.modal{background:var(--fondo);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:6px 6px 0 rgba(43,33,24,.9);padding:20px;max-width:340px;width:100%}
+.modal{background:var(--fondo);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:6px 6px 0 rgba(43,33,24,.9);padding:20px;max-width:340px;width:100%;max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px}
 .modal p{font-size:13.5px;color:#5C4F3E;margin-top:6px;line-height:1.45}
 .modal input{width:100%;margin-top:12px;border:2px solid var(--tinta);border-radius:12px;padding:11px 12px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco)}
@@ -863,8 +863,8 @@ nav button.on span{filter:none;opacity:1}
 
 <!-- MODAL PRODUCTO -->
 <div class="velo" id="velo-producto">
-  <div class="modal">
-    <h3 id="prod-modal-titulo">➕ Nuevo producto</h3>
+  <div class="modal" id="modal-producto">
+    <h3 id="prod-modal-titulo" style="position:sticky;top:-20px;background:var(--fondo);padding:4px 0 8px;margin:-4px 0 0;z-index:2">➕ Nuevo producto</h3>
     <input type="hidden" id="prod-id">
     
     <!-- Fotos múltiples -->
@@ -911,7 +911,7 @@ nav button.on span{filter:none;opacity:1}
       </div>
     </div>
     <div class="login-error" id="prod-error" style="margin-top:8px"></div>
-    <div class="acciones" style="margin-top:12px">
+    <div class="acciones" style="margin-top:12px;position:sticky;bottom:-20px;background:var(--fondo);padding:10px 0 4px;z-index:2">
       <button class="m-no" onclick="cerrarFormProducto()">Cancelar</button>
       <button class="m-fucsia" onclick="guardarProducto()">Guardar</button>
     </div>
