@@ -355,6 +355,10 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .prod .foto{height:92px;font-size:36px}
 .prod .pinfo{padding:8px 10px 10px}
 .precio{font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;color:var(--verde);margin-top:3px}
+.precio-viejo{font-family:'Nunito',sans-serif;font-weight:700;font-size:11.5px;color:#9A8B76;text-decoration:line-through;margin-right:5px}
+.cinta-oferta{position:absolute;top:6px;left:6px;z-index:2;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;
+  background:var(--fucsia);color:#fff;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 7px;letter-spacing:.2px}
+.vence{display:inline-block;font-size:10px;font-weight:800;color:#B3572B;margin-top:2px}
 .cta-wsp{display:block;width:calc(100% - 36px);margin:20px 18px;padding:15px;text-align:center;background:#25D366;color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;border-radius:14px;border:2px solid var(--tinta);box-shadow:4px 4px 0 rgba(43,33,24,.9);cursor:pointer}
 .volver{background:none;border:none;font-weight:800;font-size:14px;color:var(--fucsia);padding:14px 18px 0;cursor:pointer;font-family:'Nunito',sans-serif}
 .busca-caja{margin:0 18px 14px;display:flex;align-items:center;gap:8px;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:11px 16px}
@@ -827,6 +831,7 @@ nav button.on span{filter:none;opacity:1}
             <button class="edic-btn-agregar" style="flex:1;margin:0" onclick="abrirFormProducto()">+ Agregar</button>
             <button onclick="abrirStockRapido()" style="flex:1;padding:10px;background:var(--amarillo);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📦 Stock</button>
           </div>
+          <button id="btn-avisar-ofertas" onclick="avisarOfertas()" style="display:none;width:100%;margin-top:8px;padding:11px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📢 Avisar a mis seguidores</button>
           <div id="chips-cat-panel" class="chips" style="display:none;padding:8px 0 2px;margin:0"></div>
           <div id="buscador-prod" style="display:none;align-items:center;gap:8px;background:var(--blanco);border:2px solid var(--tinta);border-radius:999px;padding:9px 14px;margin-top:8px">
             <span style="font-size:15px">🔍</span>
@@ -882,7 +887,29 @@ nav button.on span{filter:none;opacity:1}
       <input type="number" id="prod-stock" value="1" min="0" step="1"
         style="width:76px;border:2px solid var(--tinta);border-radius:10px;padding:8px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;text-align:center">
     </div>
-    <input type="number" id="prod-precio" placeholder="Precio en $" min="1" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
+    <input type="number" id="prod-precio" placeholder="Precio en $" min="1" oninput="resumenOferta()" style="width:100%;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
+
+    <div style="background:#FFF0F7;border:2px dashed var(--fucsia);border-radius:12px;padding:11px 13px;margin-top:8px">
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
+        <input type="checkbox" id="prod-en-oferta" onchange="toggleOferta()" style="width:19px;height:19px;accent-color:#E91E8C;cursor:pointer">
+        <b style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px">🏷️ Poner en oferta</b>
+      </label>
+      <div id="caja-oferta" style="display:none;margin-top:10px">
+        <small style="font-size:12px;color:#7A6A55;font-weight:700;display:block;line-height:1.45">
+          Poné arriba el precio <b>rebajado</b>. Acá, el precio de antes: es el que va a aparecer tachado.
+        </small>
+        <input type="number" id="prod-precio-antes" placeholder="Precio anterior en $" min="1" oninput="resumenOferta()"
+          style="width:100%;margin-top:8px;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px">
+        <small style="font-size:12px;color:#7A6A55;font-weight:700;display:block;margin-top:10px">¿Cuánto dura?</small>
+        <select id="prod-oferta-dura" onchange="resumenOferta()" style="width:100%;margin-top:6px;border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;background:var(--blanco)">
+          <option value="7">Una semana</option>
+          <option value="15">Quince días</option>
+          <option value="30">Un mes</option>
+          <option value="0">Sin fecha (la saco yo)</option>
+        </select>
+        <div id="oferta-resumen" style="font-size:12.5px;font-weight:800;color:var(--fucsia);margin-top:9px"></div>
+      </div>
+    </div>
     <div class="login-error" id="prod-error" style="margin-top:8px"></div>
     <div class="acciones" style="margin-top:12px">
       <button class="m-no" onclick="cerrarFormProducto()">Cancelar</button>
@@ -2000,6 +2027,28 @@ function mostrarToast(msg){
   t._timer = setTimeout(()=>{ t.style.opacity='0'; }, 3000);
 }
 
+// ── Ofertas ────────────────────────────────────────────────
+// Una oferta vale si tiene precio anterior y todavía no venció.
+function ofertaViva(x){
+  if(!x || !x.precio_anterior) return false;
+  if(Number(x.precio_anterior) <= Number(x.precio)) return false;
+  if(!x.oferta_hasta) return true;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return new Date(x.oferta_hasta + "T23:59:59") >= hoy;
+}
+
+function pesos(n){ return "$" + Number(n).toLocaleString("es-AR"); }
+
+function descuentoPct(antes, ahora){
+  return Math.round((1 - Number(ahora)/Number(antes)) * 100);
+}
+
+function textoVence(iso){
+  if(!iso) return "";
+  const d = new Date(iso + "T12:00:00");
+  return `Hasta el ${d.getDate()}/${d.getMonth()+1}`;
+}
+
 // ================== NAVEGACIÓN ==================
 function ir(id){
   document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));
@@ -2191,7 +2240,11 @@ function renderProductosPerfil(f){
   }
   cont.innerHTML = visibles.map(({p,i})=>{
     const foto = p.foto ? `<div class="foto" style="background-image:url('${p.foto}');background-size:cover;background-position:center"></div>` : `<div class="foto">${p.e||"🛍️"}</div>`;
-    return `<div class="prod" onclick="verProducto(${i})" style="cursor:pointer">${foto}<div class="pinfo"><div class="pnombre">${p.n}</div><div class="precio">${p.p}</div></div></div>`;
+    const cinta = p.antes ? `<span class="cinta-oferta">🏷️ -${descuentoPct(p.antes, p.precioNum)}%</span>` : '';
+    const precioHtml = p.antes
+      ? `<div class="precio"><span class="precio-viejo">${pesos(p.antes)}</span>${p.p}</div>`
+      : `<div class="precio">${p.p}</div>`;
+    return `<div class="prod" onclick="verProducto(${i})" style="cursor:pointer;position:relative">${cinta}${foto}<div class="pinfo"><div class="pnombre">${p.n}</div>${precioHtml}</div></div>`;
   }).join("");
 }
 
@@ -2471,7 +2524,7 @@ async function cargarFeriaYPuestosEnVivo(){
   try{
     const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
-    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria,stock),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria,stock,precio_anterior,oferta_hasta),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
@@ -2506,7 +2559,7 @@ async function cargarFeriaYPuestosEnVivo(){
         redes:(p.redes&&Object.keys(p.redes).length)?p.redes:null,
         ferias:fdet.map(x=>x.id), feriasDetalle:fdet,
         categorias: Array.isArray(p.categorias) ? p.categorias : [],
-        productos:(p.productos||[]).filter(x=>x.visible!==false && (x.stock===null||x.stock===undefined||x.stock>0)).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",cat:(x.categoria||"").trim(),stock:(x.stock===null||x.stock===undefined)?1:x.stock,foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
+        productos:(p.productos||[]).filter(x=>x.visible!==false && (x.stock===null||x.stock===undefined||x.stock>0)).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",cat:(x.categoria||"").trim(),stock:(x.stock===null||x.stock===undefined)?1:x.stock,precioNum:Number(x.precio),antes:ofertaViva(x)?Number(x.precio_anterior):null,ofertaHasta:ofertaViva(x)?x.oferta_hasta:null,foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
         pinesDB:(p.puesto_insignia||[]).filter(x=>x.vigente!==false&&x.insignias).map(x=>x.insignias),
         confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
       };
@@ -2813,6 +2866,7 @@ function renderProductosEdic(){
 
   // Chips para filtrar por categoría, así no hay que scrollear todo
   renderChipsCatPanel();
+  actualizarBotonAvisar();
 
   const q = (document.getElementById('edic-buscar-prod')?.value || '').trim().toLowerCase();
   let lista = productosEdic;
@@ -2840,6 +2894,7 @@ function renderProductosEdic(){
       <div class="prod-info">
         <b>${p.nombre}</b>
         <small>$${Number(p.precio).toLocaleString('es-AR')}</small>
+        ${p.precio_anterior ? `<small style="display:block;color:var(--fucsia);font-weight:800">🏷️ En oferta — antes $${Number(p.precio_anterior).toLocaleString('es-AR')}${p.oferta_hasta ? ' · hasta el ' + new Date(p.oferta_hasta+'T12:00:00').getDate() + '/' + (new Date(p.oferta_hasta+'T12:00:00').getMonth()+1) : ''}</small>` : ''}
         ${p.categoria ? `<small style="display:block;color:var(--fucsia);font-weight:800">🗂️ ${p.categoria}</small>` : ''}
         <small style="display:block;font-weight:800;color:${(p.stock||0)===0 ? '#B3572B' : '#7A6A55'}">📦 ${(p.stock||0)===0 ? 'Sin stock — no se ve en tu puesto' : (p.stock===1 ? 'Queda 1' : p.stock + ' unidades')}</small>
         ${oculto?'<small style="display:block;color:#B3572B;font-weight:800">🙈 Oculto — los visitantes no lo ven</small>':''}
@@ -2874,6 +2929,11 @@ function abrirFormProducto(id){
   document.getElementById('prod-precio').value = '';
   document.getElementById('prod-error').classList.remove('on');
   document.getElementById('prod-stock').value = 1;
+  document.getElementById('prod-en-oferta').checked = false;
+  document.getElementById('prod-precio-antes').value = '';
+  document.getElementById('prod-oferta-dura').value = '7';
+  document.getElementById('oferta-resumen').textContent = '';
+  toggleOferta();
   llenarSelectCategoria('');
   fotosProducto = [];
 
@@ -2885,6 +2945,12 @@ function abrirFormProducto(id){
       document.getElementById('prod-precio').value = p.precio || '';
       llenarSelectCategoria(p.categoria || '');
       document.getElementById('prod-stock').value = (p.stock === null || p.stock === undefined) ? 1 : p.stock;
+      const tieneOferta = !!p.precio_anterior;
+      document.getElementById('prod-en-oferta').checked = tieneOferta;
+      document.getElementById('prod-precio-antes').value = p.precio_anterior || '';
+      // Si ya tenía fecha, mostramos "sin fecha" y la recalcula si la cambia
+      document.getElementById('prod-oferta-dura').value = p.oferta_hasta ? '0' : '7';
+      toggleOferta();
       // Cargar fotos existentes
       fotosProducto = (p.fotos||[]).filter(Boolean).map(url=>({url, preview:null, file:null}));
     }
@@ -2973,6 +3039,11 @@ async function guardarProducto(){
   err.classList.remove('on');
   if(!nombre){ err.textContent='Ingresá el nombre del producto'; err.classList.add('on'); return; }
   if(!precio || Number(precio) <= 0){ err.textContent='Ingresá un precio mayor a $0'; err.classList.add('on'); return; }
+  if(document.getElementById('prod-en-oferta').checked){
+    const antes = Number(document.getElementById('prod-precio-antes').value || 0);
+    if(!antes){ err.textContent='Ingresá el precio anterior de la oferta'; err.classList.add('on'); return; }
+    if(antes <= Number(precio)){ err.textContent='El precio anterior tiene que ser mayor al precio de ahora'; err.classList.add('on'); return; }
+  }
 
   const id = document.getElementById('prod-id').value;
   const guardarBtn = document.querySelector('#velo-producto .m-fucsia');
@@ -2998,6 +3069,7 @@ async function guardarProducto(){
       fotos: fotosFinales,
       categoria: (planTieneCategorias() ? (document.getElementById('prod-categoria').value || null) : undefined),
       stock: Math.max(0, parseInt(document.getElementById('prod-stock').value, 10) || 0),
+      ...datosOferta(Number(precio)),
       visible: true,
       orden: id ? productosEdic.find(x=>x.id===id)?.orden || 0 : productosEdic.length
     };
@@ -3290,6 +3362,119 @@ async function guardarAsignaciones(){
   }finally{
     btn.textContent = '💾 Guardar todo'; btn.disabled = false;
   }
+}
+
+// Avisa a los seguidores de las ofertas vigentes.
+// Un solo mail con todas juntas, y como mucho uno por semana:
+// así el feriante decide cuándo avisar y no quema su lista de correos.
+function ofertasVigentesDelPanel(){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return productosEdic.filter(p =>
+    p.precio_anterior &&
+    Number(p.precio_anterior) > Number(p.precio) &&
+    (p.stock === null || p.stock === undefined || p.stock > 0) &&
+    p.visible !== false &&
+    (!p.oferta_hasta || new Date(p.oferta_hasta + "T23:59:59") >= hoy)
+  );
+}
+
+function actualizarBotonAvisar(){
+  const btn = document.getElementById('btn-avisar-ofertas');
+  if(!btn) return;
+  const n = ofertasVigentesDelPanel().length;
+  btn.style.display = n ? 'block' : 'none';
+  btn.textContent = n === 1
+    ? '📢 Avisar a mis seguidores (1 oferta)'
+    : `📢 Avisar a mis seguidores (${n} ofertas)`;
+}
+
+const CLAVE_AVISO = 'digiferia_ultimo_aviso_ofertas';
+
+async function avisarOfertas(){
+  const ofertas = ofertasVigentesDelPanel();
+  if(!ofertas.length){ mostrarToast('No tenés ofertas vigentes para avisar'); return; }
+
+  // Freno: como mucho un aviso por semana
+  const ultimo = Number(localStorage.getItem(CLAVE_AVISO + '_' + usuario.puestoId) || 0);
+  const dias = (Date.now() - ultimo) / 86400000;
+  if(ultimo && dias < 7){
+    const faltan = Math.ceil(7 - dias);
+    mostrarToast(`📭 Ya avisaste hace poco. Podés volver a hacerlo en ${faltan} día${faltan>1?'s':''}.`);
+    return;
+  }
+
+  const lista = ofertas.map(o=>`• ${o.nombre}`).join('\n');
+  if(!confirm(`Vas a mandar UN email a tus seguidores con estas ${ofertas.length} oferta(s):\n\n${lista}\n\nDespués vas a poder avisar de nuevo dentro de 7 días.\n\n¿Lo mandamos?`)) return;
+
+  const btn = document.getElementById('btn-avisar-ofertas');
+  const textoOriginal = btn.textContent;
+  btn.textContent = '⏳ Enviando...'; btn.disabled = true;
+
+  try{
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/enviar-alerta`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ tipo: 'ofertas', puesto_id: usuario.puestoId })
+    });
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error || 'No se pudo enviar');
+    localStorage.setItem(CLAVE_AVISO + '_' + usuario.puestoId, String(Date.now()));
+    mostrarToast(d.enviados
+      ? `📬 Aviso enviado a ${d.enviados} seguidor(es)`
+      : '📭 Todavía no tenés seguidores a quienes avisar');
+  }catch(e){
+    mostrarToast('❌ ' + e.message);
+  }finally{
+    btn.textContent = textoOriginal; btn.disabled = false;
+  }
+}
+
+// Arma los dos campos de oferta según lo que eligió el feriante
+function datosOferta(precioAhora){
+  const on = document.getElementById('prod-en-oferta').checked;
+  if(!on) return { precio_anterior: null, oferta_hasta: null };
+
+  const antes = Number(document.getElementById('prod-precio-antes').value || 0);
+  if(!antes || antes <= precioAhora) return { precio_anterior: null, oferta_hasta: null };
+
+  const dias = Number(document.getElementById('prod-oferta-dura').value || 0);
+  let hasta = null;
+  if(dias){
+    const f = new Date(); f.setDate(f.getDate() + dias);
+    hasta = f.toISOString().slice(0,10);
+  }
+  return { precio_anterior: antes, oferta_hasta: hasta };
+}
+
+// ── Ofertas en el panel del feriante ───────────────────────
+function toggleOferta(){
+  const on = document.getElementById('prod-en-oferta').checked;
+  document.getElementById('caja-oferta').style.display = on ? 'block' : 'none';
+  if(on) resumenOferta();
+}
+
+function resumenOferta(){
+  const cont  = document.getElementById('oferta-resumen');
+  const ahora = Number(document.getElementById('prod-precio').value || 0);
+  const antes = Number(document.getElementById('prod-precio-antes').value || 0);
+  const dias  = Number(document.getElementById('prod-oferta-dura').value || 0);
+
+  if(!antes || !ahora){ cont.textContent = ''; return; }
+  if(antes <= ahora){
+    cont.style.color = '#B3572B';
+    cont.textContent = '⚠️ El precio anterior tiene que ser MAYOR al de ahora';
+    return;
+  }
+  cont.style.color = 'var(--fucsia)';
+  const pct = Math.round((1 - ahora/antes) * 100);
+  let txt = `🏷️ Queda ${pct}% de descuento`;
+  if(dias){
+    const f = new Date(); f.setDate(f.getDate() + dias);
+    txt += ` · vence el ${f.getDate()}/${f.getMonth()+1}`;
+  } else {
+    txt += ' · sin fecha de vencimiento';
+  }
+  cont.textContent = txt;
 }
 
 // ── Filtro por categoría dentro del panel de productos ──────
@@ -3772,7 +3957,16 @@ function verProducto(idx){
   productoActual = f.productos[idx];
   const p = productoActual;
   document.getElementById('detalle-nombre').textContent = p.n;
-  document.getElementById('detalle-precio').textContent = p.p;
+  const cajaPrecio = document.getElementById('detalle-precio');
+  if(p.antes){
+    cajaPrecio.innerHTML = `
+      <span style="font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;color:#9A8B76;text-decoration:line-through;margin-right:8px">${pesos(p.antes)}</span>
+      ${p.p}
+      <span style="font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#fff;background:var(--fucsia);border:2px solid var(--tinta);border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:middle">🏷️ -${descuentoPct(p.antes, p.precioNum)}%</span>
+      ${p.ofertaHasta ? `<div class="vence">⏳ Oferta ${textoVence(p.ofertaHasta).toLowerCase()}</div>` : ''}`;
+  } else {
+    cajaPrecio.textContent = p.p;
+  }
   const descTxt = (p.desc || '').trim();
   document.getElementById('detalle-desc').textContent = descTxt;
   document.getElementById('detalle-desc-bloque').style.display = descTxt ? 'block' : 'none';
