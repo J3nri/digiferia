@@ -2433,7 +2433,27 @@ async function sincronizarSeguimiento(fn, tipo, ref){
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: em, p_tipo: tipo, p_ref: (tipo === 'general' ? null : ref) })
     });
+    // Doble opt-in: si es la primera vez que este email se anota,
+    // le pedimos que confirme. Sin confirmar no recibe ningún aviso.
+    if(fn === 'seguir_publico') pedirConfirmacion(em);
   }catch(e){ console.warn('Seguimiento sin sincronizar:', e); }
+}
+
+// Manda (o reintenta) el email de confirmación. La Edge Function
+// decide sola: si ya está verificado o si le escribió hace menos
+// de 24 hs, no manda nada.
+async function pedirConfirmacion(em){
+  try{
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/confirmar-suscripcion`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ email: em })
+    });
+    const d = await r.json();
+    if(d && d.enviados > 0){
+      mostrarToast('📬 Te mandamos un email para confirmar — revisá tu casilla');
+    }
+  }catch(e){ console.warn('Confirmación no enviada:', e); }
 }
 const siguiendo = new Set();
 let pendiente = null;
@@ -2464,6 +2484,7 @@ function seguir(tipo, id, nombre, boton){
 }
 
 function confirmarEmail(){
+  // (el aviso de "revisá tu casilla" lo dispara pedirConfirmacion)
   const em = document.getElementById('modal-email').value.trim();
   if(!em||!em.includes('@')){ document.getElementById('modal-email').style.borderColor='#E91E8C'; return; }
   emailVisitante = em;
@@ -2494,7 +2515,7 @@ function suscribirGeneral(){
   sincronizarSeguimiento('seguir_publico', 'general', null);
   guardarSeguimientosLocal();
   const card = document.querySelector('.news-card');
-  card.innerHTML = '<h3>🎉 ¡Listo!</h3><p>Cada semana te va a llegar lo mejor de La Digi Feria. Podés seguir también puestos, ferias o rubros puntuales con la campanita 🔔.</p>';
+  card.innerHTML = '<h3>📬 ¡Casi listo!</h3><p>Te mandamos un email para que confirmes tu dirección. <b>Tocá el botón que dice "Sí, confirmo mi email"</b> y desde ahí empezás a recibir las novedades.</p><p style="margin-top:8px;font-size:12px">¿No lo ves? Fijate en Spam o Promociones.</p>';
 }
 
 // ================== SUPABASE EN VIVO ==================
