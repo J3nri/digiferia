@@ -1657,191 +1657,237 @@ function trazoRedondeado(ctx, x, y, w, h, r){
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
 }
+// ══════════════ CARTELES A4 CON QR (puesto y feria) ══════════════
+// Un solo motor para los dos carteles: cambian el logo, el título
+// y los textos, pero el formato es el mismo.
+
+const MARCA_TINTA='#2B2118', MARCA_FUCSIA='#E91E8C', MARCA_NARANJA='#FF7A00',
+      MARCA_GRIS='#7A6A55', MARCA_CREMA='#FDF1DC';
+const MARCA_PALETA=[MARCA_FUCSIA,'#FFC93C','#00A878',MARCA_NARANJA,'#2D9CDB'];
+const FRED='Fredoka, Nunito, sans-serif', NUNI='Nunito, sans-serif';
+
+// Carga una imagen permitiendo usarla dentro del canvas
+function cargarImagen(url, conCors){
+  return new Promise((resolve)=>{
+    const im = new Image();
+    if(conCors) im.crossOrigin = 'anonymous';
+    im.onload  = ()=> resolve(im);
+    im.onerror = ()=> resolve(null);   // si falla, seguimos sin logo
+    im.src = url;
+  });
+}
+
+// Carpa de feria dibujada a mano (cuando no hay logo propio)
+function dibujarCarpita(ctx, cx, cy, esc){
+  const an = 82*esc, al = 54*esc, gr = Math.max(2, 3.4*esc);
+  for(let k=0;k<6;k++){
+    const x0 = cx-an + k*(2*an/6), x1 = cx-an + (k+1)*(2*an/6);
+    ctx.beginPath(); ctx.moveTo(x0,cy); ctx.lineTo(x1,cy); ctx.lineTo(cx,cy-al); ctx.closePath();
+    ctx.fillStyle = (k%2===0) ? MARCA_FUCSIA : '#FFFFFF'; ctx.fill();
+    ctx.lineWidth = gr; ctx.strokeStyle = MARCA_TINTA; ctx.stroke();
+  }
+  const cuerpo = 40*esc;
+  trazoRedondeado(ctx, cx-an+8*esc, cy, (an-8*esc)*2, cuerpo, 6*esc);
+  ctx.fillStyle = MARCA_CREMA; ctx.fill(); ctx.lineWidth = gr; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-21*esc,cy+cuerpo); ctx.lineTo(cx+21*esc,cy+cuerpo); ctx.lineTo(cx,cy+5*esc);
+  ctx.closePath(); ctx.fillStyle='#FFC93C'; ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy-al); ctx.lineTo(cx,cy-al-23*esc); ctx.lineWidth=gr; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy-al-23*esc); ctx.lineTo(cx+26*esc,cy-al-15*esc); ctx.lineTo(cx,cy-al-7*esc);
+  ctx.closePath(); ctx.fillStyle='#00A878'; ctx.fill(); ctx.stroke();
+}
+
+// Genera y descarga el cartel A4
+async function cartelQR_A4(op){
+  await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+  await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+  // --- QR en un contenedor invisible ---
+  const tmp = document.createElement('div');
+  tmp.style.position='fixed'; tmp.style.left='-9999px';
+  document.body.appendChild(tmp);
+  new QRCode(tmp, { text: op.link, width: 700, height: 700, correctLevel: QRCode.CorrectLevel.M });
+  await new Promise(r=>setTimeout(r,250));
+  const qrEl = tmp.querySelector('canvas') || tmp.querySelector('img');
+  const qrData = qrEl.tagName === 'CANVAS' ? qrEl.toDataURL('image/png') : qrEl.src;
+  tmp.remove();
+
+  // --- Logo del puesto (si tiene) ---
+  const logo = op.logoUrl ? await cargarImagen(op.logoUrl, true) : null;
+
+  // --- Lienzo A4 ---
+  const cw = 840, ch = 1188;
+  const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+  const ctx = cv.getContext('2d');
+  const MARGEN = 70, UTIL = cw - MARGEN*2;
+
+  function queEntre(txt, tam, maxAncho, peso, fam){
+    let t = tam; ctx.font = `${peso} ${t}px ${fam}`;
+    while(ctx.measureText(txt).width > maxAncho && t > 10){ t -= 1; ctx.font = `${peso} ${t}px ${fam}`; }
+    return t;
+  }
+  function partirEnLineas(txt, maxAncho){
+    const palabras = String(txt).split(/\s+/); const lineas = []; let act = '';
+    for(const p of palabras){
+      const prueba = act ? act + ' ' + p : p;
+      if(ctx.measureText(prueba).width > maxAncho && act){ lineas.push(act); act = p; }
+      else act = prueba;
+    }
+    if(act) lineas.push(act);
+    return lineas;
+  }
+
+  ctx.fillStyle = '#FFF8EC'; ctx.fillRect(0,0,cw,ch);
+
+  // Banderines arriba y abajo
+  const bw = 56, bh = 44;
+  for(let i=0,x=0; x<cw; i++, x+=bw){
+    ctx.fillStyle = MARCA_PALETA[i%5];
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+bw,0); ctx.lineTo(x+bw/2,bh); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x,ch); ctx.lineTo(x+bw,ch); ctx.lineTo(x+bw/2,ch-bh); ctx.closePath(); ctx.fill();
+  }
+
+  let y = 44;
+
+  // ── 1. Marca chiquita arriba (solo en el cartel del puesto) ──
+  function dibujarMarca(tamBase, yBase, maxAncho){
+    const partes = [['La ',MARCA_TINTA],['Digi ',MARCA_FUCSIA],['Feria',MARCA_NARANJA]];
+    const t = queEntre('La Digi Feria', tamBase, maxAncho, '800', FRED);
+    ctx.font = `800 ${t}px ${FRED}`;
+    let total = 0; partes.forEach(([p])=> total += ctx.measureText(p).width);
+    let x = (cw-total)/2;
+    ctx.textAlign = 'left';
+    partes.forEach(([p,c])=>{ ctx.fillStyle=c; ctx.fillText(p, x, yBase); x += ctx.measureText(p).width; });
+    ctx.textAlign = 'center';
+    return t;
+  }
+
+  if(op.marcaArriba){
+    y += 62;
+    dibujarMarca(40, y, UTIL - 200);
+    y += 26;
+  } else {
+    y += 30;
+  }
+
+  // ── 2. El logo del puesto, o la carpita ──
+  const D = 168;                      // diámetro del círculo
+  const cx = cw/2, cyLogo = y + D/2;
+  if(logo){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cyLogo, D/2, 0, Math.PI*2); ctx.closePath();
+    ctx.fillStyle = '#FFFFFF'; ctx.fill();
+    ctx.clip();
+    // La imagen entra completa dentro del círculo, sin recortarse
+    const rel = Math.min(D/logo.width, D/logo.height);
+    const an = logo.width*rel, al = logo.height*rel;
+    ctx.drawImage(logo, cx-an/2, cyLogo-al/2, an, al);
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(cx, cyLogo, D/2, 0, Math.PI*2);
+    ctx.lineWidth = 7; ctx.strokeStyle = MARCA_TINTA; ctx.stroke();
+  } else {
+    dibujarCarpita(ctx, cx, cyLogo + 22, 1.0);
+  }
+  y += D + 34;
+
+  ctx.textAlign = 'center';
+
+  // ── 3. Título ──
+  if(op.tituloEsMarca){
+    const t = dibujarMarca(78, y + 46, UTIL - 40);
+    y += t + 26;
+  } else {
+    const t = queEntre(op.titulo, 74, UTIL, '800', FRED);
+    ctx.font = `800 ${t}px ${FRED}`; ctx.fillStyle = MARCA_TINTA;
+    ctx.fillText(op.titulo, cw/2, y + t);
+    y += t + 20;
+  }
+
+  // ── 4. Subtítulo (puede ocupar dos renglones) ──
+  if(op.subtitulo){
+    ctx.font = `700 30px ${NUNI}`; ctx.fillStyle = MARCA_GRIS;
+    const lineas = partirEnLineas(op.subtitulo, UTIL - 40).slice(0,2);
+    lineas.forEach((l,i)=> ctx.fillText(l, cw/2, y + 26 + i*40));
+    y += 26 + lineas.length*40 + 16;
+  }
+
+  // ── 5. El QR en su marco blanco ──
+  const espacioAbajo = 292;                       // lo que ocupa el pie
+  const lado = Math.max(258, Math.min(338, ch - 44 - espacioAbajo - y - 44));
+  const pad = 26, qx = (cw-lado)/2;
+  trazoRedondeado(ctx, qx-pad, y-pad+8, lado+2*pad, lado+2*pad, 42);
+  ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = MARCA_TINTA; ctx.stroke();
+  const imQr = new Image();
+  await new Promise((r,j)=>{ imQr.onload=r; imQr.onerror=j; imQr.src=qrData; });
+  ctx.drawImage(imQr, qx, y+8, lado, lado);
+  y += lado + pad + 46;
+
+  // ── 6. Llamado a la acción ──
+  const tCta = queEntre(op.cta, 54, UTIL, '800', FRED);
+  ctx.font = `800 ${tCta}px ${FRED}`; ctx.fillStyle = MARCA_TINTA;
+  ctx.fillText(op.cta, cw/2, y);
+  y += 20;
+
+  if(op.ctaSub){
+    ctx.font = `700 32px ${NUNI}`; ctx.fillStyle = MARCA_GRIS;
+    const lineas = partirEnLineas(op.ctaSub, UTIL - 40).slice(0,2);
+    lineas.forEach((l,i)=> ctx.fillText(l, cw/2, y + 30 + i*40));
+    y += 30 + lineas.length*40;
+  }
+
+  // ── 7. Píldora con la web ──
+  y += 26;
+  const tWeb = queEntre('digiferia.ar', 58, UTIL - 160, '800', FRED);
+  ctx.font = `800 ${tWeb}px ${FRED}`;
+  const ww = ctx.measureText('digiferia.ar').width + 140, wx = (cw-ww)/2, hw = 94;
+  trazoRedondeado(ctx, wx, y, ww, hw, hw/2);
+  ctx.fillStyle = MARCA_FUCSIA; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = MARCA_TINTA; ctx.stroke();
+  ctx.fillStyle = '#FFFFFF'; ctx.fillText('digiferia.ar', cw/2, y + hw/2 + 20);
+
+  // ── PDF a página completa ──
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  doc.addImage(cv.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
+  doc.save(op.archivo);
+}
+
+// ---- Cartel del PUESTO (con su logo) ----
 async function imprimirQRPuesto(){
   if(!usuario || !usuario.puestoSlug){
     mostrarToast('Tu puesto todavía no tiene link propio. Escribinos y lo revisamos.');
     return;
   }
-  mostrarToast('⏳ Preparando tu tarjeta QR…');
+  mostrarToast('⏳ Preparando tu cartel QR…');
   try{
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    const link = linkDeMiPuesto();
-
-    // Generar el QR en un contenedor invisible
-    const tmp = document.createElement('div');
-    tmp.style.position = 'fixed'; tmp.style.left = '-9999px';
-    document.body.appendChild(tmp);
-    new QRCode(tmp, { text: link, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.H });
-    await new Promise(r=>setTimeout(r, 200));
-    const qrEl = tmp.querySelector('canvas') || tmp.querySelector('img');
-    const qrData = qrEl.tagName === 'CANVAS' ? qrEl.toDataURL('image/png') : qrEl.src;
-    tmp.remove();
-
-    // Dibujar la tarjeta (estilo Digi Feria)
-    const S = 3, cw = 190*S, ch = 272*S;
-    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
-    const ctx = cv.getContext('2d');
-    trazoRedondeado(ctx, 1*S, 1*S, cw-2*S, ch-2*S, 22*S);
-    ctx.fillStyle = '#E91E8C'; ctx.fill();
-    ctx.lineWidth = 2*S; ctx.strokeStyle = '#2B2118'; ctx.stroke();
-    ctx.textAlign = 'center'; ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 ${17*S}px Fredoka, Nunito, sans-serif`;
-    ctx.fillText('LA DIGI FERIA', cw/2, 26*S);
-    ctx.font = `700 ${9.5*S}px Nunito, sans-serif`;
-    ctx.fillText('La Feria Digital en Gutiérrez', cw/2, 46*S);
-
-    const lado = 134*S, px = (cw-lado)/2, py = 66*S, pad = 9*S;
-    trazoRedondeado(ctx, px-pad, py-pad, lado+2*pad, lado+2*pad, 14*S);
-    ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
-    const im = new Image();
-    await new Promise((r, j)=>{ im.onload = r; im.onerror = j; im.src = qrData; });
-    ctx.drawImage(im, px, py, lado, lado);
-
-    // Píldora con el nombre del puesto (se achica si es largo)
-    const nombre = usuario.puestoNombre || 'Mi puesto';
-    let fz = 12*S;
-    ctx.font = `800 ${fz}px Fredoka, Nunito, sans-serif`;
-    while(ctx.measureText(nombre).width > cw - 40*S && fz > 7*S){
-      fz -= S; ctx.font = `800 ${fz}px Fredoka, Nunito, sans-serif`;
-    }
-    const tw = ctx.measureText(nombre).width + 24*S;
-    const ax = (cw-tw)/2, ay = py + lado + pad + 8*S;
-    trazoRedondeado(ctx, ax, ay, tw, 22*S, 11*S);
-    ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#E91E8C';
-    ctx.fillText(nombre, cw/2, ay + 15.5*S);
-    // Armar el PDF A4 con la tarjeta centrada
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit:'mm', format:'a4' });
-    const wmm = 100, hmm = wmm * ch / cw;
-    doc.addImage(cv.toDataURL('image/png'), 'PNG', (210-wmm)/2, (297-hmm)/2, wmm, hmm);
-    doc.save(`QR-${usuario.puestoSlug}.pdf`);
-    mostrarToast('📄 ¡Tarjeta QR descargada! Buscala en tus descargas.');
+    await cartelQR_A4({
+      link: linkDeMiPuesto(),
+      logoUrl: usuario.puestoFoto || null,
+      marcaArriba: true,
+      titulo: usuario.puestoNombre || 'Mi puesto',
+      subtitulo: (usuario.puestoBio || '').trim(),
+      cta: 'Escaneá y mirá todos mis productos',
+      ctaSub: 'Elegís, consultás y me escribís directo por WhatsApp',
+      archivo: `QR-${usuario.puestoSlug}.pdf`
+    });
+    mostrarToast('📄 ¡Cartel descargado! Buscalo en tus descargas.');
   }catch(e){
     mostrarToast('No se pudo generar el QR: ' + e.message);
   }
 }
 
-// ============ CARTEL A4 CON EL QR DE LA DIGI FERIA ============
-// Para que el feriante o el organizador lo imprima y lo cuelgue
-// en su puesto: quien lo escanea entra a la feria online.
+// ---- Cartel de LA DIGI FERIA (para colgar y difundir la app) ----
 async function imprimirQRDigiFeria(){
   mostrarToast('⏳ Preparando el cartel…');
   try{
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-
-    const link = 'https://digiferia.ar';
-
-    // QR en un contenedor invisible
-    const tmp = document.createElement('div');
-    tmp.style.position = 'fixed'; tmp.style.left = '-9999px';
-    document.body.appendChild(tmp);
-    new QRCode(tmp, { text: link, width: 700, height: 700, correctLevel: QRCode.CorrectLevel.M });
-    await new Promise(r=>setTimeout(r, 250));
-    const qrEl = tmp.querySelector('canvas') || tmp.querySelector('img');
-    const qrData = qrEl.tagName === 'CANVAS' ? qrEl.toDataURL('image/png') : qrEl.src;
-    tmp.remove();
-
-    // ---- Lienzo A4 (840 x 1188 px) ----
-    const S = 4, cw = 210*S, ch = 297*S;
-    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
-    const ctx = cv.getContext('2d');
-    const TINTA='#2B2118', FUCSIA='#E91E8C', NARANJA='#FF7A00', GRIS='#7A6A55';
-    const PALETA = [FUCSIA,'#FFC93C','#00A878',NARANJA,'#2D9CDB'];
-    const MARGEN = 70, ANCHO_UTIL = cw - MARGEN*2;
-
-    // Achica la tipografía hasta que el texto entre en el ancho disponible
-    function fuenteQueEntre(texto, tamInicial, maxAncho, peso, familia){
-      let t = tamInicial;
-      ctx.font = `${peso} ${t}px ${familia}`;
-      while(ctx.measureText(texto).width > maxAncho && t > 10){
-        t -= 1; ctx.font = `${peso} ${t}px ${familia}`;
-      }
-      return t;
-    }
-    const FRED = 'Fredoka, Nunito, sans-serif';
-    const NUNI = 'Nunito, sans-serif';
-
-    ctx.fillStyle = '#FFF8EC'; ctx.fillRect(0,0,cw,ch);
-
-    // Banderines arriba y abajo
-    const bw = 56, bh = 44;
-    for(let i=0, x=0; x < cw; i++, x+=bw){
-      ctx.fillStyle = PALETA[i%5];
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+bw,0); ctx.lineTo(x+bw/2,bh); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(x,ch); ctx.lineTo(x+bw,ch); ctx.lineTo(x+bw/2,ch-bh); ctx.closePath(); ctx.fill();
-    }
-
-    // ---- Marca en tres colores (centrada y ajustada) ----
-    const partes = [['La ',TINTA],['Digi ',FUCSIA],['Feria',NARANJA]];
-    const marcaTxt = 'La Digi Feria';
-    const tMarca = fuenteQueEntre(marcaTxt, 68, ANCHO_UTIL - 60, '800', FRED);
-    ctx.font = `800 ${tMarca}px ${FRED}`;
-    let total = 0; partes.forEach(([t])=> total += ctx.measureText(t).width);
-    let cx = (cw - total)/2;
-    ctx.textAlign = 'left';
-    partes.forEach(([t,c])=>{ ctx.fillStyle = c; ctx.fillText(t, cx, 152); cx += ctx.measureText(t).width; });
-
-    ctx.textAlign = 'center';
-    const sub = 'La feria del barrio, abierta las 24 horas';
-    const tSub = fuenteQueEntre(sub, 30, ANCHO_UTIL - 40, '700', NUNI);
-    ctx.font = `700 ${tSub}px ${NUNI}`;
-    ctx.fillStyle = GRIS; ctx.fillText(sub, cw/2, 214);
-
-    // ---- QR en marco blanco ----
-    const lado = 306, qx = (cw-lado)/2, qy = 272, pad = 26;
-    trazoRedondeado(ctx, qx-pad, qy-pad, lado+2*pad, lado+2*pad, 46);
-    ctx.fillStyle = '#FFFFFF'; ctx.fill();
-    ctx.lineWidth = 8; ctx.strokeStyle = TINTA; ctx.stroke();
-    const im = new Image();
-    await new Promise((r,j)=>{ im.onload = r; im.onerror = j; im.src = qrData; });
-    ctx.drawImage(im, qx, qy, lado, lado);
-
-    // ---- Llamado a la acción ----
-    const cta = 'Escaneá y paseá por toda la feria';
-    const tCta = fuenteQueEntre(cta, 52, ANCHO_UTIL, '800', FRED);
-    ctx.font = `800 ${tCta}px ${FRED}`;
-    ctx.fillStyle = TINTA; ctx.fillText(cta, cw/2, 646);
-
-    ctx.fillStyle = GRIS;
-    ctx.font = `700 ${34}px ${NUNI}`;
-    ctx.fillText('Mirá los productos y precios de cada puesto', cw/2, 696);
-    ctx.fillText('y comprale directo por WhatsApp', cw/2, 736);
-
-    // ---- Tres beneficios ----
-    let y = 768;
-    const items = [['Sin registrarte','#00A878'], ['Sin descargar nada','#2D9CDB'], ['Sin comisiones',NARANJA]];
-    const ALTO_P = 58, PUNTO = 26, SEP = 16;
-    items.forEach(([t,c])=>{
-      ctx.font = `800 ${34}px ${NUNI}`;
-      const tw = ctx.measureText(t).width;
-      const pil = tw + PUNTO*2 + 96, bx = (cw-pil)/2;
-      trazoRedondeado(ctx, bx, y, pil, ALTO_P, ALTO_P/2);
-      ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = TINTA; ctx.stroke();
-      ctx.beginPath(); ctx.arc(bx + 46, y + ALTO_P/2, PUNTO/2 + 5, 0, Math.PI*2);
-      ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
-      ctx.fillStyle = TINTA;
-      ctx.fillText(t, bx + 46 + PUNTO + 24 + tw/2, y + ALTO_P/2 + 12);
-      y += ALTO_P + SEP;
+    await cartelQR_A4({
+      link: 'https://digiferia.ar',
+      logoUrl: null,                 // usa la carpita
+      marcaArriba: false,
+      tituloEsMarca: true,           // el título ES "La Digi Feria"
+      subtitulo: 'La feria del barrio, abierta las 24 horas',
+      cta: 'Escaneá y paseá por toda la feria',
+      ctaSub: 'Mirá los productos y precios de cada puesto y comprale directo por WhatsApp',
+      archivo: 'QR-La-Digi-Feria-A4.pdf'
     });
-
-    // ---- Píldora final con la web ----
-    y += 22;
-    const web = 'digiferia.ar';
-    const tWeb = fuenteQueEntre(web, 64, ANCHO_UTIL - 120, '800', FRED);
-    ctx.font = `800 ${tWeb}px ${FRED}`;
-    const ww = ctx.measureText(web).width + 150, wx = (cw-ww)/2, hw = 100;
-    trazoRedondeado(ctx, wx, y, ww, hw, hw/2);
-    ctx.fillStyle = FUCSIA; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = TINTA; ctx.stroke();
-    ctx.fillStyle = '#FFFFFF'; ctx.fillText(web, cw/2, y + hw/2 + 22);
-
-    // ---- PDF A4 ----
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit:'mm', format:'a4' });
-    doc.addImage(cv.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
-    doc.save('QR-La-Digi-Feria-A4.pdf');
     mostrarToast('📄 ¡Cartel descargado! Buscalo en tus descargas.');
   }catch(e){
     mostrarToast('No se pudo generar el cartel: ' + e.message);
