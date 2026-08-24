@@ -83,6 +83,22 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .fl2{background:linear-gradient(135deg,#FDA8D4,#F26BB5)}
 .fl3{background:linear-gradient(135deg,#7FE0BC,#2FBF8F)}
 .fl4{background:linear-gradient(135deg,#8FD0F5,#4FA8E0)}
+.proximamente{position:relative;pointer-events:none;user-select:none}
+.proximamente > *{opacity:.42;filter:grayscale(.35)}
+.proximamente::after{
+  content:attr(data-cartel);position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-7deg);
+  background:var(--fucsia);color:#fff;border:3px solid var(--tinta);border-radius:999px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;letter-spacing:.4px;
+  padding:9px 22px;white-space:nowrap;box-shadow:4px 4px 0 rgba(43,33,24,.9);
+  opacity:1;z-index:3
+}
+.aviso-apertura{
+  margin:0 18px 16px;background:#FFFDF4;border:2px dashed #B8860B;border-radius:16px;
+  padding:14px 16px;text-align:center
+}
+.aviso-apertura b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;display:block}
+.aviso-apertura small{font-size:12.5px;color:#5C4F3E;font-weight:700;display:block;margin-top:5px;line-height:1.45}
 .flyer.tu-feria{background:var(--blanco);display:flex;flex-direction:column}
 .flyer.fijo{min-width:auto;margin:0 18px 18px;cursor:pointer}
 .destacados-row{display:flex;gap:14px;overflow-x:auto;padding:2px 18px 18px;scroll-snap-type:x proximity;scrollbar-width:none}
@@ -440,7 +456,7 @@ nav button.on span{filter:none;opacity:1}
       <button onclick="suscribirGeneral()">¡Anotarme!</button>
     </div>
   </div>
-  <div class="flyer tu-feria fijo" onclick="abrirLoginOIr('unirse')">
+  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente()">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Sos feriante? 🛍️</h3>
@@ -452,7 +468,7 @@ nav button.on span{filter:none;opacity:1}
       </div>
     </div>
   </div>
-  <div class="flyer tu-feria fijo" onclick="window.open('unirse-feria.html','_blank')">
+  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente()">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Organizás una feria? 📣</h3>
@@ -1357,8 +1373,9 @@ function renderMiPuesto(){
         <h2>Tu espacio en la feria</h2>
         <p>Si sos feriante o manejás una feria, ingresá para ver y gestionar tu panel.</p>
         <button class="btn-login-big" onclick="abrirLogin()">Ingresar a mi cuenta</button>
-        <button class="btn-login-big amarillo" onclick="window.open('unirse.html','_blank')">Quiero sumarme gratis 🌱</button>
+        <button class="btn-login-big amarillo" id="btn-sumarme" onclick="window.open('unirse.html','_blank')">Quiero sumarme gratis 🌱</button>
       </div>`;
+    aplicarBloqueoInscripciones();
     return;
   }
   if(usuario.rol === 'feriante'){
@@ -2095,6 +2112,82 @@ function textoVence(iso){
   return `Hasta el ${d.getDate()}/${d.getMonth()+1}`;
 }
 
+
+// ══════ APERTURA DE INSCRIPCIONES ══════
+// Las altas de feriantes y ferias se abren el 12 de septiembre de 2026,
+// que es cuando Javier puede acompañar a cada uno en la feria física.
+// Hasta entonces todo se ve pero no se puede tocar.
+// PARA ABRIRLAS: cambiar APERTURA por una fecha ya pasada, o poner null.
+const APERTURA = new Date('2026-09-12T00:00:00-03:00');
+
+function inscripcionesAbiertas(){
+  return !APERTURA || new Date() >= APERTURA;
+}
+
+function textoApertura(){
+  const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${APERTURA.getDate()} de ${meses[APERTURA.getMonth()]}`;
+}
+
+function avisoProximamente(){
+  mostrarToast(`🌱 Las inscripciones abren el ${textoApertura()} — ¡te esperamos!`);
+}
+
+// Apaga (o enciende) todos los accesos de alta
+function aplicarBloqueoInscripciones(){
+  const abierto = inscripcionesAbiertas();
+
+  // Tarjetas de la portada
+  document.querySelectorAll('.bloqueable').forEach(el=>{
+    el.classList.toggle('proximamente', !abierto);
+    if(abierto){
+      // Al abrirse, cada tarjeta recupera su destino
+      const esFeria = /feria/i.test(el.querySelector('h3')?.textContent || '');
+      el.setAttribute('onclick', esFeria
+        ? "window.open('unirse-feria.html','_blank')"
+        : "abrirLoginOIr('unirse')");
+    }
+  });
+
+  // Botón "Quiero sumarme" del panel
+  const btn = document.getElementById('btn-sumarme');
+  if(btn){
+    if(abierto){
+      btn.style.opacity = ''; btn.style.cursor = '';
+      btn.setAttribute('onclick', "window.open('unirse.html','_blank')");
+    } else {
+      btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
+      btn.textContent = `🌱 Inscripciones desde el ${textoApertura()}`;
+      btn.setAttribute('onclick', 'avisoProximamente()');
+    }
+  }
+
+  // Botón de la pantalla de Ferias vacía
+  document.querySelectorAll('.link-sumar-feria').forEach(a=>{
+    if(abierto){ a.style.opacity=''; a.style.pointerEvents=''; }
+    else{
+      a.style.opacity='.5'; a.style.pointerEvents='none';
+      a.textContent = `📣 Ferias: inscripción desde el ${textoApertura()}`;
+    }
+  });
+
+  // Cartel explicativo arriba de las tarjetas
+  const cont = document.querySelector('.flyer.tu-feria.bloqueable')?.parentElement;
+  let aviso = document.getElementById('aviso-apertura');
+  if(!abierto && cont && !aviso){
+    aviso = document.createElement('div');
+    aviso.id = 'aviso-apertura';
+    aviso.className = 'aviso-apertura';
+    aviso.innerHTML = `<b>🌱 Las inscripciones abren el ${textoApertura()}</b>
+      <small>Estamos terminando de preparar todo. Ese día vas a poder sumar tu puesto o tu feria,
+      y quedan lugares de <b>Puesto Fundador</b> con Plan Pro sin cargo.</small>`;
+    const primera = cont.querySelector('.flyer.tu-feria.bloqueable');
+    cont.insertBefore(aviso, primera);
+  }
+  if(abierto && aviso) aviso.remove();
+}
+
 // ================== NAVEGACIÓN ==================
 function ir(id){
   document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));
@@ -2388,7 +2481,7 @@ function renderFerias(){
       <div style="font-size:38px;line-height:1">🗓️</div>
       <b style="font-family:'Fredoka';font-weight:600;font-size:17px;display:block;margin-top:8px">Todavía no hay ferias programadas</b>
       <small style="font-size:13px;color:#7A6A55;font-weight:700;display:block;margin-top:6px;line-height:1.45">Estamos sumando las ferias de la zona. Cuando un organizador confirme su próxima fecha, la vas a ver acá con su flyer.</small>
-      <a href="unirse-feria.html" style="display:inline-block;margin-top:14px;font-family:'Fredoka';font-weight:600;font-size:14px;color:#fff;background:var(--naranja);border:2px solid var(--tinta);border-radius:999px;padding:10px 20px;text-decoration:none;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📣 ¿Organizás una feria? Sumala</a>
+      <a href="unirse-feria.html" class="link-sumar-feria" style="display:inline-block;margin-top:14px;font-family:'Fredoka';font-weight:600;font-size:14px;color:#fff;background:var(--naranja);border:2px solid var(--tinta);border-radius:999px;padding:10px 20px;text-decoration:none;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📣 ¿Organizás una feria? Sumala</a>
     </div>`;
   }
   cont.innerHTML = html;
@@ -4238,6 +4331,7 @@ window.addEventListener('hashchange', abrirPuestoDelLink);
 
 // ================== INIT ==================
 restaurarSeguimientosLocal();
+aplicarBloqueoInscripciones();
 renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
