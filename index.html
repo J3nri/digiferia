@@ -2900,6 +2900,7 @@ function renderProductosEdic(){
         ${oculto?'<small style="display:block;color:#B3572B;font-weight:800">🙈 Oculto — los visitantes no lo ven</small>':''}
       </div>
       <div class="prod-acciones">
+        ${p.precio_anterior ? `<button class="prod-btn" onclick="terminarOferta('${p.id}')" title="Terminar la oferta y volver al precio anterior" style="background:#FFE8D6">🏷️</button>` : ''}
         <button class="prod-btn" onclick="alternarVisibleProducto('${p.id}', ${oculto})" title="${oculto?'Mostrar':'Ocultar'}" style="${oculto?'background:#DFF5EC':''}">${oculto?'👁️':'🙈'}</button>
         <button class="prod-btn" onclick="editarProducto('${p.id}')" title="Editar">✏️</button>
         <button class="prod-btn" onclick="borrarProducto('${p.id}')" title="Borrar" style="background:#FDE7F2">🗑️</button>
@@ -2929,6 +2930,7 @@ function abrirFormProducto(id){
   document.getElementById('prod-precio').value = '';
   document.getElementById('prod-error').classList.remove('on');
   document.getElementById('prod-stock').value = 1;
+  ofertaPreviaDelEditado = null;
   document.getElementById('prod-en-oferta').checked = false;
   document.getElementById('prod-precio-antes').value = '';
   document.getElementById('prod-oferta-dura').value = '7';
@@ -2946,6 +2948,7 @@ function abrirFormProducto(id){
       llenarSelectCategoria(p.categoria || '');
       document.getElementById('prod-stock').value = (p.stock === null || p.stock === undefined) ? 1 : p.stock;
       const tieneOferta = !!p.precio_anterior;
+      ofertaPreviaDelEditado = tieneOferta ? p.precio_anterior : null;
       document.getElementById('prod-en-oferta').checked = tieneOferta;
       document.getElementById('prod-precio-antes').value = p.precio_anterior || '';
       // Si ya tenía fecha, mostramos "sin fecha" y la recalcula si la cambia
@@ -3364,6 +3367,31 @@ async function guardarAsignaciones(){
   }
 }
 
+// Corta la oferta antes de tiempo: devuelve el producto a su precio
+// de lista (el que estaba tachado) y limpia la fecha de vencimiento.
+async function terminarOferta(id){
+  const p = productosEdic.find(x => x.id === id);
+  if(!p || !p.precio_anterior) return;
+
+  const antes = Number(p.precio_anterior);
+  if(!confirm(`Terminar la oferta de "${p.nombre}".\n\nEl precio vuelve a $${antes.toLocaleString('es-AR')} (hoy está a $${Number(p.precio).toLocaleString('es-AR')}).\n\n¿Confirmás?`)) return;
+
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify({ precio: antes, precio_anterior: null, oferta_hasta: null })
+    });
+    if(!r.ok) throw new Error('No se pudo terminar la oferta');
+    p.precio = antes; p.precio_anterior = null; p.oferta_hasta = null;
+    mostrarToast(`🏷️ Oferta terminada — vuelve a $${antes.toLocaleString('es-AR')}`);
+    renderProductosEdic();
+    cargarFeriaYPuestosEnVivo();
+  }catch(e){
+    mostrarToast('❌ ' + e.message);
+  }
+}
+
 // Avisa a los seguidores de las ofertas vigentes.
 // Un solo mail con todas juntas, y como mucho uno por semana:
 // así el feriante decide cuándo avisar y no quema su lista de correos.
@@ -3447,9 +3475,28 @@ function datosOferta(precioAhora){
 }
 
 // ── Ofertas en el panel del feriante ───────────────────────
+// Guarda el precio de lista del producto que se está editando,
+// para poder restaurarlo si el feriante corta la oferta.
+let ofertaPreviaDelEditado = null;
+
 function toggleOferta(){
-  const on = document.getElementById('prod-en-oferta').checked;
+  const chk = document.getElementById('prod-en-oferta');
+  const on = chk.checked;
   document.getElementById('caja-oferta').style.display = on ? 'block' : 'none';
+
+  // Si estaba en oferta y la destilda: el precio vuelve al de lista.
+  // Sin esto, el producto quedaría para siempre con el precio rebajado.
+  if(!on && ofertaPreviaDelEditado){
+    const campoPrecio = document.getElementById('prod-precio');
+    const antes = Number(ofertaPreviaDelEditado);
+    if(antes && Number(campoPrecio.value) < antes){
+      campoPrecio.value = antes;
+      mostrarToast(`🏷️ Oferta sacada — el precio vuelve a $${antes.toLocaleString('es-AR')}`);
+    }
+    document.getElementById('prod-precio-antes').value = '';
+    ofertaPreviaDelEditado = null;
+  }
+
   if(on) resumenOferta();
 }
 
