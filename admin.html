@@ -89,14 +89,20 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 <header>
   <div class="logo">La <em style="font-style:normal">Digi</em> <span>Feria</span></div>
   <span class="badge-admin">🔑 Panel Admin</span>
+  <button id="btn-salir" onclick="salirAdmin()" style="display:none;margin-left:8px;background:none;border:2px solid var(--tinta);border-radius:999px;font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;padding:4px 10px;cursor:pointer">Salir</button>
 </header>
 
 <div class="login" id="login">
   <div style="font-size:48px">🔐</div>
   <h2>Acceso al panel</h2>
-  <input type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')entrar()">
-  <button class="btn" onclick="entrar()">Entrar</button>
-  <span class="error" id="login-error" style="display:none">Contraseña incorrecta</span>
+  <p style="font-size:13px;color:#7A6A55;font-weight:700;text-align:center;margin-top:-6px">
+    Entrá con tu cuenta de La Digi Feria.</p>
+  <input type="email" id="adm-email" placeholder="Tu email" autocomplete="username"
+         onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()">
+  <input type="password" id="pwd" placeholder="Tu contraseña" autocomplete="current-password"
+         onkeydown="if(event.key==='Enter')entrar()">
+  <button class="btn" id="btn-entrar" onclick="entrar()">Entrar</button>
+  <span class="error" id="login-error" style="display:none"></span>
 </div>
 
 <div class="panel" id="panel">
@@ -107,6 +113,7 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
   <div class="tabs-main">
     <button class="tab-main on" onclick="cambiarSeccion('feriantes',this)">🛍️ Feriantes</button>
     <button class="tab-main" onclick="cambiarSeccion('ferias',this)">📣 Ferias</button>
+    <button class="tab-main" onclick="cambiarSeccion('interesados',this)">🌱 Interesados</button>
   </div>
   <div class="tabs">
     <div class="tab on" onclick="cambiarTab('pendientes',this)">⏳ Pendientes</div>
@@ -122,32 +129,113 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
-const PWD_ADMIN = "digiferia2026";
+// La contraseña ya NO vive acá: se valida contra Supabase y la base
+// verifica que el usuario esté en la tabla de administradores.
+let tokenAdmin = null;
+function cabAuth(){
+  return { "Content-Type":"application/json", apikey: SUPABASE_KEY,
+           Authorization: `Bearer ${tokenAdmin || SUPABASE_KEY}` };
+}
 
 let tabActual = "pendientes";
 let seccionActual = "feriantes";
 let puestos = [];
 let ferias  = [];
 
-function entrar(){
-  if(document.getElementById('pwd').value === PWD_ADMIN){
+async function entrar(){
+  const email = document.getElementById('adm-email').value.trim();
+  const pass  = document.getElementById('pwd').value;
+  const err   = document.getElementById('login-error');
+  const btn   = document.getElementById('btn-entrar');
+
+  if(!email || !pass){
+    err.textContent = 'Completá tu email y tu contraseña'; err.style.display='block'; return;
+  }
+  err.style.display = 'none';
+  btn.textContent = 'Entrando…'; btn.disabled = true;
+
+  try{
+    // 1. Iniciar sesión de verdad
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', apikey: SUPABASE_KEY },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const d = await r.json();
+    if(!r.ok || !d.access_token) throw new Error('Email o contraseña incorrectos');
+    tokenAdmin = d.access_token;
+
+    // 2. Preguntarle a la base si este usuario es administrador
+    const ra = await fetch(`${SUPABASE_URL}/rest/v1/rpc/es_admin`, {
+      method:'POST', headers: cabAuth(), body: '{}'
+    });
+    const esAdmin = await ra.json();
+    if(esAdmin !== true){
+      tokenAdmin = null;
+      throw new Error('Esta cuenta no tiene permiso de administrador');
+    }
+
+    sessionStorage.setItem('digi_admin_token', tokenAdmin);
     document.getElementById('login').style.display = 'none';
     document.getElementById('panel').classList.add('on');
+    document.getElementById('btn-salir').style.display = '';
     cargarTodo();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
+  }catch(e){
+    err.textContent = e.message; err.style.display = 'block';
+  }finally{
+    btn.textContent = 'Entrar'; btn.disabled = false;
   }
 }
 
+function salirAdmin(){
+  tokenAdmin = null;
+  sessionStorage.removeItem('digi_admin_token');
+  location.reload();
+}
+
+// Escapa el texto para que no rompa el HTML
+function esc(t){
+  return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let interesados = [];
+
 async function cargarTodo(){
-  await Promise.all([cargarPuestos(), cargarFerias()]);
+  await Promise.all([cargarPuestos(), cargarFerias(), cargarInteresados()]);
   renderLista();
+}
+
+async function cargarInteresados(){
+  try{
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/interesados?select=*&order=creado_en.desc`,
+      { headers: cabAuth() });
+    interesados = r.ok ? await r.json() : [];
+  }catch(e){ interesados = []; }
+  if(seccionActual === 'interesados') renderLista();
+}
+
+// Marcar a alguien como ya contactado
+async function marcarContactado(id, valor){
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/interesados?id=eq.${id}`, {
+      method:'PATCH',
+      headers:{ ...cabAuth(), Prefer:'return=minimal' },
+      body: JSON.stringify({ contactado: valor })
+    });
+    if(!r.ok) throw new Error('No se pudo guardar');
+    const it = interesados.find(x=>x.id===id);
+    if(it) it.contactado = valor;
+    renderLista();
+    toast(valor ? '✅ Marcado como contactado' : '↩️ Marcado como pendiente');
+  }catch(e){ toast('❌ ' + e.message); }
 }
 
 async function cargarPuestos(){
   const resp = await fetch(
     `${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`,
-    {headers:cab}
+    {headers:cabAuth()}
   );
   puestos = resp.ok ? await resp.json() : [];
 }
@@ -155,7 +243,7 @@ async function cargarPuestos(){
 async function cargarFerias(){
   const resp = await fetch(
     `${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,frecuencia,estado,descripcion,rubros_principales,cantidad_puestos,precio_entrada,email_contacto,nombre_contacto,whatsapp_contacto,whatsapp_publico,redes&estado=neq.rechazada&order=nombre.asc`,
-    {headers:cab}
+    {headers:cabAuth()}
   );
   ferias = resp.ok ? await resp.json() : [];
 }
@@ -166,7 +254,11 @@ function cambiarSeccion(sec, el){
   el.classList.add('on');
   tabActual = 'pendientes';
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on', i===0));
-  renderLista();
+  // Interesados no se divide en pendientes/aprobados
+  const filaTabs = document.querySelector('.tabs');
+  if(filaTabs) filaTabs.style.display = (sec === 'interesados') ? 'none' : '';
+  if(sec === 'interesados' && !interesados.length) cargarInteresados();
+  else renderLista();
 }
 
 function cambiarTab(tab, el){
@@ -178,6 +270,53 @@ function cambiarTab(tab, el){
 
 function renderLista(){
   const cont = document.getElementById('lista');
+
+  // ── Interesados en sumarse (los que dejaron su WhatsApp) ──
+  if(seccionActual === 'interesados'){
+    const sinContactar = interesados.filter(x=>!x.contactado);
+    document.getElementById('panel-titulo').textContent = 'Interesados';
+    document.getElementById('contador').textContent =
+      `${sinContactar.length} sin contactar`;
+
+    if(!interesados.length){
+      cont.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#7A6A55;font-weight:700">
+        <div style="font-size:40px">🌱</div>
+        <p style="margin-top:10px">Todavía nadie dejó sus datos.</p>
+        <p style="font-size:13px;margin-top:6px">Van a aparecer acá los que se anoten
+        mientras las inscripciones están cerradas.</p></div>`;
+      return;
+    }
+
+    cont.innerHTML = interesados.map(x=>{
+      const fecha = new Date(x.creado_en).toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+      const wsp = String(x.whatsapp||'').replace(/[^0-9]/g,'');
+      const esFeria = x.tipo === 'organizador';
+      return `<div class="card" style="${x.contactado?'opacity:.6':''}">
+        <div class="card-head">
+          <div class="card-emoji">${esFeria ? '📣' : '🛍️'}</div>
+          <div class="card-titulo">
+            <b>${esc(x.nombre)}</b>
+            <small class="${esFeria?'celeste':''}">${esFeria ? 'Quiere sumar una feria' : 'Quiere sumar su puesto'}</small>
+          </div>
+          <span style="font-size:11px;font-weight:800;color:#9A8B76;flex-shrink:0">${fecha}</span>
+        </div>
+        <div class="card-body">
+          <div class="dato"><span class="ic">📱</span><span>${esc(x.whatsapp)}</span></div>
+          ${x.que_vende ? `<div class="dato"><span class="ic">🛍️</span><span>${esc(x.que_vende)}</span></div>` : ''}
+          ${x.contactado ? '<div class="dato"><span class="ic">✅</span><span>Ya lo contactaste</span></div>' : ''}
+        </div>
+        <div class="card-acciones">
+          <a class="btn-aprobar" href="https://wa.me/${wsp}" target="_blank" rel="noopener"
+             style="text-decoration:none">💬 Escribirle</a>
+          <button class="btn-aprobar celeste" onclick="marcarContactado('${x.id}', ${!x.contactado})">
+            ${x.contactado ? '↩️ Pendiente' : '✅ Contactado'}
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
   if(seccionActual === 'feriantes'){
     const pendientes = puestos.filter(p=>!p.publicado);
     const aprobados  = puestos.filter(p=>p.publicado);
@@ -351,7 +490,7 @@ async function aprobar(id, nombre, wsp, email, nombrePersona){
 
 async function rechazarPuesto(id){
   if(!confirm('¿Rechazar y eliminar este puesto?')) return;
-  await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {method:'DELETE', headers:cab});
+  await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${id}`, {method:'DELETE', headers:cabAuth()});
   puestos = puestos.filter(p=>p.id!==id);
   renderLista();
   toast('🗑️ Puesto eliminado');
