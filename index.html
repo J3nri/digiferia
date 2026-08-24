@@ -456,7 +456,7 @@ nav button.on span{filter:none;opacity:1}
       <button onclick="suscribirGeneral()">¡Anotarme!</button>
     </div>
   </div>
-  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente()">
+  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente('feriante')">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Sos feriante? 🛍️</h3>
@@ -468,7 +468,7 @@ nav button.on span{filter:none;opacity:1}
       </div>
     </div>
   </div>
-  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente()">
+  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente('organizador')">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Organizás una feria? 📣</h3>
@@ -585,6 +585,32 @@ nav button.on span{filter:none;opacity:1}
       <button id="btn-guardar-stock" onclick="guardarStockRapido()" style="width:100%;padding:13px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">💾 Guardar todo</button>
       <button onclick="document.getElementById('velo-stock').classList.remove('on')" style="width:100%;margin-top:8px;padding:11px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cerrar</button>
     </div>
+  </div>
+</div>
+
+<!-- DEJAR MIS DATOS (inscripciones cerradas) -->
+<div class="velo" id="velo-interes">
+  <div class="modal">
+    <h3>🌱 Te avisamos cuando abra</h3>
+    <p id="interes-bajada">Dejanos tus datos y te escribimos apenas se abran las inscripciones.</p>
+
+    <input type="text" id="int-nombre" placeholder="Tu nombre" maxlength="60"
+      style="width:100%;margin-top:12px;border:2px solid var(--tinta);border-radius:12px;padding:11px 13px;font-family:'Nunito',sans-serif;font-size:14px">
+
+    <input type="tel" id="int-wsp" placeholder="Tu WhatsApp (ej: 1122334455)" maxlength="20"
+      style="width:100%;margin-top:8px;border:2px solid var(--tinta);border-radius:12px;padding:11px 13px;font-family:'Nunito',sans-serif;font-size:14px">
+
+    <input type="text" id="int-que" placeholder="¿Qué vendés? (opcional)" maxlength="80"
+      style="width:100%;margin-top:8px;border:2px solid var(--tinta);border-radius:12px;padding:11px 13px;font-family:'Nunito',sans-serif;font-size:14px">
+
+    <div class="login-error" id="int-error" style="margin-top:8px"></div>
+    <div class="acciones" style="margin-top:14px">
+      <button class="m-no" onclick="document.getElementById('velo-interes').classList.remove('on')">Ahora no</button>
+      <button class="m-fucsia" onclick="guardarInteres()">Avisenme</button>
+    </div>
+    <small style="display:block;margin-top:10px;font-size:11.5px;color:#9A8B76;font-weight:700;line-height:1.4">
+      Usamos tu WhatsApp solo para avisarte de esto. No lo compartimos con nadie.
+    </small>
   </div>
 </div>
 
@@ -2130,8 +2156,60 @@ function textoApertura(){
   return `${APERTURA.getDate()} de ${meses[APERTURA.getMonth()]}`;
 }
 
-function avisoProximamente(){
-  mostrarToast(`🌱 Las inscripciones abren el ${textoApertura()} — ¡te esperamos!`);
+let tipoInteres = 'feriante';
+
+function avisoProximamente(tipo){
+  tipoInteres = tipo || 'feriante';
+  const esFeria = tipoInteres === 'organizador';
+  document.getElementById('interes-bajada').textContent = esFeria
+    ? `Las inscripciones abren el ${textoApertura()}. Dejanos tus datos y te escribimos para sumar tu feria.`
+    : `Las inscripciones abren el ${textoApertura()}. Dejanos tus datos y te escribimos para armar tu puesto.`;
+  document.getElementById('int-que').style.display = esFeria ? 'none' : '';
+  document.getElementById('int-que').placeholder = '¿Qué vendés? (opcional)';
+  document.getElementById('int-nombre').value = '';
+  document.getElementById('int-wsp').value = '';
+  document.getElementById('int-que').value = '';
+  document.getElementById('int-error').classList.remove('on');
+  document.getElementById('velo-interes').classList.add('on');
+}
+
+// Guarda al interesado. La tabla deja escribir pero no leer:
+// la lista solo se ve desde el panel de administración.
+async function guardarInteres(){
+  const err    = document.getElementById('int-error');
+  const nombre = document.getElementById('int-nombre').value.trim();
+  const wspRaw = document.getElementById('int-wsp').value.trim();
+  const wsp    = wspRaw.replace(/[^0-9]/g,'');
+  const que    = document.getElementById('int-que').value.trim();
+
+  if(nombre.length < 2){ err.textContent='Poné tu nombre'; err.classList.add('on'); return; }
+  if(wsp.length < 8){ err.textContent='Revisá el número de WhatsApp'; err.classList.add('on'); return; }
+  err.classList.remove('on');
+
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/interesados`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', apikey:SUPABASE_KEY,
+                Authorization:`Bearer ${SUPABASE_KEY}`, Prefer:'return=minimal' },
+      body: JSON.stringify({ nombre, whatsapp: wsp, tipo: tipoInteres, que_vende: que || null })
+    });
+
+    // Si ya se había anotado con ese número, lo tomamos como éxito
+    if(!r.ok && r.status !== 409){
+      const t = await r.text();
+      throw new Error(t.includes('duplicate') ? 'ya' : 'No se pudo guardar');
+    }
+    document.getElementById('velo-interes').classList.remove('on');
+    mostrarToast('🌱 ¡Listo! Te escribimos apenas abran las inscripciones');
+  }catch(e){
+    if(e.message === 'ya'){
+      document.getElementById('velo-interes').classList.remove('on');
+      mostrarToast('👍 Ya te tenemos anotado — te escribimos pronto');
+      return;
+    }
+    err.textContent = 'No se pudo guardar. Probá de nuevo en un rato.';
+    err.classList.add('on');
+  }
 }
 
 // Apaga (o enciende) todos los accesos de alta
@@ -2159,7 +2237,7 @@ function aplicarBloqueoInscripciones(){
     } else {
       btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
       btn.textContent = `🌱 Inscripciones desde el ${textoApertura()}`;
-      btn.setAttribute('onclick', 'avisoProximamente()');
+      btn.setAttribute('onclick', "avisoProximamente('feriante')");
     }
   }
 
@@ -2167,8 +2245,11 @@ function aplicarBloqueoInscripciones(){
   document.querySelectorAll('.link-sumar-feria').forEach(a=>{
     if(abierto){ a.style.opacity=''; a.style.pointerEvents=''; }
     else{
-      a.style.opacity='.5'; a.style.pointerEvents='none';
-      a.textContent = `📣 Ferias: inscripción desde el ${textoApertura()}`;
+      a.style.pointerEvents='';
+      a.removeAttribute('href');
+      a.style.cursor='pointer';
+      a.setAttribute('onclick', "avisoProximamente('organizador')");
+      a.textContent = `🔔 Avisenme cuando abran las ferias`;
     }
   });
 
@@ -2181,7 +2262,8 @@ function aplicarBloqueoInscripciones(){
     aviso.className = 'aviso-apertura';
     aviso.innerHTML = `<b>🌱 Las inscripciones abren el ${textoApertura()}</b>
       <small>Estamos terminando de preparar todo. Ese día vas a poder sumar tu puesto o tu feria,
-      y quedan lugares de <b>Puesto Fundador</b> con Plan Pro sin cargo.</small>`;
+      y quedan lugares de <b>Puesto Fundador</b> con Plan Pro sin cargo.</small>
+      <button onclick="avisoProximamente('feriante')" style="margin-top:11px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:999px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;padding:9px 18px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🔔 Avisenme cuando abra</button>`;
     const primera = cont.querySelector('.flyer.tu-feria.bloqueable');
     cont.insertBefore(aviso, primera);
   }
