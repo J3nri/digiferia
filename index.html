@@ -429,7 +429,7 @@ nav button.on span{filter:none;opacity:1}
 <!-- HOME -->
 <section class="pantalla activa" id="p-home">
   <div class="seccion">
-    <h1>¡La feria está abierta! 🎪</h1>
+    <h1>Las ferias de tu barrio, esta semana 🎪</h1>
     <p class="sub" id="contador-puestos"></p>
   </div>
   <div class="carrusel-label" id="label-destacados"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
@@ -450,7 +450,7 @@ nav button.on span{filter:none;opacity:1}
   <div class="grilla" id="grilla-puestos"></div>
   <div class="news-card" id="news-card-wrap">
     <h3>📬 Que la feria te busque a vos</h3>
-    <p>Dejanos tu email y enterate cada semana qué puestos confirmaron, qué ferias vienen y qué hay de nuevo en tus rubros favoritos.</p>
+    <p>Dejanos tu email y te avisamos qué puestos confirmaron para el finde.</p>
     <div class="news-form">
       <input type="email" id="news-email" placeholder="tu@email.com">
       <button onclick="suscribirGeneral()">¡Anotarme!</button>
@@ -460,11 +460,13 @@ nav button.on span{filter:none;opacity:1}
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Sos feriante? 🛍️</h3>
-      <p style="font-size:13.5px;color:#7A6A55;font-weight:700">Armá tu puesto virtual gratis y recibí pedidos por WhatsApp.</p>
+      <p style="font-size:14px;color:#7A6A55;font-weight:800;line-height:1.4">Dejá de escribir la dirección de la feria veinte veces por finde.</p>
+      <p style="font-size:12.5px;color:#7A6A55;font-weight:600;line-height:1.45;margin-top:6px">Tu puesto tiene su link: dónde estás, qué días, qué vendés y a cuánto. Lo mandás una vez.</p>
+      <p style="font-size:12.5px;color:#7A6A55;font-weight:700;line-height:1.45;margin-top:6px">Y la plata nunca pasa por acá: tu cliente te escribe a vos, te paga a vos. Sin comisión.</p>
       <span class="flyer-fecha" style="background:var(--fucsia);color:#fff">🎪 Sumá tu puesto gratis</span>
       <div class="fundadores">
         <div class="num"><span id="fund-num">1</span><span style="font-size:13px;color:#9A8B76">/20</span></div>
-        <small id="fund-txt">🌱 Puestos Fundadores ocupados — quedan 19<br>Voto de confianza: Plan Pro gratis por 6 meses + insignia permanente</small>
+        <small id="fund-txt">🌱 Puestos Fundadores ocupados — quedan 19<br>Plan Pro gratis por 6 meses, insignia permanente y tu precio congelado hasta marzo</small>
       </div>
     </div>
   </div>
@@ -472,7 +474,8 @@ nav button.on span{filter:none;opacity:1}
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Organizás una feria? 📣</h3>
-      <p style="font-size:13.5px;color:#7A6A55;font-weight:700">Publicá tu flyer destacado y llegá a todos los visitantes.</p>
+      <p style="font-size:14px;color:#7A6A55;font-weight:800;line-height:1.4">Tu feria, con todos sus puestos en un solo link.</p>
+      <p style="font-size:12.5px;color:#7A6A55;font-weight:600;line-height:1.45;margin-top:6px">Publicás las fechas, subís el flyer, y cada feriante trae a su propia gente.</p>
       <span class="flyer-fecha" style="background:var(--amarillo)">✨ Sumá tu feria</span>
     </div>
   </div>
@@ -2262,7 +2265,7 @@ function aplicarBloqueoInscripciones(){
     aviso.className = 'aviso-apertura';
     aviso.innerHTML = `<b>🌱 Las inscripciones abren el ${textoApertura()}</b>
       <small>Estamos terminando de preparar todo. Ese día vas a poder sumar tu puesto o tu feria,
-      y quedan lugares de <b>Puesto Fundador</b> con Plan Pro sin cargo.</small>
+      y quedan lugares de <b>Puesto Fundador</b>: Plan Pro sin cargo y precio congelado por 6 meses.</small>
       <button onclick="avisoProximamente('feriante')" style="margin-top:11px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:999px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;padding:9px 18px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🔔 Avisenme cuando abra</button>`;
     const primera = cont.querySelector('.flyer.tu-feria.bloqueable');
     cont.insertBefore(aviso, primera);
@@ -2332,7 +2335,7 @@ function renderGrilla(){
   const g = document.getElementById('grilla-puestos');
   g.innerHTML = lista.length ? lista.map(cardPuesto).join("") : `<div class="vacio">Todavía no hay puestos acá 🙈</div>`;
   const c = document.getElementById('contador-puestos');
-  if(filtroActivo==="todos") c.textContent = `Paseá entre ${FERIANTES.length} puestos, como un domingo cualquiera.`;
+  if(filtroActivo==="todos") c.textContent = `Mirá quién está, qué trae y escribile directo. Sin apps, sin registrarte.`;
   else if(filtroActivo==="finde") c.textContent = `${lista.length} puestos confirmaron que van este finde 🔥`;
   else c.textContent = `${lista.length} puesto${lista.length!==1?"s":""} de ${rubroDe(filtroActivo).nombre.toLowerCase()}.`;
 }
@@ -2822,7 +2825,7 @@ async function cargarFeriaYPuestosEnVivo(){
       const et = document.getElementById('fund-txt');
       if(en && et && n > 0){
         en.textContent = n;
-        et.innerHTML = `🌱 Puestos Fundadores ocupados — quedan ${Math.max(0, 20 - n)}<br>Voto de confianza: Plan Pro gratis por 6 meses + insignia permanente`;
+        et.innerHTML = `🌱 Puestos Fundadores ocupados — quedan ${Math.max(0, 20 - n)}<br>Plan Pro gratis por 6 meses, insignia permanente y tu precio congelado hasta marzo`;
       }
     })();
     const b=document.getElementById('badge-vivo'); if(b){b.style.display="inline-block";b.textContent="🟢 datos en vivo";}
