@@ -102,6 +102,12 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 .exito{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;flex:1}
 .exito.on{display:flex}
 .form-wrap{flex:1;display:flex;flex-direction:column}
+.invitado-por{display:none;align-items:center;gap:10px;margin:0 18px 14px;background:#FFFDF4;
+  border:2px dashed #B8860B;border-radius:14px;padding:11px 13px}
+.invitado-por.on{display:flex}
+.invitado-por .ic{font-size:20px;flex-shrink:0}
+.invitado-por b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;display:block;line-height:1.2}
+.invitado-por small{font-size:12px;color:#5C4F3E;font-weight:700;line-height:1.35;display:block;margin-top:2px}
 .form-wrap.oculto{display:none}
 .exito-emoji{font-size:64px;margin-bottom:16px}
 .exito h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:var(--tinta)}
@@ -150,6 +156,15 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 
 <!-- FORMULARIO -->
 <div class="form-wrap" id="form-wrap">
+
+<div class="invitado-por" id="invitado-por">
+  <span class="ic">🤝</span>
+  <div>
+    <b id="invitado-por-nombre">Te invitó un feriante</b>
+    <small>Cuando tu puesto esté activo, quien te invitó suma su premio. ¡Gracias por venir de su parte!</small>
+  </div>
+</div>
+
 
   <div class="seccion">
     <h2>👤 Tus datos</h2>
@@ -356,6 +371,25 @@ const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
+// ---- Referido: de quién viene esta persona ----
+window.refCodigo = (new URLSearchParams(location.search).get("ref") || "").trim();
+
+async function mostrarQuienInvita(){
+  if(!window.refCodigo) return;
+  const caja = document.getElementById('invitado-por');
+  const nom  = document.getElementById('invitado-por-nombre');
+  if(caja) caja.classList.add('on');   // se muestra aunque no encontremos el nombre
+  try{
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/puestos?codigo_referido=eq.${encodeURIComponent(window.refCodigo)}&select=nombre&limit=1`,
+      {headers:cab});
+    if(!r.ok) return;
+    const [p] = await r.json();
+    if(p && p.nombre && nom) nom.textContent = `Te invitó ${p.nombre}`;
+  }catch(e){ /* sin nombre, el cartel queda genérico */ }
+}
+document.addEventListener('DOMContentLoaded', mostrarQuienInvita);
+
 window.localidadElegida = "";
 
 async function cargarDatos(){
@@ -541,7 +575,8 @@ async function enviarFormulario(){
         publicado: false,
         redes,
         email_contacto: document.getElementById('f-email').value.trim(),
-        nombre_persona: document.getElementById('f-nombre').value.trim()
+        nombre_persona: document.getElementById('f-nombre').value.trim(),
+        ref_codigo: window.refCodigo || null
       })
     });
     if(!pResp.ok) throw new Error(await pResp.text());
