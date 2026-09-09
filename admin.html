@@ -43,6 +43,28 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .tab-main{flex:1;padding:11px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;border:2px solid var(--tinta);border-radius:12px;background:var(--blanco);color:var(--tinta);box-shadow:3px 3px 0 rgba(43,33,24,.9);transition:background .12s}
 .tab-main.on{background:var(--tinta);color:var(--amarillo);box-shadow:none}
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--tinta);margin:0 18px}
+/* ---- Panel de salud ---- */
+.sal-resumen{display:flex;gap:7px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}
+.sal-resumen::-webkit-scrollbar{display:none}
+.sal-chip{flex-shrink:0;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:8px 12px;text-align:center;min-width:74px}
+.sal-chip b{font-family:'Fredoka',sans-serif;font-weight:700;font-size:19px;display:block;line-height:1}
+.sal-chip small{font-size:10.5px;font-weight:800;color:#5C4F3E;display:block;margin-top:3px}
+.sal-card{background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:12px 13px;margin-bottom:11px}
+.sal-top{display:flex;align-items:center;gap:9px}
+.sal-luz{font-size:17px;flex-shrink:0}
+.sal-top b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;flex:1;line-height:1.15}
+.sal-pct{font-family:'Fredoka',sans-serif;font-weight:700;font-size:13px;color:#5C4F3E}
+.sal-barra{height:7px;background:#EFE6D5;border:1.5px solid var(--tinta);border-radius:999px;overflow:hidden;margin:8px 0 9px}
+.sal-barra i{display:block;height:100%}
+.sal-faltan{display:flex;flex-wrap:wrap;gap:5px}
+.sal-falta{font-size:11px;font-weight:800;background:#FDE7F2;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px}
+.sal-ok{font-size:12px;font-weight:800;color:#00A878}
+.sal-wsp{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:800;color:#fff;background:#25D366;border:2px solid var(--tinta);border-radius:999px;padding:6px 14px;text-decoration:none}
+.ref-card{background:#FFFDF4;border:2px dashed #B8860B;border-radius:14px;padding:11px 13px;margin-bottom:10px}
+.ref-card b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px}
+.ref-card small{font-size:12px;font-weight:700;color:#5C4F3E;display:block;margin-top:3px}
+.ref-premio{display:inline-block;font-size:11px;font-weight:800;background:var(--amarillo);border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px;margin-top:6px}
+.sal-sub{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;margin:16px 0 10px}
 .tab{flex:1;padding:10px;text-align:center;font-weight:800;font-size:13px;cursor:pointer;color:#9A8B76;border-bottom:3px solid transparent;margin-bottom:-2px}
 .tab.on{color:var(--fucsia);border-bottom-color:var(--fucsia)}
 .lista{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
@@ -114,6 +136,7 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
     <button class="tab-main on" onclick="cambiarSeccion('feriantes',this)">🛍️ Feriantes</button>
     <button class="tab-main" onclick="cambiarSeccion('ferias',this)">📣 Ferias</button>
     <button class="tab-main" onclick="cambiarSeccion('interesados',this)">🌱 Interesados</button>
+    <button class="tab-main" onclick="cambiarSeccion('salud',this)">💚 Salud</button>
   </div>
   <div class="tabs">
     <div class="tab on" onclick="cambiarTab('pendientes',this)">⏳ Pendientes</div>
@@ -200,6 +223,19 @@ function esc(t){
 }
 
 let interesados = [];
+let salud = [];
+let referidos = [];
+
+async function cargarSalud(){
+  try{
+    const [rs, rr] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/salud_feria`,     {method:'POST', headers:cabAuth(), body:'{}'}),
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/referidos_admin`, {method:'POST', headers:cabAuth(), body:'{}'})
+    ]);
+    salud     = rs.ok ? await rs.json() : [];
+    referidos = rr.ok ? await rr.json() : [];
+  }catch(e){ salud = []; referidos = []; }
+}
 
 async function cargarTodo(){
   await Promise.all([cargarPuestos(), cargarFerias(), cargarInteresados()]);
@@ -256,8 +292,13 @@ function cambiarSeccion(sec, el){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on', i===0));
   // Interesados no se divide en pendientes/aprobados
   const filaTabs = document.querySelector('.tabs');
-  if(filaTabs) filaTabs.style.display = (sec === 'interesados') ? 'none' : '';
+  if(filaTabs) filaTabs.style.display = (sec === 'interesados' || sec === 'salud') ? 'none' : '';
   if(sec === 'interesados' && !interesados.length) cargarInteresados();
+  else if(sec === 'salud'){
+    document.getElementById('lista').innerHTML =
+      '<div style="text-align:center;padding:30px;color:#7A6A55;font-weight:700">Mirando cómo anda la feria…</div>';
+    cargarSalud().then(renderLista);
+  }
   else renderLista();
 }
 
@@ -268,8 +309,94 @@ function cambiarTab(tab, el){
   renderLista();
 }
 
+const SEMAFORO = {
+  sano:         {luz:'🟢', texto:'Todo en orden',        color:'#00A878'},
+  flojo:        {luz:'🟡', texto:'Le falta cargar cosas', color:'#FFC93C'},
+  dormido:      {luz:'🟠', texto:'Sin actividad',         color:'#FF7A00'},
+  critico:      {luz:'🔴', texto:'Necesita ayuda ya',     color:'#E91E8C'},
+  sin_publicar: {luz:'⚪', texto:'Todavía sin publicar',  color:'#9A8B76'}
+};
+
+function faltantesDe(p){
+  const f = [];
+  if(!p.tiene_logo)              f.push('sin logo');
+  if(!p.tiene_bio)               f.push('sin descripción');
+  if(!p.tiene_whatsapp)          f.push('sin WhatsApp');
+  if(!p.productos)               f.push('sin productos');
+  else if(p.productos < 3)       f.push(`solo ${p.productos} producto${p.productos>1?'s':''}`);
+  if(p.productos && !p.productos_con_foto) f.push('productos sin foto');
+  if(!p.ferias_vinculadas)       f.push('sin feria vinculada');
+  if(p.dias_sin_confirmar === null && p.ferias_vinculadas)
+                                 f.push('nunca confirmó asistencia');
+  else if(p.dias_sin_confirmar > 30)
+                                 f.push(`${p.dias_sin_confirmar} días sin confirmar`);
+  return f;
+}
+
+function renderSalud(cont){
+  document.getElementById('panel-titulo').textContent = 'Salud de la feria';
+  const atencion = salud.filter(p=>p.estado !== 'sano').length;
+  document.getElementById('contador').textContent =
+    atencion ? `${atencion} necesitan atención` : 'Todo en orden';
+
+  if(!salud.length){
+    cont.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#7A6A55;font-weight:700">
+      <div style="font-size:40px">💚</div>
+      <p style="margin-top:10px">Todavía no hay puestos para revisar.</p></div>`;
+    return;
+  }
+
+  const cuenta = e => salud.filter(p=>p.estado===e).length;
+  const prom = Math.round(salud.reduce((a,p)=>a+(p.completitud||0),0)/salud.length);
+
+  let html = `<div class="sal-resumen">
+    <div class="sal-chip"><b>${salud.length}</b><small>PUESTOS</small></div>
+    <div class="sal-chip"><b>${prom}%</b><small>COMPLETOS</small></div>
+    <div class="sal-chip"><b>🟢 ${cuenta('sano')}</b><small>SANOS</small></div>
+    <div class="sal-chip"><b>🟡 ${cuenta('flojo')}</b><small>FLOJOS</small></div>
+    <div class="sal-chip"><b>🟠 ${cuenta('dormido')}</b><small>DORMIDOS</small></div>
+    <div class="sal-chip"><b>🔴 ${cuenta('critico')}</b><small>CRÍTICOS</small></div>
+  </div>`;
+
+  html += salud.map(p=>{
+    const sem = SEMAFORO[p.estado] || SEMAFORO.flojo;
+    const falta = faltantesDe(p);
+    const wsp = String(p.whatsapp||'').replace(/[^0-9]/g,'');
+    const msg = encodeURIComponent(
+      `Hola! 👋 Soy Javier de La Digi Feria. Estuve mirando tu puesto ${p.nombre} y quería darte una mano para dejarlo redondo. ¿Tenés un rato?`);
+    return `<div class="sal-card">
+      <div class="sal-top">
+        <span class="sal-luz">${sem.luz}</span>
+        <b>${esc(p.nombre)}</b>
+        <span class="sal-pct">${p.completitud}%</span>
+      </div>
+      <div class="sal-barra"><i style="width:${p.completitud}%;background:${sem.color}"></i></div>
+      ${falta.length
+        ? `<div class="sal-faltan">${falta.map(f=>`<span class="sal-falta">${f}</span>`).join('')}</div>`
+        : `<div class="sal-ok">✓ No le falta nada</div>`}
+      ${wsp && falta.length
+        ? `<a class="sal-wsp" href="https://wa.me/${wsp}?text=${msg}" target="_blank" rel="noopener">💬 Escribirle</a>`
+        : ''}
+    </div>`;
+  }).join('');
+
+  html += `<div class="sal-sub">🤝 Referidos</div>`;
+  html += referidos.length
+    ? referidos.map(r=>`<div class="ref-card">
+        <b>${esc(r.padrino)}</b>
+        <small>${r.invitados} invitado${r.invitados!==1?'s':''} · ${r.invitados_publicados} ya publicado${r.invitados_publicados!==1?'s':''}</small>
+        ${r.premios_ganados ? `<span class="ref-premio">🎁 ${r.premios_ganados} premio${r.premios_ganados>1?'s':''} para dar</span>` : ''}
+      </div>`).join('')
+    : `<div style="color:#7A6A55;font-weight:700;font-size:13px;padding:4px 2px">
+         Todavía nadie sumó a otro feriante con su link.</div>`;
+
+  cont.innerHTML = html;
+}
+
 function renderLista(){
   const cont = document.getElementById('lista');
+
+  if(seccionActual === 'salud'){ renderSalud(cont); return; }
 
   // ── Interesados en sumarse (los que dejaron su WhatsApp) ──
   if(seccionActual === 'interesados'){
