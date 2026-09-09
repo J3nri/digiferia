@@ -44,22 +44,23 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .tab-main.on{background:var(--tinta);color:var(--amarillo);box-shadow:none}
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--tinta);margin:0 18px}
 /* ---- Panel de salud ---- */
-.sal-resumen{display:flex;gap:7px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}
-.sal-resumen::-webkit-scrollbar{display:none}
-.sal-chip{flex-shrink:0;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:8px 12px;text-align:center;min-width:74px}
-.sal-chip b{font-family:'Fredoka',sans-serif;font-weight:700;font-size:19px;display:block;line-height:1}
-.sal-chip small{font-size:10.5px;font-weight:800;color:#5C4F3E;display:block;margin-top:3px}
-.sal-card{background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:12px 13px;margin-bottom:11px}
-.sal-top{display:flex;align-items:center;gap:9px}
-.sal-luz{font-size:17px;flex-shrink:0}
-.sal-top b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;flex:1;line-height:1.15}
-.sal-pct{font-family:'Fredoka',sans-serif;font-weight:700;font-size:13px;color:#5C4F3E}
-.sal-barra{height:7px;background:#EFE6D5;border:1.5px solid var(--tinta);border-radius:999px;overflow:hidden;margin:8px 0 9px}
+.sal-resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:2px 0 13px}
+.sal-chip{background:var(--blanco);border:2px solid var(--tinta);border-radius:11px;padding:6px 4px;text-align:center}
+.sal-chip b{font-family:'Fredoka',sans-serif;font-weight:700;font-size:16px;display:block;line-height:1}
+.sal-chip small{font-size:9.5px;font-weight:800;color:#5C4F3E;display:block;margin-top:2px;letter-spacing:.2px}
+.sal-card{background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;box-shadow:2px 2px 0 rgba(43,33,24,.9);padding:8px 10px;margin-bottom:7px}
+.sal-top{display:flex;align-items:center;gap:7px}
+.sal-luz{font-size:14px;flex-shrink:0}
+.sal-top b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;flex:1;line-height:1.15;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sal-pct{font-family:'Fredoka',sans-serif;font-weight:700;font-size:12px;color:#5C4F3E;flex-shrink:0}
+.sal-barra{height:4px;background:#EFE6D5;border-radius:999px;overflow:hidden;margin:6px 0 0}
 .sal-barra i{display:block;height:100%}
-.sal-faltan{display:flex;flex-wrap:wrap;gap:5px}
-.sal-falta{font-size:11px;font-weight:800;background:#FDE7F2;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px}
-.sal-ok{font-size:12px;font-weight:800;color:#00A878}
-.sal-wsp{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:800;color:#fff;background:#25D366;border:2px solid var(--tinta);border-radius:999px;padding:6px 14px;text-decoration:none}
+.sal-faltan{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.sal-falta{font-size:10.5px;font-weight:800;background:#FDE7F2;border:1px solid var(--tinta);border-radius:999px;padding:1px 7px}
+.sal-ok{font-size:11.5px;font-weight:800;color:#00A878}
+.sal-wsp{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:#25D366;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:13px;text-decoration:none}
+.sal-sanos{background:#DFF5EC;border:2px solid var(--tinta);border-radius:12px;padding:9px 12px;font-size:12.5px;font-weight:800;color:#00694D;cursor:pointer;margin-bottom:7px}
+.sal-sanos small{display:block;font-weight:700;color:#3A6B5B;font-size:11.5px;margin-top:3px;line-height:1.4}
 .ref-card{background:#FFFDF4;border:2px dashed #B8860B;border-radius:14px;padding:11px 13px;margin-bottom:10px}
 .ref-card b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px}
 .ref-card small{font-size:12px;font-weight:700;color:#5C4F3E;display:block;margin-top:3px}
@@ -352,13 +353,25 @@ function renderSalud(cont){
   let html = `<div class="sal-resumen">
     <div class="sal-chip"><b>${salud.length}</b><small>PUESTOS</small></div>
     <div class="sal-chip"><b>${prom}%</b><small>COMPLETOS</small></div>
-    <div class="sal-chip"><b>🟢 ${cuenta('sano')}</b><small>SANOS</small></div>
+    <div class="sal-chip"><b>⚪ ${cuenta('sin_publicar')}</b><small>SIN PUBLICAR</small></div>
     <div class="sal-chip"><b>🟡 ${cuenta('flojo')}</b><small>FLOJOS</small></div>
     <div class="sal-chip"><b>🟠 ${cuenta('dormido')}</b><small>DORMIDOS</small></div>
     <div class="sal-chip"><b>🔴 ${cuenta('critico')}</b><small>CRÍTICOS</small></div>
   </div>`;
 
-  html += salud.map(p=>{
+  // Los que están bien no ocupan lugar: van resumidos en una línea
+  const sanos = salud.filter(p=>p.estado === 'sano');
+  const revisar = salud.filter(p=>p.estado !== 'sano');
+
+  if(sanos.length){
+    html += `<div class="sal-sanos" onclick="this.querySelector('small').style.display=
+      this.querySelector('small').style.display==='none'?'block':'none'">
+      🟢 ${sanos.length} puesto${sanos.length>1?'s':''} en orden — no necesitan nada
+      <small style="display:none">${sanos.map(p=>esc(p.nombre)).join(' · ')}</small>
+    </div>`;
+  }
+
+  html += revisar.map(p=>{
     const sem = SEMAFORO[p.estado] || SEMAFORO.flojo;
     const falta = faltantesDe(p);
     const wsp = String(p.whatsapp||'').replace(/[^0-9]/g,'');
@@ -369,14 +382,12 @@ function renderSalud(cont){
         <span class="sal-luz">${sem.luz}</span>
         <b>${esc(p.nombre)}</b>
         <span class="sal-pct">${p.completitud}%</span>
+        ${wsp ? `<a class="sal-wsp" href="https://wa.me/${wsp}?text=${msg}" target="_blank" rel="noopener" title="Escribirle por WhatsApp">💬</a>` : ''}
       </div>
-      <div class="sal-barra"><i style="width:${p.completitud}%;background:${sem.color}"></i></div>
       ${falta.length
         ? `<div class="sal-faltan">${falta.map(f=>`<span class="sal-falta">${f}</span>`).join('')}</div>`
-        : `<div class="sal-ok">✓ No le falta nada</div>`}
-      ${wsp && falta.length
-        ? `<a class="sal-wsp" href="https://wa.me/${wsp}?text=${msg}" target="_blank" rel="noopener">💬 Escribirle</a>`
-        : ''}
+        : `<div class="sal-ok" style="margin-top:5px">✓ No le falta nada</div>`}
+      <div class="sal-barra"><i style="width:${p.completitud}%;background:${sem.color}"></i></div>
     </div>`;
   }).join('');
 
