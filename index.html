@@ -1972,11 +1972,11 @@ async function catalogoPDF(){
       if(a && out.length<max) out.push(a);
       return out;
     }
-    function pieDePagina(ctx,n){
+    function pieDePagina(ctx,n,total){
       ctx.textAlign='center'; ctx.fillStyle=SUAVE; ctx.font='700 20px '+NUN;
       const wsp = usuario.puestoWhatsapp ? '  ·  WhatsApp ' + usuario.puestoWhatsapp : '';
-      ctx.fillText('digiferia.ar' + wsp, CW/2, CH-42);
-      if(n){ ctx.font='700 18px '+NUN; ctx.fillText(String(n), CW/2, CH-18); }
+      ctx.fillText('digiferia.ar' + wsp, CW/2, CH-46);
+      if(n){ ctx.font='700 17px '+NUN; ctx.fillText('Página ' + n + ' de ' + total, CW/2, CH-20); }
     }
 
     const paginas=[];
@@ -2023,12 +2023,13 @@ async function catalogoPDF(){
     ctx.drawImage(qr,qx,qy,QS,QS);
     ctx.fillStyle=TINTA; ctx.font='600 24px '+FRED;
     ctx.fillText('Escaneá y mirá precios actualizados', CW/2, qy+QS+52);
-    pieDePagina(ctx,null);
+    pieDePagina(ctx,null,null);
     paginas.push(tapa.cv);
 
     // ---------- PRODUCTOS ----------
     const POR_PAG=6, COLS=2, GAP=26;
     const cellW=(CW-M*2-GAP)/COLS, cellH=300, topY=136;
+    const totalPags = Math.ceil(prods.length / POR_PAG);
 
     for(let i=0;i<prods.length;i+=POR_PAG){
       const grupo=prods.slice(i,i+POR_PAG);
@@ -2046,7 +2047,7 @@ async function catalogoPDF(){
 
         const f0=(pr.fotos&&pr.fotos[0])?pr.fotos[0]:null;
         const esUrl=f0 && String(f0).indexOf('http')===0;
-        const fH=176;
+        const fH=214;
         c.save(); c.beginPath();
         trazoRedondeado(c,cx+5,cy+5,cellW-10,fH,14); c.closePath();
         c.fillStyle=CREMA; c.fill(); c.clip();
@@ -2065,21 +2066,10 @@ async function catalogoPDF(){
         c.lineWidth=3; c.strokeStyle=TINTA; c.stroke();
 
         c.textAlign='left'; c.fillStyle=TINTA; c.font='600 25px '+FRED;
-        let ty=cy+fH+48;
-        lineas(c,pr.nombre,cellW-32,2).forEach(function(l){ c.fillText(l,cx+16,ty); ty+=30; });
-
-        if((pr.descripcion||'').trim()){
-          c.fillStyle=SUAVE; c.font='600 18px '+NUN;
-          lineas(c,pr.descripcion,cellW-32,1).forEach(function(l){ c.fillText(l,cx+16,ty); ty+=24; });
-        }
-
-        const py=cy+cellH-26;
-        c.fillStyle=FUCSIA; c.font='700 26px '+FRED;
-        c.fillText('$', cx+16, py);
-        c.strokeStyle='#D9CBB4'; c.lineWidth=3;
-        c.beginPath(); c.moveTo(cx+42,py+6); c.lineTo(cx+cellW-16,py+6); c.stroke();
+        let ty=cy+fH+46;
+        lineas(c,pr.nombre,cellW-32,2).forEach(function(l){ c.fillText(l,cx+16,ty); ty+=29; });
       }
-      pieDePagina(c, Math.floor(i/POR_PAG)+1);
+      pieDePagina(c, Math.floor(i/POR_PAG)+1, totalPags);
       paginas.push(pg.cv);
     }
 
