@@ -1527,6 +1527,11 @@ function renderPanelFeriante(cont){
         <div><b>Imprimí tu QR</b><small>Descargá la tarjeta en PDF, plastificala y tenela en tu puesto de la feria</small></div>
         <div class="flecha-r">→</div>
       </div>
+      <div class="accion-row" onclick="catalogoPDF()">
+        <div class="ic">📖</div>
+        <div><b>Mi catálogo en PDF</b><small>Todos tus productos con foto, listo para mandar por WhatsApp o imprimir</small></div>
+        <div class="flecha-r">→</div>
+      </div>
       <div class="accion-row" onclick="imprimirQRDigiFeria()">
         <div class="ic">🎪</div>
         <div><b>Descargá el QR de La Digi Feria</b><small>Cartel A4 para imprimir y colgar en tu puesto: quien lo escanea entra a la feria online</small></div>
@@ -1914,6 +1919,200 @@ async function cartelQR_A4(op){
   doc.save(op.archivo);
 }
 
+// ================== CATÁLOGO EN PDF ==================
+async function catalogoPDF(){
+  if(!usuario || !usuario.puestoId){
+    mostrarToast('Todavía no tenés puesto para armar el catálogo.');
+    return;
+  }
+  mostrarToast('⏳ Armando tu catálogo… puede tardar unos segundos.');
+
+  try{
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+
+    const r = await fetch(
+      SUPABASE_URL + '/rest/v1/productos?select=nombre,descripcion,fotos,visible,orden&puesto_id=eq.' + usuario.puestoId + '&order=orden',
+      { headers:{ apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } });
+    const todos = r.ok ? await r.json() : [];
+    const prods = todos.filter(function(x){ return x.visible !== false; });
+    if(!prods.length){ mostrarToast('Cargá al menos un producto para armar el catálogo.'); return; }
+
+    const FUCSIA='#E91E8C', TINTA='#2B2118', FONDO='#FFF8EC',
+          AMARILLO='#FFC93C', SUAVE='#7A6A55', CREMA='#FDF1DC';
+    const FRED = "'Fredoka', sans-serif", NUN = "'Nunito', sans-serif";
+    const CW=840, CH=1188, M=60;
+
+    function nuevoLienzo(){
+      const cv=document.createElement('canvas'); cv.width=CW; cv.height=CH;
+      const ctx=cv.getContext('2d');
+      ctx.fillStyle=FONDO; ctx.fillRect(0,0,CW,CH);
+      const cols=[FUCSIA,AMARILLO,'#00A878','#FF7A00','#2D9CDB'];
+      const ab=CW/14;
+      for(let i=0;i<14;i++){
+        ctx.beginPath();
+        ctx.moveTo(i*ab,0); ctx.lineTo((i+1)*ab,0); ctx.lineTo(i*ab+ab/2,26);
+        ctx.closePath(); ctx.fillStyle=cols[i%5]; ctx.fill();
+      }
+      return {cv:cv, ctx:ctx};
+    }
+    function achicar(ctx,txt,tam,maxAncho,peso,fam){
+      let t=tam; ctx.font=peso+' '+t+'px '+fam;
+      while(ctx.measureText(txt).width>maxAncho && t>9){ t-=1; ctx.font=peso+' '+t+'px '+fam; }
+      return t;
+    }
+    function lineas(ctx,txt,maxAncho,max){
+      const ps=String(txt||'').split(/\s+/), out=[]; let a='';
+      for(const w of ps){
+        const pr=a?a+' '+w:w;
+        if(ctx.measureText(pr).width>maxAncho && a){ out.push(a); a=w; } else a=pr;
+        if(out.length>=max) break;
+      }
+      if(a && out.length<max) out.push(a);
+      return out;
+    }
+    function pieDePagina(ctx,n){
+      ctx.textAlign='center'; ctx.fillStyle=SUAVE; ctx.font='700 20px '+NUN;
+      const wsp = usuario.puestoWhatsapp ? '  ·  WhatsApp ' + usuario.puestoWhatsapp : '';
+      ctx.fillText('digiferia.ar' + wsp, CW/2, CH-42);
+      if(n){ ctx.font='700 18px '+NUN; ctx.fillText(String(n), CW/2, CH-18); }
+    }
+
+    const paginas=[];
+
+    // ---------- TAPA ----------
+    const tapa = nuevoLienzo(); const ctx = tapa.ctx;
+    const logo = usuario.puestoFoto ? await cargarImagen(usuario.puestoFoto, true).catch(function(){return null;}) : null;
+    let y=150;
+    if(logo){
+      const R=110;
+      ctx.save(); ctx.beginPath(); ctx.arc(CW/2,y+R,R,0,Math.PI*2); ctx.closePath();
+      ctx.fillStyle=CREMA; ctx.fill(); ctx.clip();
+      const e=Math.max((R*2)/logo.width,(R*2)/logo.height);
+      ctx.drawImage(logo, CW/2-logo.width*e/2, y+R-logo.height*e/2, logo.width*e, logo.height*e);
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(CW/2,y+R,R,0,Math.PI*2);
+      ctx.lineWidth=7; ctx.strokeStyle=TINTA; ctx.stroke();
+      y+=R*2+50;
+    }
+    ctx.textAlign='center'; ctx.fillStyle=TINTA;
+    const nom = usuario.puestoNombre || 'Mi puesto';
+    const tn = achicar(ctx,nom,64,CW-M*2,'700',FRED);
+    ctx.font='700 '+tn+'px '+FRED; ctx.fillText(nom,CW/2,y); y+=tn+18;
+    if((usuario.puestoBio||'').trim()){
+      ctx.fillStyle=SUAVE; ctx.font='600 25px '+NUN;
+      lineas(ctx,usuario.puestoBio,CW-M*2-40,3).forEach(function(l){ ctx.fillText(l,CW/2,y); y+=34; });
+    }
+    y+=34;
+    ctx.fillStyle=TINTA; ctx.font='600 30px '+FRED;
+    ctx.fillText('Catálogo', CW/2, y); y+=44;
+    ctx.fillStyle=SUAVE; ctx.font='700 21px '+NUN;
+    ctx.fillText(new Date().toLocaleDateString('es-AR',{month:'long', year:'numeric'}), CW/2, y);
+
+    const tmp=document.createElement('div');
+    tmp.style.position='fixed'; tmp.style.left='-9999px'; document.body.appendChild(tmp);
+    new QRCode(tmp,{ text: linkDeMiPuesto(), width:520, height:520, correctLevel: QRCode.CorrectLevel.M });
+    await new Promise(function(res){ setTimeout(res,250); });
+    const qel=tmp.querySelector('canvas')||tmp.querySelector('img');
+    const qr=await cargarImagen(qel.tagName==='CANVAS'?qel.toDataURL('image/png'):qel.src,false);
+    tmp.remove();
+    const QS=240, qx=(CW-QS)/2, qy=CH-QS-160;
+    ctx.fillStyle='#FFFFFF'; trazoRedondeado(ctx,qx-16,qy-16,QS+32,QS+32,20);
+    ctx.fill(); ctx.lineWidth=6; ctx.strokeStyle=TINTA; ctx.stroke();
+    ctx.drawImage(qr,qx,qy,QS,QS);
+    ctx.fillStyle=TINTA; ctx.font='600 24px '+FRED;
+    ctx.fillText('Escaneá y mirá precios actualizados', CW/2, qy+QS+52);
+    pieDePagina(ctx,null);
+    paginas.push(tapa.cv);
+
+    // ---------- PRODUCTOS ----------
+    const POR_PAG=6, COLS=2, GAP=26;
+    const cellW=(CW-M*2-GAP)/COLS, cellH=300, topY=136;
+
+    for(let i=0;i<prods.length;i+=POR_PAG){
+      const grupo=prods.slice(i,i+POR_PAG);
+      const pg=nuevoLienzo(); const c=pg.ctx;
+      c.textAlign='left'; c.fillStyle=TINTA; c.font='600 30px '+FRED;
+      c.fillText(usuario.puestoNombre||'Mi puesto', M, 92);
+
+      for(let j=0;j<grupo.length;j++){
+        const pr=grupo[j];
+        const cx=M+(j%COLS)*(cellW+GAP);
+        const cy=topY+Math.floor(j/COLS)*(cellH+GAP);
+
+        c.fillStyle='#FFFFFF'; trazoRedondeado(c,cx,cy,cellW,cellH,18);
+        c.fill(); c.lineWidth=5; c.strokeStyle=TINTA; c.stroke();
+
+        const f0=(pr.fotos&&pr.fotos[0])?pr.fotos[0]:null;
+        const esUrl=f0 && String(f0).indexOf('http')===0;
+        const fH=176;
+        c.save(); c.beginPath();
+        trazoRedondeado(c,cx+5,cy+5,cellW-10,fH,14); c.closePath();
+        c.fillStyle=CREMA; c.fill(); c.clip();
+        if(esUrl){
+          const im=await cargarImagen(f0,true).catch(function(){return null;});
+          if(im){
+            const e2=Math.min((cellW-10)/im.width, fH/im.height);
+            c.drawImage(im, cx+5+((cellW-10)-im.width*e2)/2, cy+5+(fH-im.height*e2)/2, im.width*e2, im.height*e2);
+          }
+        }else{
+          c.textAlign='center'; c.font='84px sans-serif';
+          c.fillText(f0||'🛍️', cx+cellW/2, cy+5+fH/2+30);
+        }
+        c.restore();
+        c.beginPath(); trazoRedondeado(c,cx+5,cy+5,cellW-10,fH,14);
+        c.lineWidth=3; c.strokeStyle=TINTA; c.stroke();
+
+        c.textAlign='left'; c.fillStyle=TINTA; c.font='600 25px '+FRED;
+        let ty=cy+fH+48;
+        lineas(c,pr.nombre,cellW-32,2).forEach(function(l){ c.fillText(l,cx+16,ty); ty+=30; });
+
+        if((pr.descripcion||'').trim()){
+          c.fillStyle=SUAVE; c.font='600 18px '+NUN;
+          lineas(c,pr.descripcion,cellW-32,1).forEach(function(l){ c.fillText(l,cx+16,ty); ty+=24; });
+        }
+
+        const py=cy+cellH-26;
+        c.fillStyle=FUCSIA; c.font='700 26px '+FRED;
+        c.fillText('$', cx+16, py);
+        c.strokeStyle='#D9CBB4'; c.lineWidth=3;
+        c.beginPath(); c.moveTo(cx+42,py+6); c.lineTo(cx+cellW-16,py+6); c.stroke();
+      }
+      pieDePagina(c, Math.floor(i/POR_PAG)+1);
+      paginas.push(pg.cv);
+    }
+
+    // ---------- PDF ----------
+    const jsPDFc = window.jspdf.jsPDF;
+    const doc = new jsPDFc({ unit:'mm', format:'a4' });
+    paginas.forEach(function(cv,i){
+      if(i) doc.addPage();
+      doc.addImage(cv.toDataURL('image/jpeg',0.82),'JPEG',0,0,210,297);
+    });
+
+    const archivo = 'Catalogo-' + (usuario.puestoSlug||'mi-puesto') + '.pdf';
+    const blob = doc.output('blob');
+    const file = new File([blob], archivo, {type:'application/pdf'});
+
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({ files:[file], title: usuario.puestoNombre || 'Mi catálogo' });
+        mostrarToast('📖 ¡Catálogo listo! Elegí a quién mandárselo.');
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError'){ return; }
+      }
+    }
+    doc.save(archivo);
+    mostrarToast('📖 ¡Catálogo descargado! Adjuntalo en WhatsApp desde tus descargas.');
+
+  }catch(err){
+    console.error('Catálogo PDF:', err);
+    mostrarToast('No se pudo armar el catálogo. Probá de nuevo en un rato.');
+  }
+}
+
 // ---- Cartel del PUESTO (con su logo) ----
 async function imprimirQRPuesto(){
   if(!usuario || !usuario.puestoSlug){
@@ -1965,11 +2164,22 @@ function verMiPuesto(){
   }
 }
 
+// ---- Puestos que ya tienen su archivo de vista previa en /p/<slug>/ ----
+// Cada vez que se cree una carpeta nueva en GitHub, sumar acá el slug.
+// Los que no estén en esta lista siguen usando el link con # (funciona igual,
+// solo que al compartirlo WhatsApp muestra "La Digi Feria" en vez del puesto).
+const SLUGS_CON_VISTA_PREVIA = [
+  "pardo-y-copito-mry47eil",
+  "nadiava-msaqzs32"
+];
+
 // Copiar link del puesto
 function linkDeMiPuesto(){
-  return usuario && usuario.puestoSlug
-    ? `https://digiferia.ar/#puesto=${usuario.puestoSlug}`
-    : `https://digiferia.ar`;
+  const slug = usuario && usuario.puestoSlug;
+  if(!slug) return "https://digiferia.ar";
+  return SLUGS_CON_VISTA_PREVIA.includes(slug)
+    ? `https://digiferia.ar/p/${slug}/`
+    : `https://digiferia.ar/#puesto=${slug}`;
 }
 function copiarLinkPuesto(){
   const link = linkDeMiPuesto();
