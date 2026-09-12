@@ -132,6 +132,15 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .fundadores{display:flex;align-items:center;gap:10px;margin-top:10px;background:#FFFDF4;border:2px dashed #B8860B;border-radius:12px;padding:9px 12px}
 .fundadores .num{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#B8860B;line-height:1}
 .fundadores small{font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.35}
+/* ---- Solapas del panel del feriante ---- */
+.psolapas{display:flex;gap:6px;margin:0 18px 14px;background:#EFE6D5;border:2px solid var(--tinta);border-radius:14px;padding:4px}
+.psolapa{flex:1;text-align:center;padding:8px 4px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;color:#7A6A55;cursor:pointer;border:none;background:none;line-height:1.2}
+.psolapa span{display:block;font-size:16px;margin-bottom:2px}
+.psolapa.on{background:var(--blanco);color:var(--tinta);box-shadow:0 2px 0 rgba(43,33,24,.9)}
+.pgrupo{display:none}
+.pgrupo.on{display:block;animation:aparecer .2s ease}
+@media (prefers-reduced-motion:reduce){.pgrupo.on{animation:none}}
+
 /* ---- Tarjeta Digi Feria (presentación en el panel) ---- */
 .tdf{margin:0 18px 14px;background:linear-gradient(135deg,#FDE7F2,#FFF0D6);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:4px 4px 0 rgba(43,33,24,.9);overflow:hidden}
 .tdf-top{padding:14px 16px 12px}
@@ -1502,6 +1511,13 @@ function renderPanelFeriante(cont){
       </div>`}
 
       <!-- Confirmar asistencia (exclusivo Pro) -->
+      <div class="psolapas">
+        <button class="psolapa on" data-g="g-puesto" onclick="solapaPanel(this)"><span>🎪</span>Mi puesto</button>
+        <button class="psolapa" data-g="g-difundir" onclick="solapaPanel(this)"><span>📣</span>Difundir</button>
+        <button class="psolapa" data-g="g-premios" onclick="solapaPanel(this)"><span>🎟️</span>Premios</button>
+      </div>
+
+      <div class="pgrupo on" id="g-puesto">
       ${u.puestoPlan === 'pro' ? `
       <div class="confirmar-box">
         <h3>🔥 ¿Vas a la feria este finde?</h3>
@@ -1529,6 +1545,9 @@ function renderPanelFeriante(cont){
         <div><b>Ver estadísticas</b><small>Visitas y consultas recibidas</small></div>
         <div class="flecha-r">→</div>
       </div>
+      </div><!-- fin g-puesto -->
+
+      <div class="pgrupo" id="g-difundir">
       <div class="accion-row" onclick="copiarLinkPuesto()">
         <div class="ic">🔗</div>
         <div><b>Compartir mi puesto</b><small>Tu link directo para clientes: copiá y compartí</small></div>
@@ -1555,6 +1574,9 @@ function renderPanelFeriante(cont){
         <div class="flecha-r">→</div>
       </div>
 
+      </div><!-- fin g-difundir -->
+
+      <div class="pgrupo" id="g-premios">
       <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Tarjeta Digi Feria 🎟️</h2></div>
       <div class="tdf">
         <div class="tdf-top">
@@ -1588,6 +1610,7 @@ function renderPanelFeriante(cont){
       ${Object.values(PINES).map(p=>
         `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
       ).join("")}
+      </div><!-- fin g-premios -->
 
       <div style="margin:24px 18px 8px;padding-top:16px;border-top:1px dashed #D8C9AE">
         <button onclick="abrirEliminarCuenta()" style="width:100%;background:none;border:none;color:#B04A4A;font-family:'Nunito';font-weight:800;font-size:13px;cursor:pointer;padding:8px;text-align:center">
@@ -2147,6 +2170,14 @@ async function catalogoPDF(){
     console.error('Catálogo PDF:', err);
     mostrarToast('No se pudo armar el catálogo. Probá de nuevo en un rato.');
   }
+}
+
+// ---- Solapas dentro del panel del feriante ----
+function solapaPanel(btn){
+  document.querySelectorAll('.psolapa').forEach(b=>b.classList.toggle('on', b === btn));
+  document.querySelectorAll('.pgrupo').forEach(g=>g.classList.toggle('on', g.id === btn.dataset.g));
+  const barra = document.querySelector('.psolapas');
+  if(barra) barra.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // ---- Cartel del PUESTO (con su logo) ----
