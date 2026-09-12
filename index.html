@@ -132,6 +132,23 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .fundadores{display:flex;align-items:center;gap:10px;margin-top:10px;background:#FFFDF4;border:2px dashed #B8860B;border-radius:12px;padding:9px 12px}
 .fundadores .num{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#B8860B;line-height:1}
 .fundadores small{font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.35}
+/* ---- Tarjeta Digi Feria (presentación en el panel) ---- */
+.tdf{margin:0 18px 14px;background:linear-gradient(135deg,#FDE7F2,#FFF0D6);border:2px solid var(--tinta);border-radius:var(--radius);box-shadow:4px 4px 0 rgba(43,33,24,.9);overflow:hidden}
+.tdf-top{padding:14px 16px 12px}
+.tdf-badge{display:inline-block;font-size:10.5px;font-weight:800;background:var(--tinta);color:var(--amarillo);border-radius:999px;padding:3px 10px;margin-bottom:8px;letter-spacing:.3px}
+.tdf h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px;line-height:1.15}
+.tdf p{font-size:13px;color:#5C4F3E;font-weight:700;line-height:1.45;margin-top:6px}
+.tdf-sellos{display:flex;gap:7px;justify-content:center;padding:12px 16px 4px;flex-wrap:wrap}
+.tdf-sello{width:38px;height:38px;border-radius:50%;border:2px dashed #B8860B;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:16px;color:#C9BCA6}
+.tdf-sello.on{border-style:solid;background:var(--amarillo);color:var(--tinta)}
+.tdf-lista{background:rgba(255,255,255,.65);border-top:2px dashed rgba(43,33,24,.25);padding:12px 16px}
+.tdf-item{display:flex;gap:9px;align-items:flex-start;margin-bottom:8px}
+.tdf-item:last-child{margin-bottom:0}
+.tdf-item .ic{font-size:15px;flex-shrink:0;line-height:1.35}
+.tdf-item b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;display:block;line-height:1.2}
+.tdf-item small{font-size:12px;color:#5C4F3E;font-weight:700;line-height:1.4;display:block;margin-top:2px}
+.tdf-cta{display:block;width:calc(100% - 32px);margin:14px 16px 16px;padding:13px;text-align:center;background:var(--fucsia);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;border-radius:14px;border:2px solid var(--tinta);box-shadow:3px 3px 0 rgba(43,33,24,.9);cursor:pointer;text-decoration:none}
+.tdf-cta:active{transform:translate(2px,2px);box-shadow:0 0 0}
 .link-row{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;margin:0 18px 10px}
 .link-row .ic{font-size:18px}
 .link-row b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;display:block}
@@ -474,7 +491,7 @@ nav button.on span{filter:none;opacity:1}
       <button onclick="suscribirGeneral()">¡Anotarme!</button>
     </div>
   </div>
-  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente('feriante')">
+  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 19 de septiembre" onclick="avisoProximamente('feriante')">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Sos feriante? 🛍️</h3>
@@ -488,7 +505,7 @@ nav button.on span{filter:none;opacity:1}
       </div>
     </div>
   </div>
-  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 12 de septiembre" onclick="avisoProximamente('organizador')">
+  <div class="flyer tu-feria fijo bloqueable" data-cartel="Abre el 19 de septiembre" onclick="avisoProximamente('organizador')">
     <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="flyer-body">
       <h3>¿Organizás una feria? 📣</h3>
@@ -1538,6 +1555,35 @@ function renderPanelFeriante(cont){
         <div class="flecha-r">→</div>
       </div>
 
+      <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Tarjeta Digi Feria 🎟️</h2></div>
+      <div class="tdf">
+        <div class="tdf-top">
+          <span class="tdf-badge">PRÓXIMAMENTE</span>
+          <h3>La tarjeta de sellos de la feria</h3>
+          <p>Tus clientes juntan sellos comprando en cualquier puesto adherido, y canjean el descuento en el puesto que ellos elijan. Puede ser el tuyo.</p>
+        </div>
+
+        <div class="tdf-sellos">
+          <div class="tdf-sello on">🎪</div>
+          <div class="tdf-sello on">🎪</div>
+          <div class="tdf-sello on">🎪</div>
+          <div class="tdf-sello on">🎪</div>
+          <div class="tdf-sello">?</div>
+          <div class="tdf-sello">?</div>
+        </div>
+        <p style="text-align:center;font-size:12px;font-weight:800;color:#5C4F3E;padding:4px 16px 0">Así la ve tu cliente: 4 de 6</p>
+
+        <div class="tdf-lista">
+          <div class="tdf-item"><span class="ic">🛍️</span><div><b>Una compra desde $5.000 suma un sello</b><small>Vos decidís, a ojo. El sistema nunca te pide cargar el monto de la venta.</small></div></div>
+          <div class="tdf-item"><span class="ic">🎁</span><div><b>El premio es 15% de descuento, como piso</b><small>Podés dar más y poner tu tope. Tus condiciones quedan a la vista en la app.</small></div></div>
+          <div class="tdf-item"><span class="ic">🤝</span><div><b>El que viene a canjear no te conocía</b><small>Los sellos los juntó en otros puestos, pero entra al tuyo. Es una visita que no ibas a tener.</small></div></div>
+          <div class="tdf-item"><span class="ic">📱</span><div><b>Sumar un sello lleva 5 segundos</b><small>Abrís el panel, tipeás el teléfono y listo. El cliente no instala nada.</small></div></div>
+          <div class="tdf-item"><span class="ic">⏳</span><div><b>Cada sello dura 4 meses</b><small>Vencen de a uno, el más viejo primero. El cliente nunca pierde todo de golpe.</small></div></div>
+        </div>
+
+        <a class="tdf-cta" href="https://wa.me/5491130372976?text=${encodeURIComponent('Hola Javier! Vi la Tarjeta Digi Feria en mi panel y quiero sumar mi puesto al programa 🎟️')}" target="_blank" rel="noopener">🎟️ Quiero sumar mi puesto</a>
+      </div>
+
       <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Colección de pines 📌</h2></div>
       ${Object.values(PINES).map(p=>
         `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
@@ -2361,11 +2407,11 @@ function textoVence(iso){
 
 
 // ══════ APERTURA DE INSCRIPCIONES ══════
-// Las altas de feriantes y ferias se abren el 12 de septiembre de 2026,
+// Las altas de feriantes y ferias se abren el 19 de septiembre de 2026,
 // que es cuando Javier puede acompañar a cada uno en la feria física.
 // Hasta entonces todo se ve pero no se puede tocar.
 // PARA ABRIRLAS: cambiar APERTURA por una fecha ya pasada, o poner null.
-const APERTURA = new Date('2026-09-12T00:00:00-03:00');
+const APERTURA = new Date('2026-09-19T00:00:00-03:00');
 
 function inscripcionesAbiertas(){
   return !APERTURA || new Date() >= APERTURA;
@@ -2440,6 +2486,7 @@ function aplicarBloqueoInscripciones(){
   // Tarjetas de la portada
   document.querySelectorAll('.bloqueable').forEach(el=>{
     el.classList.toggle('proximamente', !abierto);
+    if(!abierto) el.setAttribute('data-cartel', 'Abre el ' + textoApertura());
     if(abierto){
       // Al abrirse, cada tarjeta recupera su destino
       const esFeria = /feria/i.test(el.querySelector('h3')?.textContent || '');
