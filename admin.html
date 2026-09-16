@@ -304,7 +304,7 @@ async function marcarContactado(id, valor){
 
 async function cargarPuestos(){
   const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,plan_hasta,plan_permanente,plan_espera,plan_espera_dias,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`,
+    `${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,plan_hasta,plan_permanente,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`,
     {headers:cabAuth()}
   );
   puestos = resp.ok ? await resp.json() : [];
