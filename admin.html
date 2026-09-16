@@ -512,7 +512,11 @@ async function previoCarga(){
 
     const fecha = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-AR') : '—';
     let html = `Hoy: <b>${(s.plan_actual||'gratis').toUpperCase()}</b>`;
-    html += s.vence_actual ? ` hasta el ${fecha(s.vence_actual)}` : ' (sin vencimiento)';
+    if(s.plan_actual === 'gratis' || s.plan_actual === 'sin destacar'){
+      html += s.vence_actual ? ` (venció el ${fecha(s.vence_actual)})` : '';
+    }else{
+      html += s.vence_actual ? ` hasta el ${fecha(s.vence_actual)}` : '';
+    }
     if(s.dias_restantes > 0){
       html += `<br>Le quedan <b>${s.dias_restantes} días</b>`;
       if(s.dias_convertidos !== s.dias_restantes){
@@ -702,7 +706,7 @@ function cardPuesto(p){
     ? `<div class="card-acciones" style="flex-wrap:wrap;gap:7px;align-items:center">
          <span class="tag-aprobado">✅ Publicado</span>
          ${planChip}
-         <button class="btn-cargar" onclick="abrirCarga('puesto','${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">💳 Cargar días</button>
+         ${permanente ? '' : `<button class="btn-cargar" onclick="abrirCarga('puesto','${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">💳 Cargar días</button>`}
        </div>`
     : `<div class="card-acciones">
         <button class="btn-aprobar" id="btn-${p.id}" onclick="aprobar('${p.id}','${p.nombre}','${wsp}','${email}','${nombrePersona}')">
