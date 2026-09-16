@@ -59,6 +59,38 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .sal-falta{font-size:10.5px;font-weight:800;background:#FDE7F2;border:1px solid var(--tinta);border-radius:999px;padding:1px 7px}
 .sal-ok{font-size:11.5px;font-weight:800;color:#00A878}
 .sal-wsp{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:#25D366;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-size:13px;text-decoration:none}
+.plan-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;border:2px solid var(--tinta);border-radius:999px;padding:2px 9px;margin-right:6px}
+.plan-gratis{background:#EFE6D5}
+.plan-plus{background:#E3F2FC}
+.plan-pro{background:#FDE7F2}
+.plan-perma{background:#DFF5EC}
+.plan-vence{background:#FFF0D6}
+.btn-cargar{background:var(--verde);color:#fff;border:2px solid var(--tinta);border-radius:10px;padding:7px 13px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:13px;cursor:pointer;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.btn-cargar:active{transform:translate(2px,2px);box-shadow:none}
+#velo-carga{position:fixed;inset:0;background:rgba(43,33,24,.6);display:none;align-items:center;justify-content:center;z-index:120;padding:16px}
+#velo-carga.on{display:flex}
+.mc{background:var(--fondo);border:2px solid var(--tinta);border-radius:16px;box-shadow:5px 5px 0 rgba(43,33,24,.9);padding:18px;max-width:390px;width:100%;max-height:92vh;overflow-y:auto}
+.mc h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px}
+.mc .quien{font-size:13px;font-weight:700;color:#5C4F3E;margin-top:3px}
+.mc label{display:block;font-size:11.5px;font-weight:800;color:#7A6A55;margin:12px 0 5px;text-transform:uppercase;letter-spacing:.3px}
+.mc select,.mc input{width:100%;border:2px solid var(--tinta);border-radius:11px;padding:10px 11px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--blanco)}
+.previo{background:#FFFDF4;border:2px dashed #B8860B;border-radius:12px;padding:11px 13px;margin-top:14px;font-size:13px;font-weight:700;line-height:1.6;color:#5C4F3E}
+.previo b{color:var(--tinta)}
+.previo .res{display:block;margin-top:6px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#00694D}
+.mc-acciones{display:flex;gap:8px;margin-top:15px}
+.mc-acciones button{flex:1;border:2px solid var(--tinta);border-radius:12px;padding:11px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer}
+.mc-no{background:var(--blanco)}
+.mc-si{background:var(--verde);color:#fff}
+.carga-row{background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:9px 11px;margin-bottom:7px;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.carga-row .l1{display:flex;align-items:center;gap:7px}
+.carga-row b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;flex:1}
+.carga-row .monto{font-family:'Fredoka',sans-serif;font-weight:700;font-size:13px;color:#00694D}
+.carga-row small{font-size:11.5px;font-weight:700;color:#7A6A55;display:block;margin-top:4px}
+.medio-chip{font-size:10.5px;font-weight:800;border:1.5px solid var(--tinta);border-radius:999px;padding:1px 7px}
+.m-mercadopago{background:#E3F2FC}
+.m-efectivo{background:#DFF5EC}
+.m-transferencia{background:#FFF0D6}
+.m-cortesia{background:#FDE7F2}
 .sal-sanos{background:#DFF5EC;border:2px solid var(--tinta);border-radius:12px;padding:9px 12px;font-size:12.5px;font-weight:800;color:#00694D;cursor:pointer;margin-bottom:7px}
 .sal-sanos small{display:block;font-weight:700;color:#3A6B5B;font-size:11.5px;margin-top:3px;line-height:1.4}
 .ref-card{background:#FFFDF4;border:2px dashed #B8860B;border-radius:14px;padding:11px 13px;margin-bottom:10px}
@@ -71,7 +103,7 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .lista{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--blanco);border:2px solid var(--tinta);border-radius:var(--radius);overflow:hidden;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
 .card-head{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}
-.card-emoji{font-size:32px;width:52px;height:52px;background:#FDF1DC;border:2px solid var(--tinta);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-emoji{font-size:32px;width:52px;height:52px;background:#FDF1DC;border:2px solid var(--tinta);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center}
 .card-emoji.org{background:#E3F2FC;font-size:26px}
 .card-titulo{flex:1}
 .card-titulo b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;display:block}
@@ -138,6 +170,7 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
     <button class="tab-main" onclick="cambiarSeccion('ferias',this)">📣 Ferias</button>
     <button class="tab-main" onclick="cambiarSeccion('interesados',this)">🌱 Interesados</button>
     <button class="tab-main" onclick="cambiarSeccion('salud',this)">💚 Salud</button>
+    <button class="tab-main" onclick="cambiarSeccion('cargas',this)">💳 Cargas</button>
   </div>
   <div class="tabs">
     <div class="tab on" onclick="cambiarTab('pendientes',this)">⏳ Pendientes</div>
@@ -271,7 +304,7 @@ async function marcarContactado(id, valor){
 
 async function cargarPuestos(){
   const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`,
+    `${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent("id,nombre,bio,foto_url,whatsapp,plan,plan_hasta,plan_permanente,publicado,redes,creado_en,email_contacto,nombre_persona,rubros(nombre,emoji),puesto_feria(ferias(nombre))")}&order=creado_en.desc`,
     {headers:cabAuth()}
   );
   puestos = resp.ok ? await resp.json() : [];
@@ -293,8 +326,13 @@ function cambiarSeccion(sec, el){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on', i===0));
   // Interesados no se divide en pendientes/aprobados
   const filaTabs = document.querySelector('.tabs');
-  if(filaTabs) filaTabs.style.display = (sec === 'interesados' || sec === 'salud') ? 'none' : '';
+  if(filaTabs) filaTabs.style.display = (sec === 'interesados' || sec === 'salud' || sec === 'cargas') ? 'none' : '';
   if(sec === 'interesados' && !interesados.length) cargarInteresados();
+  else if(sec === 'cargas'){
+    document.getElementById('lista').innerHTML =
+      '<div style="text-align:center;padding:30px;color:#7A6A55;font-weight:700">Buscando las cargas…</div>';
+    cargarHistorial().then(renderLista);
+  }
   else if(sec === 'salud'){
     document.getElementById('lista').innerHTML =
       '<div style="text-align:center;padding:30px;color:#7A6A55;font-weight:700">Mirando cómo anda la feria…</div>';
@@ -404,10 +442,170 @@ function renderSalud(cont){
   cont.innerHTML = html;
 }
 
+// ================== CARGAS DE DÍAS ==================
+let PRECIOS = [];
+let cargas = [];
+let cargaDestino = null;   // {tipo, id, nombre}
+
+async function cargarPrecios(){
+  if(PRECIOS.length) return;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/precios?select=concepto,meses,dias,precio&activo=eq.true&order=concepto,meses`,
+    {headers: cabAuth()});
+  PRECIOS = r.ok ? await r.json() : [];
+}
+
+const NOMBRE_CONCEPTO = {plus:'Plan Plus', pro:'Plan Pro', feria_destacada:'Feria Destacada'};
+
+async function abrirCarga(tipo, id, nombre){
+  await cargarPrecios();
+  cargaDestino = {tipo, id, nombre};
+  document.getElementById('carga-quien').textContent = nombre;
+
+  const conceptos = tipo === 'puesto' ? ['plus','pro'] : ['feria_destacada'];
+  document.getElementById('carga-concepto').innerHTML =
+    conceptos.map(c=>`<option value="${c}">${NOMBRE_CONCEPTO[c]}</option>`).join('');
+  if(tipo === 'puesto') document.getElementById('carga-concepto').value = 'pro';
+
+  pintarMeses();
+  document.getElementById('carga-nota').value = '';
+  document.getElementById('velo-carga').classList.add('on');
+  previoCarga();
+}
+
+function pintarMeses(){
+  const c = document.getElementById('carga-concepto').value;
+  const packs = PRECIOS.filter(x=>x.concepto === c);
+  document.getElementById('carga-meses').innerHTML = packs.map(x=>
+    `<option value="${x.meses}">${x.meses} mes${x.meses>1?'es':''} — $${Number(x.precio).toLocaleString('es-AR')}</option>`
+  ).join('');
+}
+
+document.addEventListener('change', e=>{
+  if(e.target.id === 'carga-concepto'){ pintarMeses(); }
+});
+
+function cerrarCarga(){
+  document.getElementById('velo-carga').classList.remove('on');
+  cargaDestino = null;
+}
+
+async function previoCarga(){
+  if(!cargaDestino) return;
+  const caja = document.getElementById('carga-previo');
+  const concepto = document.getElementById('carga-concepto').value;
+  const meses = parseInt(document.getElementById('carga-meses').value, 10);
+  const medio = document.getElementById('carga-medio').value;
+  if(!concepto || !meses) return;
+
+  caja.textContent = 'Calculando…';
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/simular_carga`, {
+      method:'POST', headers: cabAuth(),
+      body: JSON.stringify({
+        p_puesto_id: cargaDestino.tipo === 'puesto' ? cargaDestino.id : null,
+        p_feria_id:  cargaDestino.tipo === 'feria'  ? cargaDestino.id : null,
+        p_concepto: concepto, p_meses: meses })
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const [s] = await r.json();
+    if(!s){ caja.textContent = 'No se pudo calcular.'; return; }
+
+    const fecha = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-AR') : '—';
+    let html = `Hoy: <b>${(s.plan_actual||'gratis').toUpperCase()}</b>`;
+    html += s.vence_actual ? ` hasta el ${fecha(s.vence_actual)}` : ' (sin vencimiento)';
+    if(s.dias_restantes > 0){
+      html += `<br>Le quedan <b>${s.dias_restantes} días</b>`;
+      if(s.dias_convertidos !== s.dias_restantes){
+        html += `, que en ${NOMBRE_CONCEPTO[concepto]} valen <b>${s.dias_convertidos}</b>`;
+      }
+    }
+    html += `<br>Suma <b>${s.dias_comprados} días</b>`;
+    html += medio === 'cortesia'
+      ? ' <span class="medio-chip m-cortesia">sin cargo</span>'
+      : ` · $${Number(s.precio).toLocaleString('es-AR')}`;
+    html += `<span class="res">→ ${NOMBRE_CONCEPTO[concepto]} hasta el ${fecha(s.vence_nuevo)} (${s.dias_totales} días)</span>`;
+    caja.innerHTML = html;
+  }catch(e){
+    caja.textContent = 'No se pudo calcular: ' + String(e).slice(0,120);
+  }
+}
+
+async function confirmarCarga(){
+  if(!cargaDestino) return;
+  const btn = document.getElementById('carga-confirmar');
+  btn.disabled = true; btn.textContent = 'Cargando…';
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cargar_dias`, {
+      method:'POST', headers: cabAuth(),
+      body: JSON.stringify({
+        p_puesto_id: cargaDestino.tipo === 'puesto' ? cargaDestino.id : null,
+        p_feria_id:  cargaDestino.tipo === 'feria'  ? cargaDestino.id : null,
+        p_concepto: document.getElementById('carga-concepto').value,
+        p_meses: parseInt(document.getElementById('carga-meses').value,10),
+        p_medio: document.getElementById('carga-medio').value,
+        p_nota: document.getElementById('carga-nota').value.trim() || null })
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const [res] = await r.json();
+    cerrarCarga();
+    alert(`✅ Listo: ${res.plan.toUpperCase()} hasta el ` +
+          new Date(res.vence+'T12:00:00').toLocaleDateString('es-AR'));
+    cargas = [];
+    await cargarDatos();
+    renderLista();
+  }catch(e){
+    alert('No se pudo cargar: ' + String(e).slice(0,200));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Cargar';
+  }
+}
+
+async function cargarHistorial(){
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cargas_admin`,
+      {method:'POST', headers: cabAuth(), body:'{}'});
+    cargas = r.ok ? await r.json() : [];
+  }catch(e){ cargas = []; }
+}
+
+function renderCargas(cont){
+  document.getElementById('panel-titulo').textContent = 'Cargas';
+  const mes = cargas.filter(c=>{
+    const d = new Date(c.creado_en);
+    const h = new Date();
+    return d.getMonth() === h.getMonth() && d.getFullYear() === h.getFullYear();
+  });
+  const total = mes.reduce((a,c)=>a + Number(c.precio||0), 0);
+  document.getElementById('contador').textContent =
+    `${mes.length} este mes · $${total.toLocaleString('es-AR')}`;
+
+  if(!cargas.length){
+    cont.innerHTML = `<div class="vacio"><span>💳</span>Todavía no hay cargas registradas.</div>`;
+    return;
+  }
+  cont.innerHTML = cargas.map(c=>{
+    const f = new Date(c.creado_en).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    const vence = c.plan_hasta || c.destacada_hasta;
+    return `<div class="carga-row">
+      <div class="l1">
+        <b>${c.destino || '—'}</b>
+        <span class="monto">${Number(c.precio) > 0 ? '$'+Number(c.precio).toLocaleString('es-AR') : 'sin cargo'}</span>
+      </div>
+      <small>
+        ${NOMBRE_CONCEPTO[c.concepto] || c.concepto} · ${c.meses} mes${c.meses>1?'es':''} ·
+        <span class="medio-chip m-${c.medio}">${c.medio}</span> · ${f}
+        ${vence ? ' · vence ' + new Date(vence+'T12:00:00').toLocaleDateString('es-AR') : ''}
+        ${c.nota ? '<br>📝 ' + c.nota : ''}
+      </small>
+    </div>`;
+  }).join('');
+}
+
 function renderLista(){
   const cont = document.getElementById('lista');
 
   if(seccionActual === 'salud'){ renderSalud(cont); return; }
+  if(seccionActual === 'cargas'){ renderCargas(cont); return; }
 
   // ── Interesados en sumarse (los que dejaron su WhatsApp) ──
   if(seccionActual === 'interesados'){
@@ -490,8 +688,22 @@ function cardPuesto(p){
   const feriasHtml = ferias_vinc.map(f=>`<span class="ferias-chip">📍 ${f}</span>`).join("");
   const email = p.email_contacto || '';
   const nombrePersona = p.nombre_persona || '';
+  const plan = p.plan || 'gratis';
+  const permanente = p.plan_permanente === true;
+  const diasRest = p.plan_hasta ? Math.ceil((new Date(p.plan_hasta+'T12:00:00') - new Date())/86400000) : null;
+  const planChip = permanente
+    ? `<span class="plan-chip plan-perma">⭐ ${plan.toUpperCase()} · no vence</span>`
+    : plan === 'gratis'
+      ? `<span class="plan-chip plan-gratis">🎪 Gratis</span>`
+      : `<span class="plan-chip plan-${plan}">${plan === 'pro' ? '⭐' : '✅'} ${plan.toUpperCase()}</span>` +
+        (diasRest !== null ? `<span class="plan-chip plan-vence">⏳ ${diasRest} día${diasRest!==1?'s':''}</span>` : '');
+
   const acciones = p.publicado
-    ? `<div class="card-acciones"><span class="tag-aprobado">✅ Publicado</span></div>`
+    ? `<div class="card-acciones" style="flex-wrap:wrap;gap:7px;align-items:center">
+         <span class="tag-aprobado">✅ Publicado</span>
+         ${planChip}
+         <button class="btn-cargar" onclick="abrirCarga('puesto','${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">💳 Cargar días</button>
+       </div>`
     : `<div class="card-acciones">
         <button class="btn-aprobar" id="btn-${p.id}" onclick="aprobar('${p.id}','${p.nombre}','${wsp}','${email}','${nombrePersona}')">
           <i class="fa-solid fa-check"></i> Aprobar y publicar
@@ -500,7 +712,9 @@ function cardPuesto(p){
        </div>`;
   return `<div class="card ${p.publicado?'aprobado':''}" id="card-${p.id}">
     <div class="card-head">
-      <div class="card-emoji">${p.foto_url||'🎪'}</div>
+      <div class="card-emoji"${(p.foto_url||'').startsWith('http')
+          ? ` style="background-image:url('${p.foto_url}')"></div>`
+          : `>${p.foto_url||'🎪'}</div>`}
       <div class="card-titulo"><b>${p.nombre}</b><small>${rubro}</small></div>
     </div>
     <div class="card-body">
@@ -726,5 +940,36 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('on'), 3500);
 }
 </script>
+<div id="velo-carga">
+  <div class="mc">
+    <h3>💳 Cargar días</h3>
+    <div class="quien" id="carga-quien"></div>
+
+    <label>Qué se carga</label>
+    <select id="carga-concepto" onchange="previoCarga()"></select>
+
+    <label>Duración</label>
+    <select id="carga-meses" onchange="previoCarga()"></select>
+
+    <label>Cómo pagó</label>
+    <select id="carga-medio" onchange="previoCarga()">
+      <option value="mercadopago">Mercado Pago</option>
+      <option value="efectivo">Efectivo</option>
+      <option value="transferencia">Transferencia</option>
+      <option value="cortesia">Cortesía (no paga)</option>
+    </select>
+
+    <label>Nota (opcional)</label>
+    <input id="carga-nota" placeholder="Ej: fundador n°7">
+
+    <div class="previo" id="carga-previo">Elegí qué cargar…</div>
+
+    <div class="mc-acciones">
+      <button class="mc-no" onclick="cerrarCarga()">Cancelar</button>
+      <button class="mc-si" id="carga-confirmar" onclick="confirmarCarga()">Cargar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
