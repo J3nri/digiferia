@@ -289,7 +289,7 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
     <!-- ── IMAGEN / FLYER ── -->
     <div class="seccion-titulo">🖼️ Imagen de la feria</div>
     <div class="campo">
-      <div class="hint" style="margin-bottom:10px">Una foto o flyer de tu feria. Se va a mostrar en el carrusel de la home si contratás el espacio destacado.</div>
+      <div class="hint" style="margin-bottom:10px">Una foto o flyer de tu feria. Se va a mostrar en el carrusel de la home cuando tengas días de flyer destacado.</div>
       <div class="upload-area" onclick="document.getElementById('f-foto').click()">
         <div class="emoji">📸</div>
         <p>Tocá para subir una imagen<br><span style="font-size:11px">JPG o PNG · Máx 3MB</span></p>
@@ -366,7 +366,7 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
       <div class="plan-cabecera">⭐ Máxima visibilidad</div>
       <div class="plan-head">
         <span class="plan-nombre">🎉 Flyer destacado</span>
-        <span class="plan-precio">$10.000 / mes</span>
+        <span class="plan-precio" id="precio-feria">…</span>
       </div>
       <ul class="plan-items">
         <li>✅ Todo lo de presencia básica</li>
@@ -375,12 +375,15 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
         <li>✅ <b>Notificación automática cuando confirmás fecha</b></li>
         <li>✅ Primera posición en el calendario</li>
         <li>✅ Estadísticas de clicks en tu flyer</li>
-        <li>✅ Tarifa plana — cualquier frecuencia</li>
+        <li>✅ Mismo precio, sea tu feria semanal, quincenal o mensual</li>
+        <li>✅ Sin débitos automáticos: cargás días cuando querés</li>
       </ul>
     </div>
 
+    <p id="precios-packs" style="display:none;font-size:12.5px;color:#5C4F3E;font-weight:800;text-align:center;margin:-2px 0 12px"></p>
+
     <div class="plan-nota">
-      🎁 <b>Primeros 2 meses gratis.</b> Si sos una de las primeras ferias en sumarse, te regalamos el flyer destacado los primeros 2 meses. Después $10.000/mes tarifa plana.
+      🎁 <b>Primeros 2 meses gratis.</b> Si sos una de las primeras ferias en sumarse, te regalamos el flyer destacado los primeros 2 meses. Después, cargás días cuando quieras, como una recarga de celular.
     </div>
 
     <!-- ── ENVIAR ── -->
@@ -405,7 +408,7 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
   <div class="pasos">
     <div class="paso"><div class="num">1</div><div>Revisamos tu solicitud y te mandamos un email de confirmación.</div></div>
     <div class="paso"><div class="num">2</div><div>Te enviamos tus datos de acceso para entrar a tu panel.</div></div>
-    <div class="paso"><div class="num">3</div><div>Configuramos tu página en La Digi Feria y — si contratás el flyer — aparece en el carrusel de la home.</div></div>
+    <div class="paso"><div class="num">3</div><div>Configuramos tu página en La Digi Feria y, cuando cargues días de flyer destacado, aparece en el carrusel de la home.</div></div>
   </div>
   <button class="btn-volver" onclick="window.location.href='index.html'">← Volver a la feria</button>
 </div>
@@ -637,6 +640,31 @@ async function enviarFormulario(){
     btn.textContent = '📣 Enviar solicitud';
   }
 }
+
+// ══════ PRECIOS (se leen de la tabla, nunca escritos en el código) ══════
+async function cargarPrecios(){
+  const el = document.getElementById('precio-feria');
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/precios?select=concepto,meses,dias,precio&activo=eq.true&concepto=not.in.(plus,pro)&order=meses`, {
+      headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` }
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const lista = await r.json();
+    const base = lista.find(x=>Number(x.meses)===1);
+    el.textContent = base ? `$${Number(base.precio).toLocaleString('es-AR')} · ${base.dias} días` : 'Consultá el precio';
+    const packs = [...new Set(lista.map(x=>Number(x.meses)).filter(m=>m>1))].sort((a,b)=>a-b);
+    if(packs.length){
+      const txt = packs.length === 1 ? `${packs[0]}` : `${packs.slice(0,-1).join(', ')} y ${packs[packs.length-1]}`;
+      const pk = document.getElementById('precios-packs');
+      pk.textContent = `📦 También en packs de ${txt} meses`;
+      pk.style.display = 'block';
+    }
+  }catch(e){
+    console.warn('No se pudieron leer los precios:', e);
+    if(el) el.textContent = 'Consultá el precio';
+  }
+}
+cargarPrecios();
 </script>
 </body>
 </html>
