@@ -294,12 +294,12 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
   <!-- SECCIÓN DE PLANES -->
   <div class="seccion" style="padding-bottom:8px">
     <h2>💎 Planes disponibles</h2>
-    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:14px;line-height:1.5">Arrancás gratis. Podés subir de plan cuando quieras desde tu panel.</p>
+    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:14px;line-height:1.5">Arrancás gratis. Cuando quieras, cargás días de Plus o Pro desde tu panel, como una recarga de celular. Sin débitos automáticos.</p>
 
     <div class="plan-card plan-gratis">
       <div class="plan-head">
         <span class="plan-nombre">🎪 Gratis</span>
-        <span class="plan-precio">$0 / mes</span>
+        <span class="plan-precio">$0 · siempre</span>
       </div>
       <ul class="plan-items">
         <li>✅ Hasta 10 productos</li>
@@ -314,7 +314,7 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
     <div class="plan-card plan-plus">
       <div class="plan-head">
         <span class="plan-nombre">✅ Plus</span>
-        <span class="plan-precio">$5.990 / mes</span>
+        <span class="plan-precio" id="precio-plus">…</span>
       </div>
       <ul class="plan-items">
         <li>✅ Hasta 20 productos</li>
@@ -329,10 +329,10 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
       <div class="plan-cabecera">⭐ El más elegido por los fundadores</div>
       <div class="plan-head">
         <span class="plan-nombre">⭐ Pro</span>
-        <span class="plan-precio">$9.990 / mes</span>
+        <span class="plan-precio" id="precio-pro">…</span>
       </div>
       <ul class="plan-items">
-        <li>✅ Productos ilimitados</li>
+        <li>✅ Hasta 100 productos</li>
         <li>✅ 6 fotos por producto</li>
         <li>✅ Estadísticas completas de tu puesto</li>
         <li>✅ Primero en tu rubro 🔝</li>
@@ -342,6 +342,8 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
         <li>✅ Soporte prioritario</li>
       </ul>
     </div>
+
+    <p id="precios-packs" style="display:none;font-size:12.5px;color:#5C4F3E;font-weight:800;text-align:center;margin:-2px 0 12px"></p>
 
     <div class="plan-nota">
       🌱 <b>¿Sos de los primeros 20 feriantes?</b> Si entrás como Puesto Fundador, te regalamos el Plan Pro gratis por 6 meses y la insignia exclusiva que nunca se pierde.
@@ -610,7 +612,35 @@ async function enviarFormulario(){
   }
 }
 
+// ══════ PRECIOS (se leen de la tabla, nunca escritos en el código) ══════
+async function cargarPrecios(){
+  const poner = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/precios?select=concepto,meses,dias,precio&activo=eq.true&concepto=in.(plus,pro)&order=meses`, {headers:cab});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const lista = await r.json();
+    ['plus','pro'].forEach(c=>{
+      const base = lista.find(x=>x.concepto===c && Number(x.meses)===1);
+      poner('precio-'+c, base
+        ? `$${Number(base.precio).toLocaleString('es-AR')} · ${base.dias} días`
+        : 'Consultá el precio');
+    });
+    const packs = [...new Set(lista.map(x=>Number(x.meses)).filter(m=>m>1))].sort((a,b)=>a-b);
+    if(packs.length){
+      const txt = packs.length === 1 ? `${packs[0]}` : `${packs.slice(0,-1).join(', ')} y ${packs[packs.length-1]}`;
+      const el = document.getElementById('precios-packs');
+      el.textContent = `📦 Plus y Pro también en packs de ${txt} meses`;
+      el.style.display = 'block';
+    }
+  }catch(e){
+    console.warn('No se pudieron leer los precios:', e);
+    poner('precio-plus','Consultá el precio');
+    poner('precio-pro','Consultá el precio');
+  }
+}
+
 cargarDatos();
+cargarPrecios();
 </script>
 </body>
 </html>
