@@ -509,8 +509,8 @@ nav button.on span{filter:none;opacity:1}
       <p style="font-size:12.5px;color:#7A6A55;font-weight:700;line-height:1.45;margin-top:6px">Y la plata nunca pasa por acá: tu cliente te escribe a vos, te paga a vos. Sin comisión.</p>
       <span class="flyer-fecha" style="background:var(--fucsia);color:#fff">🎪 Sumá tu puesto gratis</span>
       <div class="fundadores">
-        <div class="num"><span id="fund-num">1</span><span style="font-size:13px;color:#9A8B76">/20</span></div>
-        <small id="fund-txt">🌱 Puestos Fundadores ocupados — quedan 19<br>Plan Pro gratis por 6 meses, insignia permanente y tu precio congelado hasta marzo</small>
+        <div class="num"><span id="fund-num">…</span><span style="font-size:13px;color:#9A8B76">/20</span></div>
+        <small id="fund-txt">🌱 Puestos Fundadores ocupados<br>Plan Pro gratis y precio congelado hasta marzo de 2027, más la insignia permanente</small>
       </div>
     </div>
   </div>
@@ -2589,7 +2589,7 @@ function aplicarBloqueoInscripciones(){
     aviso.className = 'aviso-apertura';
     aviso.innerHTML = `<b>🌱 Las inscripciones abren el ${textoApertura()}</b>
       <small>Estamos terminando de preparar todo. Ese día vas a poder sumar tu puesto o tu feria,
-      y quedan lugares de <b>Puesto Fundador</b>: Plan Pro sin cargo y precio congelado por 6 meses.</small>
+      y quedan lugares de <b>Puesto Fundador</b>: Plan Pro sin cargo y precio congelado hasta marzo de 2027.</small>
       <button onclick="avisoProximamente('feriante')" style="margin-top:11px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:999px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;padding:9px 18px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">🔔 Avisenme cuando abra</button>`;
     const primera = cont.querySelector('.flyer.tu-feria.bloqueable');
     cont.insertBefore(aviso, primera);
@@ -3149,7 +3149,7 @@ async function cargarFeriaYPuestosEnVivo(){
       const et = document.getElementById('fund-txt');
       if(en && et && n > 0){
         en.textContent = n;
-        et.innerHTML = `🌱 Puestos Fundadores ocupados — quedan ${Math.max(0, 20 - n)}<br>Plan Pro gratis por 6 meses, insignia permanente y tu precio congelado hasta marzo`;
+        et.innerHTML = `🌱 Puestos Fundadores ocupados — quedan ${Math.max(0, 20 - n)}<br>Plan Pro gratis y precio congelado hasta marzo de 2027, más la insignia permanente`;
       }
     })();
     const b=document.getElementById('badge-vivo'); if(b){b.style.display="inline-block";b.textContent="🟢 datos en vivo";}
