@@ -616,9 +616,12 @@ async function enviarFormulario(){
 async function cargarPrecios(){
   const poner = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
   try{
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/precios?select=concepto,meses,dias,precio&activo=eq.true&concepto=in.(plus,pro)&order=meses`, {headers:cab});
+    // Misma forma de consulta que unirse-feria (sin Content-Type, sin filtro por concepto)
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/precios?select=concepto,meses,dias,precio&activo=eq.true&order=meses`, {
+      headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` }
+    });
     if(!r.ok) throw new Error('HTTP ' + r.status);
-    const lista = await r.json();
+    const lista = (await r.json()).filter(x=>x.concepto==='plus' || x.concepto==='pro');
     ['plus','pro'].forEach(c=>{
       const base = lista.find(x=>x.concepto===c && Number(x.meses)===1);
       poner('precio-'+c, base
