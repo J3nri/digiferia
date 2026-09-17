@@ -1041,6 +1041,7 @@ nav button.on span{filter:none;opacity:1}
       <li>🗑️ Tu cuenta y tu acceso</li>
       <li>🗑️ Tu puesto, con todos sus productos y fotos</li>
       <li>🗑️ Tus estadísticas y tus vínculos con ferias</li>
+      <li>🗑️ Los días de plan que tengas cargados</li>
     </ul>
     <p style="font-size:13px;color:#5C4F3E;font-weight:700">
       Tus clientes ya no van a poder encontrarte. Si estás seguro, escribí <b>ELIMINAR</b> abajo para confirmar.
@@ -1098,36 +1099,60 @@ const feriaPorId = id => FERIAS.find(f=>f.id===id);
 const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 
-// Planes de Mercado Pago (IDs públicos, no secretos)
-const MP_PLANES = {
-  plus:  "71c9833f66404c9e823ade789926acff",
-  pro:   "13b15ed82aff47dfb3227a5a34452967",
-  feria: "ee3120760dca4611b37778a5bbc903a7",
-};
-async function irAPagarPlan(clave){
-  if(!MP_PLANES[clave] || !usuario) return;
-  mostrarToast('⏳ Preparando el pago seguro…');
-  try{
-    const r = await fetch(`${SUPABASE_URL}/functions/v1/mp-suscribir`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${tokenActual}`
-      },
-      body: JSON.stringify({ plan: clave })
-    });
-    const data = await r.json();
-    if(!data.ok || !data.init_point){
-      console.warn('Error mp-suscribir:', data.error);
-      mostrarToast('No se pudo iniciar el pago. Probá de nuevo en un ratito.');
-      return;
-    }
-    // Abrir el checkout de Mercado Pago (link personalizado con el ID del puesto)
-    window.open(data.init_point, '_blank');
-  }catch(e){
-    mostrarToast('No se pudo iniciar el pago: ' + e.message);
+// ══════ CARGAS DE PLAN (prepago) ══════
+// Mientras no esté el pago automático, la carga se pide por WhatsApp
+// y se acredita a mano desde el admin (solapa 💳 Cargas).
+const WSP_CARGAS = "5491150127104";
+function pedirCarga(plan){
+  if(!usuario) return;
+  const nombrePlan = plan === 'pro' ? 'Plan Pro' : 'Plan Plus';
+  const msg = `Hola! Soy de ${usuario.puestoNombre || 'mi puesto'}. Quiero cargar días de ${nombrePlan} en La Digi Feria 🎪`;
+  window.open(`https://wa.me/${WSP_CARGAS}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+// Días que le quedan al plan actual (null si no hay fecha)
+function diasRestantesPlan(hasta){
+  if(!hasta) return null;
+  const s = String(hasta);
+  const fin = s.length === 10 ? new Date(s + 'T23:59:59-03:00') : new Date(s);
+  if(isNaN(fin)) return null;
+  return Math.max(0, Math.ceil((fin - new Date()) / 86400000));
+}
+
+// Recuadro de plan en el panel del feriante
+function cajaPlan(u){
+  const btn = (plan, texto, color, mb) => `<button onclick="pedirCarga('${plan}')" style="width:100%;${mb?'margin-bottom:8px;':''}font-family:'Fredoka';font-weight:600;font-size:14px;padding:12px;border-radius:12px;border:2px solid var(--tinta);background:${color};color:#fff;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">${texto}</button>`;
+  const regla = `<p style="font-size:12px;color:#5C4F3E;font-weight:800;margin-top:12px;text-align:center">🔁 Lo que cargás arranca cuando se te termina lo que tenés.</p>
+    <p style="font-size:10.5px;color:#9A8B76;font-weight:700;margin-top:4px;text-align:center">Tocá el botón y coordinamos la carga por WhatsApp 💬</p>`;
+  const dias = diasRestantesPlan(u.planHasta);
+  const txtDias = dias === null ? '' : dias === 0 ? 'Tu plan vence hoy' : `Te quedan ${dias} día${dias===1?'':'s'}`;
+
+  // Pro permanente (fundadores iniciales)
+  if(u.puestoPlan === 'pro' && u.planPermanente){
+    return `<div style="margin:4px 18px 16px;background:#FFFDF4;border:2px solid var(--oro,#B8860B);border-radius:16px;box-shadow:4px 4px 0 rgba(184,134,11,.5);padding:14px;text-align:center">
+      <b style="font-family:'Fredoka';font-weight:600;font-size:15px">⭐ Tenés el Plan Pro</b>
+      <p style="font-size:12px;color:#5C4F3E;font-weight:700;margin-top:2px">Puesto Fundador: no vence nunca. ¡Gracias por confiar! 🎪</p>
+    </div>`;
   }
+  // Pro con fecha
+  if(u.puestoPlan === 'pro'){
+    return `<div style="margin:4px 18px 16px;background:#FFFDF4;border:2px solid var(--oro,#B8860B);border-radius:16px;box-shadow:4px 4px 0 rgba(184,134,11,.5);padding:14px;text-align:center">
+      <b style="font-family:'Fredoka';font-weight:600;font-size:15px">⭐ Tenés el Plan Pro</b>
+      <p style="font-size:12.5px;color:#5C4F3E;font-weight:800;margin:2px 0 12px">${txtDias ? txtDias + ' de Plan Pro' : 'Estás disfrutando de todos los beneficios 🎪'}</p>
+      ${btn('pro','Sumar días de Plan Pro ⭐','var(--fucsia)',false)}
+      ${regla}
+    </div>`;
+  }
+  // Plus o Gratis
+  const esPlus = u.puestoPlan === 'plus';
+  return `<div style="margin:4px 18px 16px;background:linear-gradient(135deg,#FFF6E5,#FDE7F2);border:2px solid var(--tinta);border-radius:16px;box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px">
+    <h3 style="font-family:'Fredoka';font-weight:600;font-size:16px">${esPlus ? '✅ Tenés el Plan Plus' : '🚀 Cargá tu puesto'}</h3>
+    <p style="font-size:12.5px;color:#5C4F3E;font-weight:700;margin:4px 0 12px">${esPlus && txtDias
+      ? `${txtDias} de Plan Plus. Sumá días o pasate a Pro cuando quieras.`
+      : 'Más productos, más fotos y más visibilidad. Sin débitos automáticos: cargás cuando querés, como el celular.'}</p>
+    ${btn('plus', esPlus ? 'Sumar días de Plan Plus' : 'Cargar días de Plan Plus', 'var(--celeste)', true)}
+    ${btn('pro','Cargar días de Plan Pro ⭐','var(--fucsia)',false)}
+    ${regla}
+  </div>`;
 }
 
 function sbHeaders(token){
@@ -1187,8 +1212,23 @@ async function cargarPerfil(userId, token){
         puestoWhatsapp: p.whatsapp,
         puestoFerias: (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({
           id: x.ferias.id, nombre: x.ferias.nombre, frec: x.ferias.frecuencia||""
-        }))
+        })),
+        planHasta: null,
+        planPermanente: false
       };
+      // Vigencia del plan, en consulta aparte: si falla, el panel carga igual
+      try{
+        const rv = await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${p.id}&select=plan_hasta,plan_permanente`, {
+          headers: sbHeaders(token)
+        });
+        if(rv.ok){
+          const v = await rv.json();
+          if(v[0]){
+            puestoData.planHasta = v[0].plan_hasta || null;
+            puestoData.planPermanente = v[0].plan_permanente === true;
+          }
+        }
+      }catch(e){ console.warn('No se pudo leer la vigencia del plan:', e); }
     }
   }
 
@@ -1496,19 +1536,7 @@ function renderPanelFeriante(cont){
         </div>
       </div>
 
-      ${u.puestoPlan !== 'pro' ? `
-      <div style="margin:4px 18px 16px;background:linear-gradient(135deg,#FFF6E5,#FDE7F2);border:2px solid var(--tinta);border-radius:16px;box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px">
-        <h3 style="font-family:'Fredoka';font-weight:600;font-size:16px">💎 Mejorá tu puesto</h3>
-        <p style="font-size:12.5px;color:#5C4F3E;font-weight:700;margin:4px 0 12px">Más productos, más fotos y más visibilidad. Cancelás cuando quieras.</p>
-        ${u.puestoPlan === 'gratis' ? `
-        <button onclick="irAPagarPlan('plus')" style="width:100%;margin-bottom:8px;font-family:'Fredoka';font-weight:600;font-size:14px;padding:12px;border-radius:12px;border:2px solid var(--tinta);background:var(--celeste);color:#fff;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">Pasar a Plus — $5.990/mes</button>` : ''}
-        <button onclick="irAPagarPlan('pro')" style="width:100%;font-family:'Fredoka';font-weight:600;font-size:14px;padding:12px;border-radius:12px;border:2px solid var(--tinta);background:var(--fucsia);color:#fff;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">Pasar a Pro — $9.990/mes ⭐</button>
-        <p style="font-size:10.5px;color:#9A8B76;font-weight:700;margin-top:10px;text-align:center">Pago seguro con Mercado Pago 💳</p>
-      </div>` : `
-      <div style="margin:4px 18px 16px;background:#FFFDF4;border:2px solid var(--oro,#B8860B);border-radius:16px;box-shadow:4px 4px 0 rgba(184,134,11,.5);padding:14px;text-align:center">
-        <b style="font-family:'Fredoka';font-weight:600;font-size:15px">⭐ Tenés el Plan Pro</b>
-        <p style="font-size:12px;color:#5C4F3E;font-weight:700;margin-top:2px">Estás disfrutando de todos los beneficios. ¡Gracias por confiar! 🎪</p>
-      </div>`}
+      ${cajaPlan(u)}
 
       <!-- Confirmar asistencia (exclusivo Pro) -->
       <div class="psolapas">
@@ -1603,7 +1631,7 @@ function renderPanelFeriante(cont){
           <div class="tdf-item"><span class="ic">⏳</span><div><b>Cada sello dura 4 meses</b><small>Vencen de a uno, el más viejo primero. El cliente nunca pierde todo de golpe.</small></div></div>
         </div>
 
-        <a class="tdf-cta" href="https://wa.me/5491130372976?text=${encodeURIComponent('Hola Javier! Vi la Tarjeta Digi Feria en mi panel y quiero sumar mi puesto al programa 🎟️')}" target="_blank" rel="noopener">🎟️ Quiero sumar mi puesto</a>
+        <a class="tdf-cta" href="https://wa.me/${WSP_CARGAS}?text=${encodeURIComponent('Hola! Vi la Tarjeta Digi Feria en mi panel y quiero sumar mi puesto al programa 🎟️')}" target="_blank" rel="noopener">🎟️ Quiero sumar mi puesto</a>
       </div>
 
       <div class="seccion" style="padding-bottom:8px;padding-top:4px"><h2>Colección de pines 📌</h2></div>
