@@ -397,7 +397,7 @@ async function cargarDatos(){
   try{
     const [rr, rf, rfl] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/rubros?select=id,nombre,emoji,clave&order=orden`, {headers:cab}),
-      fetch(`${SUPABASE_URL}/rest/v1/ferias?select=id,nombre,lugar,frecuencia&order=nombre`, {headers:cab}),
+      fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,frecuencia&order=nombre`, {headers:cab}),
       fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id&estado=eq.activo`, {headers:cab})
     ]);
     const rubros = rr.ok ? await rr.json() : [];
