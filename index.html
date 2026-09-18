@@ -1293,6 +1293,17 @@ async function cargarPerfil(userId, token){
           }
         }
       }catch(e){ console.warn('No se pudo leer la vigencia del plan:', e); }
+      // Asistencias ya confirmadas, para que el botón quede verde al volver al panel
+      try{
+        const hoyISO = new Date().toISOString().slice(0,10);
+        const ra = await fetch(`${SUPABASE_URL}/rest/v1/asistencias?puesto_id=eq.${p.id}&fecha=gte.${hoyISO}&select=feria_id,fecha`, {
+          headers: sbHeaders(token)
+        });
+        if(ra.ok){
+          asistenciasConfirmadas.clear();
+          (await ra.json()).forEach(a=>asistenciasConfirmadas.set(a.feria_id, a.fecha));
+        }
+      }catch(e){ console.warn('No se pudieron leer las asistencias:', e); }
     }
   }
 
@@ -1581,11 +1592,12 @@ function renderPanelFeriante(cont){
     return;
   }
 
-  const feriasList = (u.puestoFerias||[]).map(f=>
-    `<button class="confirmar-feria-btn" id="cfbtn-${f.id}" onclick="toggleAsistencia('${f.id}','${f.nombre}')">
-      📍 ${f.nombre} <span style="font-size:11px;color:#7A6A55">${f.frec}</span>
-    </button>`
-  ).join("") || `<p style="font-size:13px;color:#7A6A55;font-weight:700">Todavía no tenés ferias vinculadas a tu puesto.</p>`;
+  const feriasList = (u.puestoFerias||[]).map(f=>{
+    const yaVa = asistenciasConfirmadas.has(f.id);
+    return `<button class="confirmar-feria-btn ${yaVa?'confirmado':''}" id="cfbtn-${f.id}" onclick="toggleAsistencia('${f.id}','${f.nombre}')">
+      ${yaVa ? `✅ ${f.nombre} — Confirmado!` : `📍 ${f.nombre} <span style="font-size:11px;color:#7A6A55">${f.frec}</span>`}
+    </button>`;
+  }).join("") || `<p style="font-size:13px;color:#7A6A55;font-weight:700">Todavía no tenés ferias vinculadas a tu puesto.</p>`;
 
   cont.innerHTML = `
     <div class="panel-feriante">
@@ -2414,14 +2426,24 @@ async function verEstadisticas(){
 function cerrarStats(){ document.getElementById('velo-stats').classList.remove('on'); }
 
 // ================== CONFIRMAR ASISTENCIA ==================
-const asistenciasConfirmadas = new Set();
+const asistenciasConfirmadas = new Map();  // feria_id -> fecha confirmada
 
 async function toggleAsistencia(feriaId, feriaName){
   const btn = document.getElementById(`cfbtn-${feriaId}`);
   const yaConfirmada = asistenciasConfirmadas.has(feriaId);
 
   if(yaConfirmada){
-    // Desconfirmar: borrar asistencia (simplificado — solo UI por ahora)
+    // Desconfirmar: borrar la asistencia de la base, no solo del color
+    const fecha = asistenciasConfirmadas.get(feriaId);
+    try{
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/asistencias?puesto_id=eq.${usuario.puestoId}&feria_id=eq.${feriaId}&fecha=eq.${fecha}`, {
+        method:"DELETE", headers: sbHeaders(tokenActual)
+      });
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+    }catch(e){
+      mostrarToast("😕 No se pudo cancelar. Probá de nuevo.");
+      return;
+    }
     asistenciasConfirmadas.delete(feriaId);
     if(btn){ btn.classList.remove('confirmado'); btn.innerHTML = `📍 ${feriaName} <span style="font-size:11px;color:#7A6A55">Confirmá tu asistencia</span>`; }
     mostrarToast("✅ Asistencia cancelada.");
@@ -2443,7 +2465,7 @@ async function toggleAsistencia(feriaId, feriaName){
       headers:{ ...sbHeaders(tokenActual), Prefer:"resolution=merge-duplicates" },
       body: JSON.stringify({ puesto_id: usuario.puestoId, feria_id: feriaId, fecha: fechaStr })
     });
-    asistenciasConfirmadas.add(feriaId);
+    asistenciasConfirmadas.set(feriaId, fechaStr);
     if(btn){ btn.classList.add('confirmado'); btn.innerHTML = `✅ ${feriaName} — Confirmado!`; }
     mostrarToast("🔥 ¡Asistencia confirmada! Tus seguidores van a recibir una notificación.");
     // Avisar por email a los seguidores del puesto
