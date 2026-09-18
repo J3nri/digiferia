@@ -15,7 +15,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);min-height:100vh}
-.app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--fondo);display:flex;flex-direction:column;box-shadow:0 0 40px rgba(43,33,24,.15)}
+.app{max-width:520px;margin:0 auto;min-height:100vh;overflow-x:hidden;overflow-wrap:anywhere;background:var(--fondo);display:flex;flex-direction:column;box-shadow:0 0 40px rgba(43,33,24,.15)}
 .banderines{display:flex;height:18px;overflow:hidden}
 .banderines span{flex:1;min-width:20px;clip-path:polygon(0 0,100% 0,50% 100%)}
 .banderines span:nth-child(5n+1){background:var(--fucsia)}
@@ -39,8 +39,8 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .panel-header{padding:16px 18px 8px;display:flex;align-items:center;justify-content:space-between}
 .panel-header h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px}
 .contador{font-size:13px;font-weight:800;background:#FDE7F2;border:2px solid var(--tinta);border-radius:999px;padding:3px 12px;color:var(--fucsia)}
-.tabs-main{display:flex;gap:8px;padding:0 18px 12px}
-.tab-main{flex:1;padding:11px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;border:2px solid var(--tinta);border-radius:12px;background:var(--blanco);color:var(--tinta);box-shadow:3px 3px 0 rgba(43,33,24,.9);transition:background .12s}
+.tabs-main{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 12px}
+.tab-main{flex:1 1 28%;min-width:0;padding:11px 8px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;cursor:pointer;border:2px solid var(--tinta);border-radius:12px;background:var(--blanco);color:var(--tinta);box-shadow:3px 3px 0 rgba(43,33,24,.9);transition:background .12s}
 .tab-main.on{background:var(--tinta);color:var(--amarillo);box-shadow:none}
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--tinta);margin:0 18px}
 /* ---- Panel de salud ---- */
@@ -100,6 +100,13 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .sal-sub{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;margin:16px 0 10px}
 .tab{flex:1;padding:10px;text-align:center;font-weight:800;font-size:13px;cursor:pointer;color:#9A8B76;border-bottom:3px solid transparent;margin-bottom:-2px}
 .tab.on{color:var(--fucsia);border-bottom-color:var(--fucsia)}
+@media (max-width:400px){
+  .tabs-main{gap:6px;padding:0 12px 10px}
+  .tab-main{font-size:13px;padding:10px 6px}
+  .lista{padding:12px 12px}
+  .panel-header{padding:14px 12px 8px}
+  .tabs{margin:0 12px}
+}
 .lista{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--blanco);border:2px solid var(--tinta);border-radius:var(--radius);overflow:hidden;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
 .card-head{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}
