@@ -2742,11 +2742,12 @@ function verPerfil(id){
     const c = REDES_CFG[k]; return c ? `<a class="red ${c.clase}" href="${c.url(v)}" target="_blank" rel="noopener">${c.icono}</a>` : "";
   }).join("") : "";
   const agenda = f.feriasDetalle
-    ? f.feriasDetalle.map(fd=>({nombre:fd.nombre, frec:fd.frec}))
-    : f.ferias.map(fid=>{ const fe=feriaPorId(fid); return fe?{nombre:fe.nombre,frec:fe.frec}:null; }).filter(Boolean);
-  document.getElementById('perfil-agenda').innerHTML = agenda.map(a=>
-    `<div class="agenda-item"><div class="ic">📍</div><div><b>${a.nombre}</b><small>${a.frec||""}</small></div></div>`
-  ).join("");
+    ? f.feriasDetalle.map(fd=>({nombre:fd.nombre, frec:fd.frec, lugar:fd.lugar, horario:fd.horario}))
+    : f.ferias.map(fid=>{ const fe=feriaPorId(fid); return fe?{nombre:fe.nombre,frec:fe.frec,lugar:fe.lugar,horario:fe.horario}:null; }).filter(Boolean);
+  document.getElementById('perfil-agenda').innerHTML = agenda.map(a=>{
+    const cuando = [a.frec, a.horario].filter(Boolean).join(" · ");
+    return `<div class="agenda-item"><div class="ic">📍</div><div><b>${a.nombre}</b>${a.lugar?`<small>${a.lugar}</small>`:""}${cuando?`<small>${cuando}</small>`:""}</div></div>`;
+  }).join("");
   // Guardar referencia al feriante actual para el carrito
   window.perfilActual = f;
   const esPro = f.plan === 'pro';
@@ -3123,7 +3124,7 @@ async function cargarFeriaYPuestosEnVivo(){
   try{
     const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
-    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria,stock,precio_anterior,oferta_hasta),puesto_feria(frecuencia,ferias(id,nombre,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
+    const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria,stock,precio_anterior,oferta_hasta),puesto_feria(frecuencia,ferias(id,nombre,lugar,horario,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
     const puestos = rp.ok ? await rp.json() : [];
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
@@ -3145,7 +3146,7 @@ async function cargarFeriaYPuestosEnVivo(){
     const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
     FERIANTES = puestos.map(p=>{
       const asis = (p.asistencias||[]).map(a=>({...a,d:new Date(a.fecha+"T12:00:00")})).filter(a=>a.d>=new Date(hoy.toDateString())&&a.d<=en7).sort((a,b)=>a.d-b.d)[0];
-      const fdet = (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({id:x.ferias.id,nombre:x.ferias.nombre,frec:x.frecuencia||x.ferias.frecuencia||""}));
+      const fdet = (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({id:x.ferias.id,nombre:x.ferias.nombre,lugar:x.ferias.lugar||"",horario:x.ferias.horario||"",frec:x.frecuencia||x.ferias.frecuencia||""}));
       const feriaAsis = asis ? fdet.find(x=>x.id===asis.feria_id) : null;
       const esUrl = p.foto_url&&p.foto_url.startsWith("http");
       return {
