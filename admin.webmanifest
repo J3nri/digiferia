@@ -1,0 +1,17 @@
+{
+  "id": "/admin.html",
+  "name": "DigiFeria Admin",
+  "short_name": "DF Admin",
+  "description": "Panel de administración de La Digi Feria",
+  "lang": "es-AR",
+  "start_url": "/admin.html",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF8EC",
+  "theme_color": "#2B2118",
+  "icons": [
+    { "src": "/admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
