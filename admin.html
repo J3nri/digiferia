@@ -152,9 +152,32 @@ header{background:var(--tinta);padding:14px 18px;display:flex;align-items:center
 .vacio span{font-size:40px;display:block;margin-bottom:12px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#FFF8EC;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;padding:12px 22px;border-radius:12px;box-shadow:4px 4px 0 rgba(43,33,24,.5);opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;white-space:nowrap}
 .toast.on{opacity:1}
+/* ---- Portada al abrir como app ---- */
+.portada{display:none}
+@media (display-mode: standalone){
+  .portada{display:flex;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;overflow:hidden;background:#CFB871;transition:opacity .5s ease}
+  .portada::before{content:"";position:absolute;inset:-40px;background:url('/logo-wallet-660.png') center/cover no-repeat;filter:blur(22px) saturate(1.1);transform:scale(1.1)}
+  .portada img{position:relative;width:100%;max-width:520px;aspect-ratio:1/1;object-fit:contain;box-shadow:0 10px 40px rgba(43,33,24,.35)}
+  .portada.fuera{opacity:0;pointer-events:none}
+}
 </style>
 </head>
 <body>
+<div class="portada" id="portada" aria-hidden="true"><img src="/logo-wallet-660.png" alt=""></div>
+<script>
+// Solo en la app instalada: muestra el logo a pantalla completa y después abre el login.
+(function(){
+  if (!matchMedia('(display-mode: standalone)').matches) return;
+  const inicio = Date.now(), MINIMO = 1600;
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const p = document.getElementById('portada');
+      p.classList.add('fuera');
+      setTimeout(() => p.remove(), 600);
+    }, Math.max(0, MINIMO - (Date.now() - inicio)));
+  });
+})();
+</script>
 <div class="app">
 <div class="banderines" aria-hidden="true">
   <span></span><span></span><span></span><span></span><span></span>

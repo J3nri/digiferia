@@ -1,8 +1,8 @@
 // Service worker SOLO para el panel admin (alcance: /admin).
 // No toca la web de los feriantes ni guarda datos de Supabase:
 // siempre pide la versión nueva y usa la copia guardada solo si no hay señal.
-const CACHE = 'df-admin-v1';
-const ARCHIVOS = ['/admin.html', '/admin-192.png', '/admin-512.png'];
+const CACHE = 'df-admin-v2';
+const ARCHIVOS = ['/admin.html', '/admin-192.png', '/admin-512.png', '/logo-wallet-660.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
