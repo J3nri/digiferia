@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- La Digi Feria · index v84 — Tarjeta Digi Feria: adhesión y condiciones del feriante -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
@@ -141,6 +142,58 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .pgrupo{display:none}
 .pgrupo.on{display:block;animation:aparecer .2s ease}
 @media (prefers-reduced-motion:reduce){.pgrupo.on{animation:none}}
+
+/* ===== TARJETA DIGI FERIA · panel del feriante (v84) ===== */
+.tf-card{margin:0 18px 14px;background:#FFF1DC;
+  background-image:linear-gradient(rgba(43,33,24,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(43,33,24,.055) 1px,transparent 1px);
+  background-size:22px 22px;border:3px solid var(--tinta);border-radius:18px;
+  box-shadow:5px 5px 0 rgba(43,33,24,.9);padding:16px}
+.tf-card h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom:10px}
+.tf-p{font-size:13.5px;font-weight:700;color:#5C4F3E;line-height:1.45;margin-bottom:12px}
+.tf-lbl{font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;display:block;margin:15px 0 6px}
+.tf-lbl .op{font-weight:700;color:#7A6A55;font-size:12px}
+.tf-ayuda{font-size:12px;color:#7A6A55;font-weight:700;margin-top:5px}
+.tf-pct{display:flex;gap:8px;align-items:stretch}
+.tf-pct button{width:54px;flex:0 0 54px;background:var(--blanco);border:3px solid var(--tinta);border-radius:12px;
+  box-shadow:3px 3px 0 rgba(43,33,24,.9);font-family:'Fredoka',sans-serif;font-weight:600;font-size:24px;
+  color:var(--tinta);cursor:pointer;line-height:1;padding:6px}
+.tf-pct button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(43,33,24,.9)}
+.tf-pct button:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.tf-pct .val{flex:1;background:var(--blanco);border:3px solid var(--tinta);border-radius:12px;
+  box-shadow:3px 3px 0 rgba(43,33,24,.9);display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;padding:10px}
+.tf-input{width:100%;background:var(--blanco);border:3px solid var(--tinta);border-radius:12px;
+  box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:12px 14px;font-family:'Nunito',sans-serif;
+  font-weight:700;font-size:15px;color:var(--tinta)}
+.tf-input::placeholder{color:#B5A794;font-weight:700}
+.tf-input.chico{width:120px;padding:8px 10px;font-size:14px;border-width:2px;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.tf-radio{display:flex;align-items:center;gap:10px;margin:10px 0;font-family:'Nunito',sans-serif;
+  font-weight:700;font-size:14.5px;cursor:pointer;flex-wrap:wrap}
+.tf-radio input{position:absolute;opacity:0;pointer-events:none}
+.tf-radio .bolita{width:22px;height:22px;flex:0 0 22px;border:3px solid var(--tinta);border-radius:50%;
+  background:var(--blanco);display:flex;align-items:center;justify-content:center}
+.tf-radio input:checked + .bolita::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--tinta)}
+.tf-contador{text-align:right;font-size:12px;color:#7A6A55;font-weight:700;margin-top:4px}
+.tf-previa{border:2px dashed var(--tinta);border-radius:14px;background:#FCE3C6;padding:12px 14px;margin:16px 0 10px}
+.tf-previa .cab{font-size:12px;color:#7A6A55;font-weight:700;margin-bottom:4px}
+.tf-previa .txt{font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;line-height:1.35}
+.tf-previa .nota{font-size:13px;color:#7A6A55;font-weight:700;margin-top:3px}
+.tf-aviso{font-size:12.5px;color:#7A6A55;font-weight:700;margin:10px 0 14px;line-height:1.4}
+.tf-btn{width:100%;background:var(--fucsia);color:#fff;border:3px solid var(--tinta);border-radius:14px;
+  box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:14px;font-family:'Fredoka',sans-serif;
+  font-weight:600;font-size:17px;cursor:pointer}
+.tf-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.tf-btn:disabled{opacity:.55;cursor:default;transform:none}
+.tf-btn.sec{background:var(--blanco);color:var(--tinta);font-size:14.5px;padding:11px;margin-top:10px}
+.tf-salir{width:100%;background:none;border:none;color:#B04A4A;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:13px;cursor:pointer;padding:14px 8px 2px;text-align:center}
+.tf-ferias{display:flex;gap:6px;flex-wrap:wrap;margin:0 18px 12px}
+.tf-feria{background:var(--blanco);border:2px solid var(--tinta);border-radius:10px;padding:7px 11px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;color:#7A6A55;cursor:pointer}
+.tf-feria.on{background:var(--tinta);color:#fff}
+.tf-punto{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;font-weight:700;
+  margin-bottom:9px;line-height:1.4;color:#5C4F3E}
+.tf-punto b{color:var(--tinta)}
 
 .link-row{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;margin:0 18px 10px}
 .link-row .ic{font-size:18px}
@@ -1278,7 +1331,8 @@ async function cargarPerfil(userId, token){
           id: x.ferias.id, nombre: x.ferias.nombre, frec: x.ferias.frecuencia||""
         })),
         planHasta: null,
-        planPermanente: false
+        planPermanente: false,
+        tfProgramas: []
       };
       // Vigencia del plan, en consulta aparte: si falla, el panel carga igual
       try{
@@ -1304,6 +1358,18 @@ async function cargarPerfil(userId, token){
           (await ra.json()).forEach(a=>asistenciasConfirmadas.set(a.feria_id, a.fecha));
         }
       }catch(e){ console.warn('No se pudieron leer las asistencias:', e); }
+      // Tarjeta Digi Feria: programas ACTIVOS en las ferias de este puesto.
+      // Si no hay ninguno, la solapa "Tarjeta" no se muestra. Es el interruptor
+      // por feria: mientras tf_programas.activo sea false, el feriante no ve nada.
+      try{
+        const feriaIds = puestoData.puestoFerias.map(f=>f.id);
+        if(feriaIds.length){
+          const rt = await fetch(`${SUPABASE_URL}/rest/v1/tf_programas?feria_id=in.(${feriaIds.join(',')})&activo=eq.true&select=id,feria_id,umbral,descuento_minimo,planes_habilitados`, {
+            headers: sbHeaders(token)
+          });
+          if(rt.ok) puestoData.tfProgramas = await rt.json();
+        }
+      }catch(e){ console.warn('No se pudieron leer los programas de Tarjeta:', e); }
     }
   }
 
@@ -1489,6 +1555,7 @@ async function cerrarSesion(){
     }
   }catch(e){}
   usuario = null; tokenActual = null;
+  tfEstado.cargado = false; tfEstado.adhesiones = {}; tfEstado.feriaSel = null;
   limpiarSesionLocal();
   actualizarUI();
   renderMiPuesto();
@@ -1592,6 +1659,9 @@ function renderPanelFeriante(cont){
     return;
   }
 
+  // La solapa Tarjeta solo existe si alguna feria del puesto tiene programa activo
+  const verTarjeta = (u.tfProgramas||[]).length > 0;
+
   const feriasList = (u.puestoFerias||[]).map(f=>{
     const yaVa = asistenciasConfirmadas.has(f.id);
     return `<button class="confirmar-feria-btn ${yaVa?'confirmado':''}" id="cfbtn-${f.id}" onclick="toggleAsistencia('${f.id}','${f.nombre}')">
@@ -1618,7 +1688,8 @@ function renderPanelFeriante(cont){
       <div class="psolapas">
         <button class="psolapa on" data-g="g-puesto" onclick="solapaPanel(this)"><span>🎪</span>Mi puesto</button>
         <button class="psolapa" data-g="g-difundir" onclick="solapaPanel(this)"><span>📣</span>Difundir</button>
-        <button class="psolapa" data-g="g-premios" onclick="solapaPanel(this)"><span>🎟️</span>Premios</button>
+        <button class="psolapa" data-g="g-premios" onclick="solapaPanel(this)"><span>📌</span>Premios</button>
+        ${verTarjeta ? `<button class="psolapa" data-g="g-tarjeta" onclick="solapaPanel(this)"><span>🎟️</span>Tarjeta</button>` : ''}
       </div>
 
       <div class="pgrupo on" id="g-puesto">
@@ -1681,6 +1752,8 @@ function renderPanelFeriante(cont){
         `<div class="link-row"><span class="ic">${p.emoji}</span><div><b>${p.nombre}</b><small>${p.detalle}</small></div></div>`
       ).join("")}
       </div><!-- fin g-premios -->
+
+      ${verTarjeta ? `<div class="pgrupo" id="g-tarjeta"></div><!-- fin g-tarjeta -->` : ''}
 
       <div style="margin:24px 18px 8px;padding-top:16px;border-top:1px dashed #D8C9AE">
         <button onclick="abrirEliminarCuenta()" style="width:100%;background:none;border:none;color:#B04A4A;font-family:'Nunito';font-weight:800;font-size:13px;cursor:pointer;padding:8px;text-align:center">
@@ -2248,6 +2321,330 @@ function solapaPanel(btn){
   document.querySelectorAll('.pgrupo').forEach(g=>g.classList.toggle('on', g.id === btn.dataset.g));
   const barra = document.querySelector('.psolapas');
   if(barra) barra.scrollIntoView({behavior:'smooth', block:'start'});
+  if(btn.dataset.g === 'g-tarjeta') cargarTarjetaFeriante();
+}
+
+// ================== TARJETA DIGI FERIA · PANEL DEL FERIANTE (v84) ==================
+// Adhesión al programa de la feria y condiciones del canje.
+// Solo se llega acá si el puesto tiene alguna feria con programa activo.
+const tfEstado = { cargado:false, adhesiones:{}, feriaSel:null };
+let tfPctActual = 15;
+
+function tfEsc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function tfProgActual(){
+  return (usuario.tfProgramas||[]).find(p => p.id === tfEstado.feriaSel);
+}
+function tfNombreFeria(prog){
+  const f = (usuario.puestoFerias||[]).find(x => x.id === prog.feria_id);
+  return f ? f.nombre : 'tu feria';
+}
+function tfElegirFeria(progId){
+  tfEstado.feriaSel = progId;
+  renderTarjetaFeriante();
+}
+
+async function cargarTarjetaFeriante(){
+  const cont = document.getElementById('g-tarjeta');
+  if(!cont || !usuario || !usuario.puestoId) return;
+  if(tfEstado.cargado){ renderTarjetaFeriante(); return; }
+
+  cont.innerHTML = `<div class="tf-card"><p class="tf-p" style="margin:0">Cargando…</p></div>`;
+  try{
+    const progIds = (usuario.tfProgramas||[]).map(p=>p.id);
+    if(!progIds.length) return;
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos?puesto_id=eq.${usuario.puestoId}&programa_id=in.(${progIds.join(',')})&select=*`, {
+      headers: sbHeaders(tokenActual)
+    });
+    if(!r.ok) throw new Error('respuesta ' + r.status);
+    tfEstado.adhesiones = {};
+    (await r.json()).forEach(a => { tfEstado.adhesiones[a.programa_id] = a; });
+    tfEstado.cargado = true;
+    renderTarjetaFeriante();
+  }catch(e){
+    console.warn('Tarjeta:', e);
+    cont.innerHTML = `<div class="tf-card">
+      <p class="tf-p">No pudimos cargar tus condiciones. Puede ser la conexión.</p>
+      <button class="tf-btn" onclick="tfEstado.cargado=false;cargarTarjetaFeriante()">Reintentar</button>
+    </div>`;
+  }
+}
+
+function renderTarjetaFeriante(){
+  const cont = document.getElementById('g-tarjeta');
+  const u = usuario;
+  const progs = u.tfProgramas || [];
+  if(!cont || !progs.length) return;
+
+  if(!tfEstado.feriaSel || !progs.some(p=>p.id===tfEstado.feriaSel)) tfEstado.feriaSel = progs[0].id;
+  const prog = tfProgActual();
+  const feria = tfNombreFeria(prog);
+
+  // Selector de feria: solo si el puesto está en más de una con programa
+  const selector = progs.length > 1
+    ? `<div class="tf-ferias">${progs.map(p=>{
+        const f = (u.puestoFerias||[]).find(x=>x.id===p.feria_id);
+        return `<button class="tf-feria ${p.id===tfEstado.feriaSel?'on':''}" onclick="tfElegirFeria('${p.id}')">${tfEsc(f?f.nombre:'Feria')}</button>`;
+      }).join('')}</div>`
+    : '';
+
+  // 1. El plan no participa de la red
+  if(!(prog.planes_habilitados||[]).includes(u.puestoPlan)){
+    cont.innerHTML = selector + `<div class="tf-card">
+      <h3>Tarjeta Digi Feria 🎟️</h3>
+      <p class="tf-p">Tus clientes juntan ${prog.umbral} sellos comprando en los puestos de ${tfEsc(feria)}. Cuando completan la tarjeta, eligen un puesto para canjear su descuento.</p>
+      <p class="tf-p">Para estar entre esos puestos necesitás el Plan Plus o el Pro.</p>
+      <button class="tf-btn" onclick="pedirCarga('plus')">Ver el Plan Plus</button>
+    </div>`;
+    return;
+  }
+
+  const ad = tfEstado.adhesiones[prog.id];
+
+  // 2. Puede participar pero todavía no se adhirió (o se dio de baja)
+  if(!ad || !ad.activo){
+    cont.innerHTML = selector + `<div class="tf-card">
+      <h3>Sumate a la Tarjeta 🎟️</h3>
+      <p class="tf-p">Tus clientes juntan ${prog.umbral} sellos comprando en los puestos de ${tfEsc(feria)}. Al completar la tarjeta eligen dónde canjear. Si estás adherido, pueden elegir tu puesto.</p>
+      <div class="tf-punto"><span>🎯</span><span>Cada compra que te hagan les suma un sello, aunque canjeen en otro puesto.</span></div>
+      <div class="tf-punto"><span>🤝</span><span>Te comprometés a <b>${prog.descuento_minimo}% de descuento como mínimo</b> cuando alguien elija canjear con vos.</span></div>
+      <div class="tf-punto"><span>✍️</span><span>Las condiciones las ponés vos y las podés cambiar cuando quieras.</span></div>
+      <div class="tf-punto"><span>🚪</span><span>Podés salir cuando quieras, sin perder los sellos que ya diste.</span></div>
+      <button class="tf-btn" style="margin-top:14px" onclick="tfAdherirse('${prog.id}', this)">Sumarme a la Tarjeta</button>
+    </div>`;
+    return;
+  }
+
+  // 3. Adherido: el formulario de condiciones
+  const aplicaMonto = ad.aplica_a === 'desde_monto';
+  const otrasAdheridas = progs.filter(p => p.id !== prog.id
+    && tfEstado.adhesiones[p.id] && tfEstado.adhesiones[p.id].activo).length;
+
+  cont.innerHTML = selector + `<div class="tf-card">
+    <h3>Mis condiciones</h3>
+    ${progs.length > 1 ? `<p class="tf-p" style="margin-bottom:6px">Estas condiciones valen en <b>${tfEsc(feria)}</b>.</p>` : ''}
+
+    <label class="tf-lbl">Porcentaje de descuento</label>
+    <div class="tf-pct">
+      <button type="button" id="tf-menos" onclick="tfPct(-5)" aria-label="Bajar">−</button>
+      <div class="val" id="tf-pct-val">${ad.porcentaje}%</div>
+      <button type="button" id="tf-mas" onclick="tfPct(5)" aria-label="Subir">+</button>
+    </div>
+    <div class="tf-ayuda">Mínimo ${prog.descuento_minimo}%. Podés dar más.</div>
+
+    <label class="tf-lbl" for="tf-tope">Tope de descuento <span class="op">(opcional)</span></label>
+    <input class="tf-input" id="tf-tope" type="number" inputmode="numeric" min="1" step="500"
+           placeholder="Sin tope" value="${ad.tope || ''}" oninput="tfPrevia()">
+    <div class="tf-ayuda">Lo máximo que descontás, aunque el porcentaje dé más.</div>
+
+    <label class="tf-lbl">¿A qué aplica?</label>
+    <label class="tf-radio">
+      <input type="radio" name="tf-aplica" value="todo" ${aplicaMonto?'':'checked'} onchange="tfPrevia()">
+      <span class="bolita"></span>A todo el puesto
+    </label>
+    <label class="tf-radio">
+      <input type="radio" name="tf-aplica" value="desde_monto" ${aplicaMonto?'checked':''} onchange="tfPrevia()">
+      <span class="bolita"></span>Compras de más de
+      <input class="tf-input chico" id="tf-monto" type="number" inputmode="numeric" min="1" step="1000"
+             placeholder="$" value="${ad.monto_minimo || ''}" oninput="tfMarcarMonto()">
+    </label>
+
+    <label class="tf-lbl" for="tf-nota">Nota corta <span class="op">(opcional)</span></label>
+    <input class="tf-input" id="tf-nota" maxlength="60" placeholder="Ej: Solo productos, no encargos"
+           value="${tfEsc(ad.nota)}" oninput="tfPrevia()">
+    <div class="tf-contador"><span id="tf-cont">0</span>/60</div>
+
+    <div class="tf-previa">
+      <div class="cab">Así te ven los clientes</div>
+      <div class="txt" id="tf-previa-txt"></div>
+      <div class="nota" id="tf-previa-nota"></div>
+    </div>
+
+    <p class="tf-aviso">ⓘ Los cambios valen para los canjes nuevos. Si un cliente ya generó su código, mantiene la condición que vio.</p>
+
+    <button class="tf-btn" id="tf-guardar" onclick="tfGuardar(this)">Guardar condiciones</button>
+    ${otrasAdheridas ? `<button class="tf-btn sec" onclick="tfCopiarATodas(this)">Usar estas mismas en mis otras ferias</button>` : ''}
+    <button class="tf-salir" onclick="tfSalir()">Salir de la Tarjeta en ${tfEsc(feria)}</button>
+  </div>`;
+
+  tfPctActual = ad.porcentaje;
+  tfPct(0);
+}
+
+function tfPct(delta){
+  const prog = tfProgActual();
+  const min = prog ? prog.descuento_minimo : 15;
+  tfPctActual = Math.max(min, Math.min(100, tfPctActual + delta));
+  const val = document.getElementById('tf-pct-val');
+  if(!val) return;
+  val.textContent = tfPctActual + '%';
+  document.getElementById('tf-menos').disabled = tfPctActual <= min;
+  document.getElementById('tf-mas').disabled   = tfPctActual >= 100;
+  tfPrevia();
+}
+
+function tfMarcarMonto(){
+  const r = document.querySelector('input[name="tf-aplica"][value="desde_monto"]');
+  if(r) r.checked = true;
+  tfPrevia();
+}
+
+function tfLeerForm(){
+  const aplica = (document.querySelector('input[name="tf-aplica"]:checked')||{}).value || 'todo';
+  const tope  = parseInt(document.getElementById('tf-tope').value, 10);
+  const monto = parseInt(document.getElementById('tf-monto').value, 10);
+  const nota  = document.getElementById('tf-nota').value.trim();
+  return {
+    porcentaje: tfPctActual,
+    tope: (tope > 0 ? tope : null),
+    aplica_a: aplica,
+    monto_minimo: (aplica === 'desde_monto' && monto > 0 ? monto : null),
+    nota: nota || null
+  };
+}
+
+function tfPrevia(){
+  const txtEl = document.getElementById('tf-previa-txt');
+  if(!txtEl) return;
+  const d = tfLeerForm();
+  document.getElementById('tf-cont').textContent = document.getElementById('tf-nota').value.length;
+  let txt = `${d.porcentaje}% de descuento`;
+  txt += (d.aplica_a === 'desde_monto')
+    ? (d.monto_minimo ? ` en compras de más de ${pesos(d.monto_minimo)}` : ' en compras de más de $…')
+    : ' en todo el puesto';
+  if(d.tope) txt += ` · tope ${pesos(d.tope)}`;
+  txtEl.textContent = txt;
+  document.getElementById('tf-previa-nota').textContent = d.nota || '';
+}
+
+async function tfAdherirse(programaId, btn){
+  const prog = (usuario.tfProgramas||[]).find(p => p.id === programaId);
+  if(!prog) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sumándote…';
+  try{
+    const ya = tfEstado.adhesiones[programaId];
+    const r = ya
+      ? await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos?id=eq.${ya.id}`, {
+          method:'PATCH',
+          headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+          body: JSON.stringify({ activo:true, baja_en:null, actualizado_en:new Date().toISOString() })
+        })
+      : await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos`, {
+          method:'POST',
+          headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+          body: JSON.stringify({
+            programa_id: programaId,
+            puesto_id: usuario.puestoId,
+            porcentaje: prog.descuento_minimo,
+            aplica_a: 'todo',
+            activo: true
+          })
+        });
+    const res = await r.json();
+    if(!r.ok) throw new Error((res && res.message) || 'respuesta ' + r.status);
+    tfEstado.adhesiones[programaId] = res[0];
+    renderTarjetaFeriante();
+    mostrarToast('¡Listo! Ya estás en la Tarjeta 🎟️');
+  }catch(e){
+    console.warn('Tarjeta/adherir:', e);
+    btn.disabled = false; btn.textContent = original;
+    mostrarToast('No se pudo sumar. Probá de nuevo en un rato.');
+  }
+}
+
+async function tfGuardar(btn){
+  const prog = tfProgActual();
+  const ad = prog && tfEstado.adhesiones[prog.id];
+  if(!ad) return;
+  const d = tfLeerForm();
+  if(d.aplica_a === 'desde_monto' && !d.monto_minimo){
+    mostrarToast('Poné desde qué monto aplica, o elegí "A todo el puesto".');
+    return;
+  }
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos?id=eq.${ad.id}`, {
+      method:'PATCH',
+      headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+      body: JSON.stringify({ ...d, actualizado_en:new Date().toISOString() })
+    });
+    const res = await r.json();
+    if(!r.ok) throw new Error((res && res.message) || 'respuesta ' + r.status);
+    tfEstado.adhesiones[prog.id] = res[0];
+    mostrarToast('Condiciones guardadas ✅');
+  }catch(e){
+    console.warn('Tarjeta/guardar:', e);
+    mostrarToast('No se pudo guardar. Fijate la conexión y probá de nuevo.');
+  }finally{
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+
+async function tfCopiarATodas(btn){
+  const prog = tfProgActual();
+  const d = tfLeerForm();
+  if(d.aplica_a === 'desde_monto' && !d.monto_minimo){
+    mostrarToast('Poné desde qué monto aplica, o elegí "A todo el puesto".');
+    return;
+  }
+  const otras = (usuario.tfProgramas||[]).filter(p => p.id !== prog.id
+    && tfEstado.adhesiones[p.id] && tfEstado.adhesiones[p.id].activo);
+  if(!otras.length){ mostrarToast('Todavía no estás adherido en otra feria.'); return; }
+
+  // Cada feria puede tener su propio mínimo: no pisamos uno más alto
+  const baja = otras.find(p => d.porcentaje < p.descuento_minimo);
+  if(baja){
+    mostrarToast(`En ${tfNombreFeria(baja)} el mínimo es ${baja.descuento_minimo}%.`);
+    return;
+  }
+
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Copiando…';
+  let ok = 0;
+  for(const p of otras){
+    try{
+      const ad = tfEstado.adhesiones[p.id];
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos?id=eq.${ad.id}`, {
+        method:'PATCH',
+        headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+        body: JSON.stringify({ ...d, actualizado_en:new Date().toISOString() })
+      });
+      const res = await r.json();
+      if(r.ok){ tfEstado.adhesiones[p.id] = res[0]; ok++; }
+    }catch(e){ console.warn('Tarjeta/copiar:', e); }
+  }
+  btn.disabled = false; btn.textContent = original;
+  mostrarToast(ok === otras.length
+    ? `Copiadas a ${ok} feria${ok>1?'s':''} ✅`
+    : `Se copiaron ${ok} de ${otras.length}. Probá de nuevo con las que faltan.`);
+}
+
+async function tfSalir(){
+  const prog = tfProgActual();
+  const ad = prog && tfEstado.adhesiones[prog.id];
+  if(!ad) return;
+  const feria = tfNombreFeria(prog);
+  if(!confirm(`¿Salir de la Tarjeta en ${feria}?\n\nDejás de aparecer en la lista donde los clientes eligen dónde canjear. Los sellos que ya diste no se borran y podés volver cuando quieras.`)) return;
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos?id=eq.${ad.id}`, {
+      method:'PATCH',
+      headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+      body: JSON.stringify({ activo:false, baja_en:new Date().toISOString(), actualizado_en:new Date().toISOString() })
+    });
+    const res = await r.json();
+    if(!r.ok) throw new Error((res && res.message) || 'respuesta ' + r.status);
+    tfEstado.adhesiones[prog.id] = res[0];
+    renderTarjetaFeriante();
+    mostrarToast('Saliste de la Tarjeta. Podés volver cuando quieras.');
+  }catch(e){
+    console.warn('Tarjeta/salir:', e);
+    mostrarToast('No se pudo. Probá de nuevo en un rato.');
+  }
 }
 
 // ---- Cartel del PUESTO (con su logo) ----
