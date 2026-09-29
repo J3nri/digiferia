@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · index v85 — Tarjeta: arregla el campo de monto que se comprimía a cero -->
+<!-- La Digi Feria · index v86 — Tarjeta: avisa si se sale con condiciones sin guardar -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
@@ -2320,6 +2320,9 @@ async function catalogoPDF(){
 
 // ---- Solapas dentro del panel del feriante ----
 function solapaPanel(btn){
+  // Si se va de la Tarjeta con condiciones sin guardar, avisa antes de perderlas
+  const grupoActual = document.querySelector('.pgrupo.on');
+  if(grupoActual && grupoActual.id === 'g-tarjeta' && btn.dataset.g !== 'g-tarjeta' && !tfConfirmarSalida()) return;
   document.querySelectorAll('.psolapa').forEach(b=>b.classList.toggle('on', b === btn));
   document.querySelectorAll('.pgrupo').forEach(g=>g.classList.toggle('on', g.id === btn.dataset.g));
   const barra = document.querySelector('.psolapas');
@@ -2346,8 +2349,37 @@ function tfNombreFeria(prog){
   return f ? f.nombre : 'tu feria';
 }
 function tfElegirFeria(progId){
+  if(!tfConfirmarSalida()) return;
   tfEstado.feriaSel = progId;
   renderTarjetaFeriante();
+}
+
+// ¿El formulario en pantalla difiere de lo que hay guardado?
+function tfHayCambios(){
+  try{
+    if(!document.getElementById('tf-nota')) return false;   // el formulario no está a la vista
+    const prog = tfProgActual();
+    const ad = prog && tfEstado.adhesiones[prog.id];
+    if(!ad || !ad.activo) return false;
+    // tope y monto_minimo llegan como texto desde la API: hay que comparar como números
+    const n = v => (v === null || v === undefined || v === '') ? null : Number(v);
+    const d = tfLeerForm();
+    return d.porcentaje      !== n(ad.porcentaje)
+        || n(d.tope)         !== n(ad.tope)
+        || d.aplica_a        !== ad.aplica_a
+        || n(d.monto_minimo) !== n(ad.monto_minimo)
+        || (d.nota || null)  !== (ad.nota || null);
+  }catch(e){
+    // Ante cualquier duda, dejar navegar: ir() es el router de toda la app
+    console.warn('Tarjeta/cambios:', e);
+    return false;
+  }
+}
+
+// true = se puede salir. Si hay cambios, pregunta primero.
+function tfConfirmarSalida(){
+  if(!tfHayCambios()) return true;
+  return confirm('Tenés cambios sin guardar en tus condiciones.\n\n¿Salir igual y perderlos?');
 }
 
 async function cargarTarjetaFeriante(){
@@ -2652,6 +2684,11 @@ async function tfSalir(){
     mostrarToast('No se pudo. Probá de nuevo en un rato.');
   }
 }
+
+// Cerrar o recargar la pestaña con condiciones sin guardar
+window.addEventListener('beforeunload', function(e){
+  if(tfHayCambios()){ e.preventDefault(); e.returnValue = ''; }
+});
 
 // ---- Cartel del PUESTO (con su logo) ----
 async function imprimirQRPuesto(){
@@ -3054,6 +3091,8 @@ function aplicarBloqueoInscripciones(){
 
 // ================== NAVEGACIÓN ==================
 function ir(id){
+  // Salir del panel con condiciones sin guardar: avisa antes de perderlas
+  if(id !== 'p-mipuesto' && !tfConfirmarSalida()) return;
   document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));
   document.getElementById(id).classList.add('activa');
   window.scrollTo({top:0});
