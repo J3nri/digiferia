@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · index v84 — Tarjeta Digi Feria: adhesión y condiciones del feriante -->
+<!-- La Digi Feria · index v85 — Tarjeta: arregla el campo de monto que se comprimía a cero -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
@@ -166,13 +166,16 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
   box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:12px 14px;font-family:'Nunito',sans-serif;
   font-weight:700;font-size:15px;color:var(--tinta)}
 .tf-input::placeholder{color:#B5A794;font-weight:700}
-.tf-input.chico{width:120px;padding:8px 10px;font-size:14px;border-width:2px;box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+/* flex:0 0 evita que el navegador lo comprima a cero dentro del radio */
+.tf-input.chico{flex:0 0 130px;width:130px;padding:8px 10px;font-size:14px;border-width:2px;
+  box-shadow:2px 2px 0 rgba(43,33,24,.9);margin-left:32px}
 .tf-radio{display:flex;align-items:center;gap:10px;margin:10px 0;font-family:'Nunito',sans-serif;
   font-weight:700;font-size:14.5px;cursor:pointer;flex-wrap:wrap}
-.tf-radio input{position:absolute;opacity:0;pointer-events:none}
+/* Solo el radio se oculta. Sin [type=radio] esto tapaba el campo del monto. */
+.tf-radio input[type="radio"]{position:absolute;opacity:0;pointer-events:none}
 .tf-radio .bolita{width:22px;height:22px;flex:0 0 22px;border:3px solid var(--tinta);border-radius:50%;
   background:var(--blanco);display:flex;align-items:center;justify-content:center}
-.tf-radio input:checked + .bolita::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--tinta)}
+.tf-radio input[type="radio"]:checked + .bolita::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--tinta)}
 .tf-contador{text-align:right;font-size:12px;color:#7A6A55;font-weight:700;margin-top:4px}
 .tf-previa{border:2px dashed var(--tinta);border-radius:14px;background:#FCE3C6;padding:12px 14px;margin:16px 0 10px}
 .tf-previa .cab{font-size:12px;color:#7A6A55;font-weight:700;margin-bottom:4px}
@@ -2511,6 +2514,9 @@ function tfPrevia(){
   if(!txtEl) return;
   const d = tfLeerForm();
   document.getElementById('tf-cont').textContent = document.getElementById('tf-nota').value.length;
+  // El campo del monto se ve apagado mientras no sea el que aplica
+  const inpMonto = document.getElementById('tf-monto');
+  if(inpMonto) inpMonto.style.opacity = (d.aplica_a === 'desde_monto') ? '1' : '.45';
   let txt = `${d.porcentaje}% de descuento`;
   txt += (d.aplica_a === 'desde_monto')
     ? (d.monto_minimo ? ` en compras de más de ${pesos(d.monto_minimo)}` : ' en compras de más de $…')
