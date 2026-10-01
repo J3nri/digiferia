@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · sellar v1 — Sumar sello (Tarjeta Digi Feria) -->
+<!-- La Digi Feria · sellar v2 — el deshacer muestra cómo queda el cliente -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Sumar sello · La Digi Feria</title>
@@ -72,6 +72,8 @@ label.lbl{display:block;font-weight:800;font-size:14px;margin-bottom:7px}
 /* resultado */
 .banda{background:var(--verde);color:#fff;border:3px solid var(--tinta);border-radius:14px;
   box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:14px;text-align:center;margin-bottom:14px}
+.banda.deshecho{background:#B3572B}
+.marcador.menos .n{color:#B3572B}
 .banda b{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:21px}
 .banda span{font-size:14px;font-weight:700;opacity:.95}
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -380,12 +382,43 @@ async function deshacer(btn){
     const r = await fn({ accion:'deshacer' });
     if(!r.ok){ toast(textoMotivo(r.motivo, r.detalle)); btn.disabled = false; return; }
     ultimoEvento = null;
-    toast(`Listo: se quitaron ${r.sellos_quitados} sello${r.sellos_quitados===1?'':'s'}.`);
-    pantallaSellar();
+    pantallaDeshecho(r);
   }catch(e){
     btn.disabled = false;
     toast('No se pudo deshacer. Probá de nuevo.');
   }
+}
+
+// Igual que al sellar: muestra cómo quedó el cliente, no solo cuántos se quitaron.
+function pantallaDeshecho(r){
+  const f = r.feria, p = r.puesto;
+  const marcador = (titulo, info, clase) => {
+    if(!info) return '';
+    return `<div class="marcador menos ${clase}">
+      <div class="t">${titulo}</div>
+      <div class="n">−${info.quitados}</div>
+      <div class="d">le quedan ${info.total} de ${info.umbral}</div>
+    </div>`;
+  };
+  const destrabada = (f && f.destrabada) || (p && p.destrabada);
+
+  app.innerHTML = `
+    <div class="banda deshecho">
+      <b>↩ Sello${r.sellos_quitados === 1 ? '' : 's'} deshecho${r.sellos_quitados === 1 ? '' : 's'}</b>
+      ${r.cliente ? `<span>${esc(telLindo(r.cliente.telefono))} · ${esc(r.cliente.nombre)}</span>` : ''}
+    </div>
+
+    <div class="dos">
+      ${marcador('Tarjeta de la feria', f, '')}
+      ${marcador('Tarjeta de tu puesto', p, 'propia')}
+    </div>
+
+    ${destrabada ? `<div class="aviso">ⓘ La tarjeta había quedado completa y volvió a estar en curso.
+      Si ya le habías dado el código de canje, avisale.</div>` : ''}
+
+    ${(!f && !p) ? `<div class="aviso">ⓘ Ese sello no le sumaba a ninguna tarjeta, así que no cambió nada.</div>` : ''}
+
+    <button class="btn blanco" onclick="pantallaSellar()">Volver a sellar</button>`;
 }
 </script>
 </body>
