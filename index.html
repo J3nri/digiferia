@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · index v86 — Tarjeta: avisa si se sale con condiciones sin guardar -->
+<!-- La Digi Feria · index v88 — Tarjeta: atajo a Sumar sello para el puesto adherido -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
@@ -197,6 +197,14 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .tf-punto{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;font-weight:700;
   margin-bottom:9px;line-height:1.4;color:#5C4F3E}
 .tf-punto b{color:var(--tinta)}
+.tf-sellar{display:flex;align-items:center;gap:12px;margin:0 18px 14px;
+  background:var(--fucsia);color:#fff;border:3px solid var(--tinta);border-radius:16px;
+  box-shadow:5px 5px 0 rgba(43,33,24,.9);padding:15px 16px;text-decoration:none}
+.tf-sellar:active{transform:translate(2px,2px);box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+.tf-sellar .ic{font-size:26px;line-height:1}
+.tf-sellar b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px;display:block}
+.tf-sellar small{display:block;font-size:12.5px;font-weight:700;opacity:.92;margin-top:1px}
+.tf-sellar .fl{margin-left:auto;font-size:20px;font-weight:800}
 
 .link-row{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:12px;padding:10px 12px;margin:0 18px 10px}
 .link-row .ic{font-size:18px}
@@ -2458,7 +2466,15 @@ function renderTarjetaFeriante(){
   const otrasAdheridas = progs.filter(p => p.id !== prog.id
     && tfEstado.adhesiones[p.id] && tfEstado.adhesiones[p.id].activo).length;
 
-  cont.innerHTML = selector + `<div class="tf-card">
+  // Atajo a la pantalla de sellar. Solo para el puesto ya adherido: al que
+  // todavía no se sumó, sellar no le sirve de nada.
+  const atajoSellar = `<a class="tf-sellar" href="sellar.html">
+      <span class="ic">🎟️</span>
+      <span><b>Sumar sello</b><small>Cargale el sello al cliente en la feria</small></span>
+      <span class="fl">→</span>
+    </a>`;
+
+  cont.innerHTML = selector + atajoSellar + `<div class="tf-card">
     <h3>Mis condiciones</h3>
     ${progs.length > 1 ? `<p class="tf-p" style="margin-bottom:6px">Estas condiciones valen en <b>${tfEsc(feria)}</b>.</p>` : ''}
 
@@ -2584,13 +2600,15 @@ async function tfAdherirse(programaId, btn){
         });
     const res = await r.json();
     if(!r.ok) throw new Error((res && res.message) || 'respuesta ' + r.status);
+    // 200 con lista vacia = la base no toco ninguna fila. No es exito.
+    if(!Array.isArray(res) || !res.length) throw new Error('no se actualizo ninguna fila');
     tfEstado.adhesiones[programaId] = res[0];
     renderTarjetaFeriante();
     mostrarToast('¡Listo! Ya estás en la Tarjeta 🎟️');
   }catch(e){
     console.warn('Tarjeta/adherir:', e);
     btn.disabled = false; btn.textContent = original;
-    mostrarToast('No se pudo sumar. Probá de nuevo en un rato.');
+    mostrarToast('No se pudo sumar: ' + e.message);
   }
 }
 
@@ -2613,11 +2631,13 @@ async function tfGuardar(btn){
     });
     const res = await r.json();
     if(!r.ok) throw new Error((res && res.message) || 'respuesta ' + r.status);
+    // 200 con lista vacia = la base no toco ninguna fila. No es exito.
+    if(!Array.isArray(res) || !res.length) throw new Error('no se actualizo ninguna fila');
     tfEstado.adhesiones[prog.id] = res[0];
     mostrarToast('Condiciones guardadas ✅');
   }catch(e){
     console.warn('Tarjeta/guardar:', e);
-    mostrarToast('No se pudo guardar. Fijate la conexión y probá de nuevo.');
+    mostrarToast('No se pudo guardar: ' + e.message);
   }finally{
     btn.disabled = false; btn.textContent = original;
   }
@@ -2653,7 +2673,7 @@ async function tfCopiarATodas(btn){
         body: JSON.stringify({ ...d, actualizado_en:new Date().toISOString() })
       });
       const res = await r.json();
-      if(r.ok){ tfEstado.adhesiones[p.id] = res[0]; ok++; }
+      if(r.ok && Array.isArray(res) && res.length){ tfEstado.adhesiones[p.id] = res[0]; ok++; }
     }catch(e){ console.warn('Tarjeta/copiar:', e); }
   }
   btn.disabled = false; btn.textContent = original;
@@ -2676,12 +2696,14 @@ async function tfSalir(){
     });
     const res = await r.json();
     if(!r.ok) throw new Error((res && res.message) || 'respuesta ' + r.status);
+    // 200 con lista vacia = la base no toco ninguna fila. No es exito.
+    if(!Array.isArray(res) || !res.length) throw new Error('no se actualizo ninguna fila');
     tfEstado.adhesiones[prog.id] = res[0];
     renderTarjetaFeriante();
     mostrarToast('Saliste de la Tarjeta. Podés volver cuando quieras.');
   }catch(e){
     console.warn('Tarjeta/salir:', e);
-    mostrarToast('No se pudo. Probá de nuevo en un rato.');
+    mostrarToast('No se pudo salir: ' + e.message);
   }
 }
 
