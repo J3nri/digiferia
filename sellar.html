@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · sellar v2 — el deshacer muestra cómo queda el cliente -->
+<!-- La Digi Feria · sellar v3 — fechas en formato argentino (día/mes/año) -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Sumar sello · La Digi Feria</title>
@@ -121,6 +121,19 @@ const app = document.getElementById('app');
 function esc(s){ return String(s==null?'':s)
   .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// "2026-10-16" -> "viernes 16/10/2026". La fecha se dice como se escribe acá,
+// y el día de la semana ayuda a que el cliente entienda cuánto le queda.
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function fechaLinda(iso, conDia){
+  if(!iso) return '';
+  const d = new Date(iso + 'T12:00:00');
+  if(isNaN(d)) return iso;
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const txt = `${dd}/${mm}/${d.getFullYear()}`;
+  return conDia === false ? txt : `${DIAS[d.getDay()]} ${txt}`;
+}
+
 // 1123456789 -> "11 2345-6789"  ·  2214567890 -> "221 456-7890"
 function telLindo(t){
   const d = String(t||'').replace(/\D/g,'');
@@ -138,7 +151,7 @@ function mensajeWhatsApp(r){
   if(f.suma) t += `Sumaste ${f.suma} sello en tu Tarjeta Digi Feria: ya tenés ${f.total} de ${f.umbral}. `;
   else       t += `Gracias por tu compra en ${puesto.nombre}. `;
   if(p && p.suma) t += `Y en la tarjeta de ${puesto.nombre} sumaste ${p.suma}: vas ${p.total} de ${p.umbral}. `;
-  if(f.completa) t += `¡Completaste la tarjeta de la feria! Tenés hasta el ${f.canjear_hasta} para elegir dónde canjear tu descuento. `;
+  if(f.completa) t += `¡Completaste la tarjeta de la feria! Tenés hasta el ${fechaLinda(f.canjear_hasta)} para elegir dónde canjear tu descuento. `;
   else if(p && p.completa) t += `¡Completaste la tarjeta de ${puesto.nombre}! `;
   return encodeURIComponent(t.trim());
 }
@@ -361,7 +374,7 @@ function pantallaResultado(r){
 
     ${festejo ? `<div class="festejo">🎉 ¡${esc(r.cliente.nombre)} completó la tarjeta!<br>
       <span style="font-size:13px;font-family:'Nunito';font-weight:700">
-      Tiene hasta el ${esc(f.canjear_hasta || (p && p.canjear_hasta) || '')} para canjear.</span></div>` : ''}
+      Tiene hasta el ${esc(fechaLinda(f.canjear_hasta || (p && p.canjear_hasta)))} para canjear.</span></div>` : ''}
 
     ${(r.avisos||[]).map(a=>`<div class="aviso">ⓘ ${esc(a)}</div>`).join('')}
 
