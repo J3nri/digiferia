@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- La Digi Feria · alta v1 — Alta del cliente en la Tarjeta Digi Feria -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarjeta Digi Feria</title>
+<link rel="icon" href="favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
+  --verde:#00A878; --celeste:#2D9CDB; --tinta:#2B2118;
+  --fondo:#FFF8EC; --blanco:#FFFFFF;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:16px}
+.hoja{width:100%;max-width:420px}
+
+.logo{text-align:center;margin-bottom:14px}
+.logo img{width:96px;height:96px;border:3px solid var(--tinta);border-radius:22px;
+  box-shadow:5px 5px 0 rgba(43,33,24,.9);background:var(--blanco)}
+.logo h1{font-family:'Fredoka',sans-serif;font-weight:600;font-size:23px;margin-top:12px;line-height:1.2}
+.logo p{font-size:14px;font-weight:700;color:#6B5C48;margin-top:5px;line-height:1.45}
+
+.card{background:#FFF1DC;
+  background-image:linear-gradient(rgba(43,33,24,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(43,33,24,.055) 1px,transparent 1px);
+  background-size:22px 22px;border:3px solid var(--tinta);border-radius:18px;
+  box-shadow:5px 5px 0 rgba(43,33,24,.9);padding:18px}
+
+label.lbl{display:block;font-weight:800;font-size:14px;margin:14px 0 6px}
+label.lbl:first-of-type{margin-top:0}
+.inp{width:100%;background:var(--blanco);border:3px solid var(--tinta);border-radius:12px;
+  box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:13px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:17px;color:var(--tinta)}
+.inp::placeholder{color:#B5A794;font-weight:700}
+.ayuda{font-size:12px;color:#7A6A55;font-weight:700;margin-top:5px}
+
+.datos{background:#FCE3C6;border:2px dashed var(--tinta);border-radius:13px;
+  padding:13px 14px;margin:18px 0 14px;font-size:12.8px;font-weight:700;line-height:1.5}
+.datos b{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.datos ul{margin:0;padding-left:17px}
+.datos li{margin-bottom:4px}
+
+.acepto{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
+  font-size:13.5px;font-weight:700;line-height:1.4}
+.acepto input{position:absolute;opacity:0;pointer-events:none}
+.acepto .caja{width:26px;height:26px;flex:0 0 26px;border:3px solid var(--tinta);
+  border-radius:8px;background:var(--blanco);display:flex;align-items:center;
+  justify-content:center;font-size:17px;font-weight:800;line-height:1}
+.acepto input:checked + .caja::after{content:"✓"}
+.acepto input:checked + .caja{background:var(--verde);color:#fff}
+
+.btn{width:100%;background:var(--fucsia);color:#fff;border:3px solid var(--tinta);
+  border-radius:14px;box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:16px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;cursor:pointer;margin-top:16px}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(43,33,24,.9)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn.blanco{background:var(--blanco);color:var(--tinta);font-size:16px;padding:13px}
+
+.msg{font-size:14.5px;font-weight:700;line-height:1.5}
+.msg b{font-family:'Fredoka',sans-serif;font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:var(--tinta);
+  color:#fff;padding:13px 20px;border-radius:12px;font-weight:800;font-size:14px;
+  max-width:92%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="hoja" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+
+const app = document.getElementById('app');
+const params = new URLSearchParams(location.search);
+const puestoSlug = params.get('p') || '';
+
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+let tT;
+function toast(m){
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('on');
+  clearTimeout(tT); tT = setTimeout(()=>t.classList.remove('on'), 3600);
+}
+
+async function fn(body){
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/tf-cliente`, {
+    method:'POST',
+    headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`,
+              "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  });
+  return await r.json();
+}
+
+// Si ya tiene tarjeta en este celular, va derecho a verla
+(function inicio(){
+  let guardado = null;
+  try{ guardado = localStorage.getItem('df_tarjeta'); }catch(e){}
+  if(guardado) return location.replace('tarjeta.html?t=' + encodeURIComponent(guardado));
+  pantallaAlta();
+})();
+
+function pantallaAlta(){
+  app.innerHTML = `
+    <div class="logo">
+      <img src="tf-logo.jpg" alt="La Digi Feria">
+      <h1>Tarjeta Digi Feria 🎟️</h1>
+      <p>Juntá sellos comprando en los puestos de la feria y canjeá tu descuento donde vos elijas.</p>
+    </div>
+
+    <div class="card">
+      <label class="lbl" for="nom">¿Cómo te llamás?</label>
+      <input class="inp" id="nom" maxlength="40" autocomplete="given-name" placeholder="Tu nombre">
+
+      <label class="lbl" for="tel">Tu teléfono</label>
+      <input class="inp" id="tel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="11 2345-6789">
+      <div class="ayuda">Es lo que te identifica cuando el puesto te suma un sello.</div>
+
+      <div class="datos">
+        <b>Qué guardamos y para qué</b>
+        <ul>
+          <li>Solo tu <b style="display:inline;font-size:12.8px">nombre y tu teléfono</b>, para llevar la cuenta de tus sellos.</li>
+          <li>Los puestos de la feria <b style="display:inline;font-size:12.8px">nunca ven tu nombre ni tu teléfono</b>, ni siquiera donde comprás.</li>
+          <li>No te mandamos publicidad. Solo avisos de tus sellos.</li>
+          <li>Podés pedir que borremos tus datos cuando quieras, escribiendo a hola@digiferia.ar</li>
+        </ul>
+      </div>
+
+      <label class="acepto">
+        <input type="checkbox" id="ok"><span class="caja"></span>
+        <span>Estoy de acuerdo y quiero mi Tarjeta Digi Feria.</span>
+      </label>
+
+      <button class="btn" id="b" onclick="crear(this)">Crear mi tarjeta</button>
+    </div>`;
+
+  document.getElementById('tel').addEventListener('keydown', e=>{
+    if(e.key === 'Enter') crear(document.getElementById('b'));
+  });
+}
+
+async function crear(btn){
+  const nombre = document.getElementById('nom').value.trim();
+  const telefono = document.getElementById('tel').value.trim();
+  const ok = document.getElementById('ok').checked;
+
+  if(nombre.length < 2) return toast('Escribí tu nombre.');
+  if(telefono.replace(/\D/g,'').length < 10) return toast('Escribí tu teléfono completo, con característica.');
+  if(!ok) return toast('Necesitamos que estés de acuerdo para crear tu tarjeta.');
+
+  btn.disabled = true; btn.textContent = 'Creando…';
+  try{
+    const r = await fn({ accion:'alta', nombre, telefono, puesto_slug: puestoSlug });
+    if(!r.ok){
+      if(r.motivo === 'ya_registrado') return pantallaYaTenes();
+      btn.disabled = false; btn.textContent = 'Crear mi tarjeta';
+      return toast(r.motivo === 'telefono_invalido' ? 'Ese teléfono no parece completo.'
+                 : r.motivo === 'nombre_invalido'   ? 'Escribí tu nombre.'
+                 : 'No se pudo crear. Probá de nuevo en un rato.');
+    }
+    try{ localStorage.setItem('df_tarjeta', r.token); }catch(e){}
+    location.replace('tarjeta.html?t=' + encodeURIComponent(r.token) + '&nueva=1');
+  }catch(e){
+    btn.disabled = false; btn.textContent = 'Crear mi tarjeta';
+    toast('No se pudo crear. Fijate la señal y probá de nuevo.');
+  }
+}
+
+// El teléfono ya existe. No le damos acceso: si no, cualquiera entraría
+// a la tarjeta de otro escribiendo su número.
+function pantallaYaTenes(){
+  app.innerHTML = `
+    <div class="logo">
+      <img src="tf-logo.jpg" alt="La Digi Feria">
+      <h1>Ese teléfono ya tiene tarjeta</h1>
+    </div>
+    <div class="card">
+      <p class="msg">Si sos vos, abrí el link de tu tarjeta: te lo pasó por WhatsApp el puesto
+      donde te anotaste, o lo tenés guardado en tu Google Wallet.</p>
+      <p class="msg" style="margin-top:11px;color:#5C4F3E">¿No lo encontrás? Escribinos a
+      <b style="display:inline">hola@digiferia.ar</b> con tu nombre y tu teléfono y te lo mandamos.</p>
+      <button class="btn blanco" onclick="pantallaAlta()">Volver</button>
+    </div>`;
+}
+</script>
+</body>
+</html>

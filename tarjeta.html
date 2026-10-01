@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- La Digi Feria · tarjeta v1 — La tarjeta del cliente -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Tarjeta Digi Feria</title>
+<link rel="icon" href="favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fucsia:#E91E8C; --naranja:#FF7A00; --amarillo:#FFC93C;
+  --verde:#00A878; --celeste:#2D9CDB; --tinta:#2B2118;
+  --fondo:#FFF8EC; --blanco:#FFFFFF;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:#EFE6D5;color:var(--tinta);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px}
+.hoja{width:100%;max-width:430px}
+
+.cab{text-align:center;margin-bottom:13px}
+.cab img{width:58px;height:58px;border:3px solid var(--tinta);border-radius:15px;
+  box-shadow:3px 3px 0 rgba(43,33,24,.9);background:var(--blanco)}
+.cab h1{font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px;margin-top:9px}
+.cab p{font-size:13px;font-weight:700;color:#6B5C48;margin-top:2px}
+
+.solapas{display:flex;gap:6px;background:#EFE6D5;border:3px solid var(--tinta);
+  border-radius:14px;padding:4px;margin-bottom:14px}
+.solapa{flex:1;text-align:center;padding:9px 5px;border-radius:10px;border:none;background:none;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;color:#7A6A55;cursor:pointer}
+.solapa.on{background:var(--tinta);color:#fff}
+.solapa .pin{background:var(--amarillo);color:var(--tinta);border-radius:999px;
+  padding:1px 7px;font-size:11px;margin-left:4px}
+.grupo{display:none}
+.grupo.on{display:block}
+
+.card{background:#FFF1DC;
+  background-image:linear-gradient(rgba(43,33,24,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(43,33,24,.055) 1px,transparent 1px);
+  background-size:22px 22px;border:3px solid var(--tinta);border-radius:18px;
+  box-shadow:5px 5px 0 rgba(43,33,24,.9);padding:18px;margin-bottom:14px}
+.card h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px;margin-bottom:3px}
+.card .sub{font-size:13px;font-weight:700;color:#7A6A55;margin-bottom:14px}
+
+/* casilleros: el sello es el logo, apenas torcido como un sello de goma */
+.casilleros{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:15px}
+.casilleros.muchos{grid-template-columns:repeat(4,1fr)}
+.casillero{aspect-ratio:1;border:3px solid var(--tinta);border-radius:14px;background:var(--blanco);
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.casillero img{width:82%;height:82%;object-fit:contain}
+.casillero.vacio{background:#F6EBD8}
+.casillero.vacio::after{content:"";width:9px;height:9px;border-radius:50%;background:#DDCDB2}
+.casillero .ini{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;color:var(--fucsia)}
+
+.barra{height:17px;background:var(--blanco);border:3px solid var(--tinta);border-radius:999px;
+  overflow:hidden;margin-bottom:9px}
+.barra i{display:block;height:100%;background:var(--fucsia);transition:width .4s}
+.faltan{text-align:center;font-weight:800;font-size:14.5px;margin-bottom:4px}
+.vence{text-align:center;font-size:12.5px;font-weight:700;color:#7A6A55}
+.vence.urge{color:#B3572B}
+
+.completa{background:var(--amarillo);border:3px solid var(--tinta);border-radius:14px;
+  box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:14px;text-align:center;margin-bottom:13px}
+.completa b{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px}
+.completa span{font-size:13px;font-weight:700}
+
+.fila{display:flex;align-items:center;gap:11px;background:var(--blanco);border:3px solid var(--tinta);
+  border-radius:14px;box-shadow:3px 3px 0 rgba(43,33,24,.9);padding:12px 13px;margin-bottom:10px;
+  text-decoration:none;color:var(--tinta)}
+.fila .bolo{width:44px;height:44px;flex:0 0 44px;border:3px solid var(--tinta);border-radius:50%;
+  background:#FDE7F2;display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px}
+.fila b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15.5px;display:block}
+.fila small{display:block;font-size:12.5px;font-weight:700;color:#7A6A55;margin-top:1px}
+.fila .fl{margin-left:auto;font-size:18px;font-weight:800;color:#9A8B76}
+.mini{height:9px;background:#EFE6D5;border:2px solid var(--tinta);border-radius:999px;
+  overflow:hidden;margin-top:5px}
+.mini i{display:block;height:100%;background:var(--verde)}
+
+.vacio-msg{font-size:13.5px;font-weight:700;color:#6B5C48;line-height:1.5;text-align:center;padding:8px 0}
+.pie{text-align:center;font-size:12px;font-weight:700;color:#9A8B76;margin:16px 0 8px;line-height:1.5}
+.cargando{text-align:center;padding:50px 0;font-weight:800;color:#7A6A55}
+.btn{width:100%;background:var(--blanco);color:var(--tinta);border:3px solid var(--tinta);
+  border-radius:14px;box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:14px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="hoja" id="app"><div class="cargando">Cargando tu tarjeta…</div></div>
+
+<script>
+const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+const SELLO = "sello-casillero.png";
+
+const app = document.getElementById('app');
+const params = new URLSearchParams(location.search);
+let token = params.get('t') || '';
+const esNueva = params.get('nueva') === '1';
+let datos = null;
+
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function fechaLinda(iso, conDia){
+  if(!iso) return '';
+  const d = new Date(iso + 'T12:00:00');
+  if(isNaN(d)) return iso;
+  const txt = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  return conDia === false ? txt : `${DIAS[d.getDay()]} ${txt}`;
+}
+function diasHasta(iso){
+  if(!iso) return null;
+  const d = new Date(iso + 'T12:00:00'), h = new Date();
+  return Math.round((d - new Date(h.getFullYear(), h.getMonth(), h.getDate(), 12)) / 86400000);
+}
+
+(async function inicio(){
+  // Sin código en la dirección, se busca el guardado en este celular
+  if(!token){ try{ token = localStorage.getItem('df_tarjeta') || ''; }catch(e){} }
+  if(!token) return pantallaSinCodigo();
+
+  try{
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/tf-cliente`, {
+      method:'POST',
+      headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`,
+                "Content-Type":"application/json" },
+      body: JSON.stringify({ accion:'tarjeta', token })
+    });
+    const d = await r.json();
+    if(!d.ok){
+      if(d.motivo === 'codigo_invalido') return pantallaSinCodigo(true);
+      return pantallaError();
+    }
+    datos = d;
+    try{ localStorage.setItem('df_tarjeta', token); }catch(e){}
+    render();
+  }catch(e){ pantallaError(); }
+})();
+
+function pantallaSinCodigo(invalido){
+  app.innerHTML = `
+    <div class="cab"><img src="tf-logo.jpg" alt=""><h1>Tu Tarjeta Digi Feria</h1></div>
+    <div class="card">
+      <p class="vacio-msg">${invalido
+        ? 'Ese link no corresponde a ninguna tarjeta. Puede estar incompleto: fijate de copiarlo entero.'
+        : 'Para ver tu tarjeta entrá con el link que te pasó el puesto donde te anotaste.'}</p>
+      <button class="btn" style="margin-top:12px" onclick="location.href='alta.html'">Todavía no tengo tarjeta</button>
+    </div>`;
+}
+function pantallaError(){
+  app.innerHTML = `
+    <div class="cab"><img src="tf-logo.jpg" alt=""><h1>Tu Tarjeta Digi Feria</h1></div>
+    <div class="card">
+      <p class="vacio-msg">No pudimos cargar tu tarjeta. Puede ser la conexión.</p>
+      <button class="btn" style="margin-top:12px" onclick="location.reload()">Reintentar</button>
+    </div>`;
+}
+
+function render(){
+  const f = datos.feria;
+  const ps = datos.puestos || [];
+
+  app.innerHTML = `
+    <div class="cab">
+      <img src="tf-logo.jpg" alt="La Digi Feria">
+      <h1>${esNueva ? '¡Bienvenida, ' : 'Hola, '}${esc(datos.cliente.nombre)}!</h1>
+      <p>${esNueva ? 'Esta es tu tarjeta. Guardá este link.' : 'Tu Tarjeta Digi Feria'}</p>
+    </div>
+
+    ${ps.length ? `<div class="solapas">
+      <button class="solapa on" data-g="g-feria" onclick="solapa(this)">La feria</button>
+      <button class="solapa" data-g="g-puestos" onclick="solapa(this)">Mis puestos<span class="pin">${ps.length}</span></button>
+    </div>` : ''}
+
+    <div class="grupo on" id="g-feria">${bloqueFeria(f)}</div>
+    ${ps.length ? `<div class="grupo" id="g-puestos">${bloquePuestos(ps)}</div>` : ''}
+
+    <div class="pie">Tus sellos quedan guardados con tu teléfono.<br>
+      Los puestos nunca ven tu nombre ni tu número.</div>`;
+}
+
+function solapa(btn){
+  document.querySelectorAll('.solapa').forEach(b=>b.classList.toggle('on', b===btn));
+  document.querySelectorAll('.grupo').forEach(g=>g.classList.toggle('on', g.id===btn.dataset.g));
+}
+
+function casilleros(llenos, total, ini){
+  let h = `<div class="casilleros${total > 9 ? ' muchos' : ''}">`;
+  for(let i = 0; i < total; i++){
+    const giro = ((i * 37) % 13) - 6;   // cada sello apenas torcido, como uno de goma
+    h += i < llenos
+      ? `<div class="casillero" style="transform:rotate(${giro}deg)">${
+          ini ? `<span class="ini">${esc(ini)}</span>` : `<img src="${SELLO}" alt="sello">`}</div>`
+      : `<div class="casillero vacio"></div>`;
+  }
+  return h + '</div>';
+}
+
+function bloqueFeria(f){
+  if(!f) return `<div class="card">
+    <h2>Todavía no tenés sellos</h2>
+    <p class="sub">Comprá en cualquier puesto adherido de la feria y pedí que te sumen el sello.</p>
+    ${quienesHoy()}
+  </div>`;
+
+  const faltan = Math.max(0, f.umbral - f.sellos);
+  const pct = Math.min(100, Math.round(f.sellos / f.umbral * 100));
+  const d = diasHasta(f.vence_proximo);
+  const urge = d !== null && d <= f.dias_aviso;
+
+  return `
+    ${f.estado === 'completa' ? `<div class="completa">
+      <b>🎉 ¡Completaste la tarjeta!</b>
+      <span>Tenés hasta el ${esc(fechaLinda(f.canjear_hasta))} para elegir dónde canjear.</span>
+    </div>` : ''}
+
+    <div class="card">
+      <h2>${esc(f.feria)}</h2>
+      <p class="sub">${f.estado === 'completa'
+        ? 'Elegí el puesto donde querés tu descuento.'
+        : 'Juntá sellos comprando en los puestos adheridos.'}</p>
+
+      ${casilleros(f.sellos, f.umbral, null)}
+
+      <div class="barra"><i style="width:${pct}%"></i></div>
+      <div class="faltan">${f.estado === 'completa'
+        ? `${f.sellos} de ${f.umbral} · ¡completa!`
+        : (faltan === 1 ? 'Te falta 1 sello' : `Te faltan ${faltan} sellos`) + ` · ${f.sellos} de ${f.umbral}`}</div>
+
+      ${f.estado !== 'completa' && f.vence_proximo ? `<div class="vence ${urge?'urge':''}">
+        ${urge ? '⏳ ' : ''}Tu sello más viejo vence el ${esc(fechaLinda(f.vence_proximo, false))}</div>` : ''}
+    </div>
+
+    ${quienesHoy()}`;
+}
+
+function quienesHoy(){
+  const hoy = datos.hoy_en_feria || [];
+  if(!hoy.length) return '';
+  return `<div class="card">
+    <h2>🔥 Quiénes están hoy</h2>
+    <p class="sub">Puestos que confirmaron que van a la feria.</p>
+    ${hoy.map(p=>`<a class="fila" href="index.html#puesto=${esc(p.slug||'')}">
+      <span class="bolo">🎪</span><span><b>${esc(p.nombre)}</b></span><span class="fl">→</span></a>`).join('')}
+  </div>`;
+}
+
+function bloquePuestos(ps){
+  return ps.map(p=>{
+    const pct = Math.min(100, Math.round(p.sellos / p.umbral * 100));
+    const premio = p.premio_tipo === 'porcentaje' ? p.premio : p.premio;
+    return `<div class="card">
+      <h2>${esc(p.puesto)}</h2>
+      <p class="sub">Premio: ${esc(premio)}</p>
+      ${p.estado === 'completa' ? `<div class="completa" style="margin-bottom:13px">
+        <b>🎉 ¡Completa!</b><span>Canjeala en este puesto.</span></div>` : ''}
+      ${casilleros(p.sellos, p.umbral, p.iniciales)}
+      <div class="mini"><i style="width:${pct}%"></i></div>
+      <div class="faltan" style="margin-top:9px">${p.sellos} de ${p.umbral}</div>
+    </div>`;
+  }).join('') + `<div class="pie" style="margin-top:0">
+    Aparece una tarjeta por cada puesto donde ya tenés sellos. Se crea sola.</div>`;
+}
+</script>
+</body>
+</html>
