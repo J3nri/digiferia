@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · tarjeta v2 — botón Guardar en Google Wallet -->
+<!-- La Digi Feria · tarjeta v3 — el botón de Wallet también con la tarjeta vacía -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Tarjeta Digi Feria</title>
@@ -183,7 +183,7 @@ function render(){
       <button class="solapa" data-g="g-puestos" onclick="solapa(this)">Mis puestos<span class="pin">${ps.length}</span></button>
     </div>` : ''}
 
-    <div class="grupo on" id="g-feria">${bloqueFeria(f)}</div>
+    <div class="grupo on" id="g-feria">${bloqueFeria(f)}${botonWallet()}${quienesHoy()}</div>
     ${ps.length ? `<div class="grupo" id="g-puestos">${bloquePuestos(ps)}</div>` : ''}
 
     <div class="pie">Tus sellos quedan guardados con tu teléfono.<br>
@@ -207,11 +207,14 @@ function casilleros(llenos, total, ini){
   return h + '</div>';
 }
 
+// Solo la tarjeta. El botón de Wallet y "quiénes están hoy" se arman
+// aparte, para que el recién anotado también pueda guardar su pase:
+// es justo el momento en que uno quiere tenerlo a mano.
 function bloqueFeria(f){
   if(!f) return `<div class="card">
     <h2>Todavía no tenés sellos</h2>
-    <p class="sub">Comprá en cualquier puesto adherido de la feria y pedí que te sumen el sello.</p>
-    ${quienesHoy()}
+    <p class="sub">Comprá en cualquier puesto adherido de la feria y pedí que te sumen el sello.
+    Mientras tanto, guardá tu tarjeta acá abajo así no la perdés.</p>
   </div>`;
 
   const faltan = Math.max(0, f.umbral - f.sellos);
@@ -240,10 +243,7 @@ function bloqueFeria(f){
 
       ${f.estado !== 'completa' && f.vence_proximo ? `<div class="vence ${urge?'urge':''}">
         ${urge ? '⏳ ' : ''}Tu sello más viejo vence el ${esc(fechaLinda(f.vence_proximo, false))}</div>` : ''}
-    </div>
-
-    ${botonWallet()}
-    ${quienesHoy()}`;
+    </div>`;
 }
 
 // El pase vive en la cuenta de Google, no en el aparato: si cambia de
