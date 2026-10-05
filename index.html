@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · index v89 — Editar puesto: no se borran las redes y el guardado avisa de verdad si falla -->
+<!-- La Digi Feria · index v90 — El celular ya no muestra datos viejos: los pedidos a Supabase no se guardan en cache -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
@@ -1162,6 +1162,30 @@ const feriaPorId = id => FERIAS.find(f=>f.id===id);
 // ================== SUPABASE ==================
 const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
+
+// ── Nunca servir datos viejos ─────────────────────────────────────
+// El navegador del celular se guarda la respuesta de un pedido y, si
+// la dirección es igual, la vuelve a servir sin preguntarle al
+// servidor. Como la lista de puestos se pide SIEMPRE con la misma
+// dirección, el feriante cargaba un producto, entraba a su puesto y
+// veía el de antes; recién después de refrescar dos o tres veces
+// aparecía. En la compu casi no se nota, en el celular sí.
+//
+// Acá le decimos al navegador que las respuestas de Supabase no se
+// guardan nunca: son datos vivos, no un archivo. Las fotos no entran
+// en esto (van por <img>, no por acá), así que siguen quedando en
+// cache y la app no se pone más lenta.
+(function(){
+  const fetchOriginal = window.fetch.bind(window);
+  window.fetch = function(entrada, opciones){
+    const url = (typeof entrada === 'string') ? entrada
+              : (entrada && entrada.url) ? entrada.url : '';
+    if(url.startsWith(SUPABASE_URL)){
+      opciones = Object.assign({}, opciones || {}, { cache: 'no-store' });
+    }
+    return fetchOriginal(entrada, opciones);
+  };
+})();
 
 // ══════ CARGAS DE PLAN (prepago) ══════
 // Mientras no esté el pago automático, la carga se pide por WhatsApp
