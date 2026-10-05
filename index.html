@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- La Digi Feria · index v88 — Tarjeta: atajo a Sumar sello para el puesto adherido -->
+<!-- La Digi Feria · index v89 — Editar puesto: no se borran las redes y el guardado avisa de verdad si falla -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Digi Feria</title>
@@ -1320,7 +1320,7 @@ async function cargarPerfil(userId, token){
   // Si es feriante, busca su puesto
   let puestoData = {};
   if(rol === 'feriante'){
-    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,slug,codigo_referido,bio,foto_url,plan,whatsapp,categorias,puesto_feria(ferias(id,nombre,frecuencia))`, {
+    const rpu = await fetch(`${SUPABASE_URL}/rest/v1/puestos?usuario_id=eq.${userId}&select=id,nombre,slug,codigo_referido,bio,foto_url,plan,whatsapp,redes,categorias,puesto_feria(ferias(id,nombre,frecuencia))`, {
       headers: sbHeaders(token)
     });
     const puestos = await rpu.json();
@@ -1338,6 +1338,7 @@ async function cargarPerfil(userId, token){
         puestoPlan: p.plan || "gratis",
         puestoCategorias: Array.isArray(p.categorias) ? p.categorias : [],
         puestoWhatsapp: p.whatsapp,
+        puestoRedes: (p.redes && typeof p.redes === 'object') ? p.redes : {},
         puestoFerias: (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({
           id: x.ferias.id, nombre: x.ferias.nombre, frec: x.ferias.frecuencia||""
         })),
@@ -2953,7 +2954,8 @@ function mostrarToast(msg){
   t.textContent = msg;
   t.style.opacity = '1';
   clearTimeout(t._timer);
-  t._timer = setTimeout(()=>{ t.style.opacity='0'; }, 3000);
+  // Un aviso largo necesita mas tiempo en pantalla que un "listo"
+  t._timer = setTimeout(()=>{ t.style.opacity='0'; }, Math.min(10000, 3000 + msg.length * 50));
 }
 
 // ── Ofertas ────────────────────────────────────────────────
@@ -3852,6 +3854,32 @@ function achicarFoto(file, ladoMax = 1200, calidad = 0.82){
   });
 }
 
+// Un pedido a Supabase que se banca un bache de señal:
+// si la conexión se corta, espera un segundo y lo intenta una vez más.
+// Si igual falla, tira un error en castellano y no "Failed to fetch".
+async function pedir(url, opciones, queEstabaHaciendo){
+  let ultimo = null;
+  for(let intento = 1; intento <= 2; intento++){
+    try{
+      const resp = await fetch(url, opciones);
+      if(!resp.ok){
+        let detalle = '';
+        try{ const j = await resp.json(); detalle = j.message || j.error_description || j.error || j.hint || ''; }catch(e){}
+        throw new Error(queEstabaHaciendo + (detalle ? ': ' + detalle : ' (error ' + resp.status + ')'));
+      }
+      return resp;
+    }catch(e){
+      // Un corte de red tira TypeError; un rechazo del servidor ya viene traducido arriba.
+      const esDeRed = (e instanceof TypeError);
+      if(!esDeRed) throw e;
+      ultimo = e;
+      if(intento === 1) await new Promise(r => setTimeout(r, 1200));
+    }
+  }
+  console.warn('Falló la conexión con Supabase:', ultimo);
+  throw new Error('No hay conexión con el servidor. Fijate que tengas señal o wifi y volvé a tocar Guardar; no se te borró nada de lo que escribiste.');
+}
+
 async function subirFoto(file, carpeta){
   const MAX_MB = 8;
   if(file.size > MAX_MB * 1024 * 1024){
@@ -3862,17 +3890,12 @@ async function subirFoto(file, carpeta){
   const ext = (liviana.type === 'image/jpeg') ? 'jpg' : (file.name.split('.').pop() || 'jpg');
   const path = `${carpeta}/${usuario.id}-${Date.now()}.${ext}`;
 
-  const resp = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${path}`, {
+  await pedir(`${SUPABASE_URL}/storage/v1/object/imagenes/${path}`, {
     method: 'POST',
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tokenActual}`, 'Content-Type': liviana.type || file.type },
     body: liviana
-  });
+  }, 'No se pudo subir la foto');
 
-  if(!resp.ok){
-    let detalle = '';
-    try{ const j = await resp.json(); detalle = j.message || j.error || ''; }catch(e){}
-    throw new Error('No se pudo subir la imagen' + (detalle ? ': ' + detalle : ` (error ${resp.status})`));
-  }
   return `${SUPABASE_URL}/storage/v1/object/public/imagenes/${path}`;
 }
 
@@ -3884,17 +3907,17 @@ async function guardarInfoPuesto(){
     if(fotoNueva){
       fotoUrl = await subirFoto(fotoNueva, 'puestos');
     }
-    const redes = {};
-    const ig = document.getElementById('edic-ig').value.trim();
-    const tk = document.getElementById('edic-tk').value.trim();
-    const fb = document.getElementById('edic-fb').value.trim();
-    const web = document.getElementById('edic-web').value.trim();
-    if(ig) redes.instagram = ig;
-    if(tk) redes.tiktok = tk;
-    if(fb) redes.facebook = fb;
-    if(web) redes.web = web;
+    // Partimos de lo que ya estaba guardado: así, si alguna red no vino
+    // en la pantalla, no se borra sola al guardar otra cosa.
+    const redes = Object.assign({}, usuario.puestoRedes || {});
+    const campos = { instagram: 'edic-ig', tiktok: 'edic-tk', facebook: 'edic-fb', web: 'edic-web' };
+    for(const clave in campos){
+      const valor = document.getElementById(campos[clave]).value.trim();
+      if(valor) redes[clave] = valor;
+      else delete redes[clave];
+    }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
+    await pedir(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
       body: JSON.stringify({
@@ -3904,7 +3927,7 @@ async function guardarInfoPuesto(){
         foto_url: fotoUrl,
         redes
       })
-    });
+    }, 'No se pudieron guardar los cambios');
 
     // Actualizar usuario local
     usuario.puestoNombre = document.getElementById('edic-nombre').value.trim();
