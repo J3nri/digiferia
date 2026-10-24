@@ -113,6 +113,12 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 .exito h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:var(--tinta)}
 .exito p{font-size:15px;color:#5C4F3E;font-weight:700;margin-top:10px;line-height:1.55}
 .exito .volver-link{display:inline-block;margin-top:24px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;color:var(--fucsia);text-decoration:none;border:2px solid var(--tinta);border-radius:12px;padding:12px 24px;background:var(--blanco);box-shadow:3px 3px 0 rgba(43,33,24,.9)}
+/* aviso de rubro completo */
+.aviso-completo{display:none;align-items:flex-start;gap:10px;margin-top:10px;background:#FFE9E9;border:2px solid var(--tinta);border-radius:12px;padding:11px 13px}
+.aviso-completo.on{display:flex}
+.aviso-completo .ic{font-size:20px;line-height:1.2}
+.aviso-completo div{font-size:13px;font-weight:700;color:#5C4F3E;line-height:1.5}
+.aviso-completo b{color:#B04A4A}
 /* nota de revisión */
 .nota-revision{margin:0 18px 18px;background:#FFF0D6;border:2px solid var(--tinta);border-radius:14px;padding:12px 14px}
 .nota-revision p{font-size:13px;font-weight:700;color:#5C4F3E;line-height:1.5}
@@ -152,6 +158,7 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 
 <div class="nota-revision">
   <p>✋ <strong>Revisamos cada puesto antes de publicarlo.</strong> Una vez que envíes el formulario, te contactamos por WhatsApp para confirmar y darte la bienvenida.</p>
+  <p style="margin-top:9px">🎪 <strong>Un puesto por persona, un rubro por puesto.</strong> Entran hasta <strong>3 puestos por rubro</strong> en toda La Digi Feria, igual que en la feria física, para que nadie quede tapado.</p>
 </div>
 
 <!-- FORMULARIO -->
@@ -222,6 +229,10 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
         <span class="rp-emoji" id="rp-emoji"></span>
         <span class="rp-nombre" id="rp-nombre">Este emoji va a representar tu puesto en la feria</span>
       </div>
+      <div class="aviso-completo" id="aviso-completo">
+        <span class="ic">⏳</span>
+        <div><b>Este rubro está completo.</b> Podés enviar tu solicitud igual y quedás en lista de espera: te avisamos apenas se libere un lugar.</div>
+      </div>
       <span class="msg-error">Por favor elegí un rubro</span>
     </div>
 
@@ -242,7 +253,7 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
       <label>WhatsApp del puesto</label>
       <div class="red-row">
         <span class="red-ic wsp"><i class="fa-brands fa-whatsapp"></i></span>
-        <input type="tel" id="f-wsp-puesto" placeholder="Ej: 1150127104" inputmode="numeric">
+        <input type="tel" id="f-wsp-puesto" placeholder="Ej: 1123456789" inputmode="numeric">
       </div>
       <span class="hint">Solo números, sin el 0 ni el 15. Con código de área (ej: 11 para CABA, 221 para La Plata).</span>
       <span class="msg-error">Ingresá el WhatsApp del puesto</span>
@@ -361,7 +372,7 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 <div class="exito" id="exito">
   <div class="exito-emoji">🎉</div>
   <h2>¡Tu solicitud llegó!</h2>
-  <p>Recibimos los datos de tu puesto. En breve te contactamos por WhatsApp para darte la bienvenida a <strong>La Digi Feria</strong>.</p>
+  <p id="exito-texto">Recibimos los datos de tu puesto. En breve te contactamos por WhatsApp para darte la bienvenida a <strong>La Digi Feria</strong>.</p>
   <a href="https://j3nri.github.io/digiferia" class="volver-link">👀 Ver la feria</a>
 </div>
 
@@ -371,6 +382,18 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 const SUPABASE_URL = "https://msbtiihlcgiycorskkdt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_eM5s_vC0_StPCC7sWlYFmQ_gEzvi46A";
 const cab = { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+// Cuántos puestos entran por rubro en toda La Digi Feria.
+const CUPO_RUBRO = 3;
+
+// Identificador propio para el puesto nuevo.
+function uuid(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, ch => {
+    const r = Math.random()*16|0;
+    return (ch === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
 
 // ---- Referido: de quién viene esta persona ----
 window.refCodigo = (new URLSearchParams(location.search).get("ref") || "").trim();
@@ -395,23 +418,35 @@ window.localidadElegida = "";
 
 async function cargarDatos(){
   try{
-    const [rr, rf, rfl] = await Promise.all([
+    const [rr, rf, rfl, rp] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/rubros?select=id,nombre,emoji,clave&order=orden`, {headers:cab}),
       fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,frecuencia&order=nombre`, {headers:cab}),
-      fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id&estado=eq.activo`, {headers:cab})
+      fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id&estado=eq.activo`, {headers:cab}),
+      fetch(`${SUPABASE_URL}/rest/v1/puestos?select=rubro_id&publicado=eq.true`, {headers:cab})
     ]);
     const rubros = rr.ok ? await rr.json() : [];
     const ferias = rf.ok ? await rf.json() : [];
     const flyers = rfl.ok ? await rfl.json() : [];
     const feriasDest = new Set(flyers.map(fl=>fl.feria_id));
 
+    // Cuántos puestos publicados tiene cada rubro. Los rubros en cero no
+    // muestran nada: la página dice lo que hay, no lo que falta.
+    const puestosPub = rp.ok ? await rp.json() : [];
+    const ocupados = {};
+    puestosPub.forEach(x=>{ ocupados[x.rubro_id] = (ocupados[x.rubro_id]||0) + 1; });
+
     const sel = document.getElementById('f-rubro');
     rubros.forEach(r=>{
+      const n = ocupados[r.id] || 0;
       const op = document.createElement('option');
       op.value = r.id;
       op.dataset.emoji = r.emoji;
       op.dataset.nombre = r.nombre;
-      op.textContent = `${r.emoji} ${r.nombre}`;
+      op.dataset.ocupados = n;
+      let cola = "";
+      if(n >= CUPO_RUBRO)  cola = "  — COMPLETO";
+      else if(n > 0)       cola = `  (${n} de ${CUPO_RUBRO})`;
+      op.textContent = `${r.emoji} ${r.nombre}${cola}`;
       sel.appendChild(op);
     });
 
@@ -442,6 +477,7 @@ function actualizarRubro(){
   const sel = document.getElementById('f-rubro');
   const op = sel.options[sel.selectedIndex];
   const preview = document.getElementById('rubro-preview');
+  const aviso = document.getElementById('aviso-completo');
   if(sel.value && op.dataset.emoji){
     document.getElementById('rp-emoji').textContent = op.dataset.emoji;
     document.getElementById('rp-nombre').textContent = "Tu puesto va a usar este ícono: " + op.dataset.nombre;
@@ -449,6 +485,10 @@ function actualizarRubro(){
   } else {
     preview.classList.remove('on');
   }
+  // Completo no bloquea: deja enviar y queda en lista de espera.
+  const lleno = sel.value && Number(op.dataset.ocupados||0) >= CUPO_RUBRO;
+  window.rubroCompleto = !!lleno;
+  if(aviso) aviso.classList.toggle('on', !!lleno);
 }
 
 const LOCALIDADES = {
@@ -540,6 +580,12 @@ async function enviarFormulario(){
   const op = sel.options[sel.selectedIndex];
   const emojiRubro = op.dataset.emoji || '🎪';
 
+  // El id lo generamos acá. Antes lo pedíamos de vuelta a la base con
+  // "return=representation", pero un puesto recién creado todavía no está
+  // publicado y la política de lectura no deja verlo: insertaba bien y
+  // fallaba al devolverlo, así que se caía todo el alta.
+  const nuevoId = uuid();
+
   const wspPuesto   = '549' + document.getElementById('f-wsp-puesto').value.trim().replace(/\D/g,'');
   const wspPersonal = document.getElementById('f-wsp-personal').value.trim().replace(/\D/g,'');
   const instagram   = document.getElementById('f-instagram').value.trim().replace('@','');
@@ -564,8 +610,9 @@ async function enviarFormulario(){
   try{
     const pResp = await fetch(`${SUPABASE_URL}/rest/v1/puestos`, {
       method:'POST',
-      headers:{...cab, Prefer:'return=representation'},
+      headers:{...cab, Prefer:'return=minimal'},
       body: JSON.stringify({
+        id: nuevoId,
         rubro_id: sel.value,
         nombre: nombrePuesto,
         slug,
@@ -580,15 +627,14 @@ async function enviarFormulario(){
         ref_codigo: window.refCodigo || null
       })
     });
-    if(!pResp.ok) throw new Error(await pResp.text());
-    const [puesto] = await pResp.json();
+    if(!pResp.ok) throw new Error('puestos ' + pResp.status + ': ' + await pResp.text());
 
     if(feriasMarcadas.length){
       await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria`, {
         method:'POST',
         headers:cab,
         body: JSON.stringify(feriasMarcadas.map(fid=>({
-          puesto_id: puesto.id, feria_id: fid, frecuencia
+          puesto_id: nuevoId, feria_id: fid, frecuencia
         })))
       });
     }
@@ -599,6 +645,10 @@ async function enviarFormulario(){
       body: JSON.stringify({ email: document.getElementById('f-email').value.trim(), verificado: false })
     }).catch(()=>{});
 
+    if(window.rubroCompleto){
+      const t = document.getElementById('exito-texto');
+      if(t) t.innerHTML = 'Recibimos los datos de tu puesto. Tu rubro está completo por ahora, así que quedás en <strong>lista de espera</strong>: te escribimos por WhatsApp apenas se libere un lugar.';
+    }
     document.getElementById('form-wrap').classList.add('oculto');
     document.getElementById('exito').classList.add('on');
     window.scrollTo({top:0});
