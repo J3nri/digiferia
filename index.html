@@ -575,7 +575,7 @@ nav button.on span{filter:none;opacity:1}
 
 <!-- PERFIL -->
 <section class="pantalla" id="p-perfil">
-  <button class="volver" onclick="ir('p-home')">← Volver a la feria</button>
+  <button class="volver" onclick="volverAtras()">← Volver a la feria</button>
   <div class="perfil-portada" style="margin-top:10px">
     <div class="toldo-grande toldo" id="perfil-toldo"></div>
     <div class="perfil-head">
@@ -5392,5 +5392,78 @@ avisoVueltaDePago();
   </div>
 </div>
 
+<script>
+// ══════════════════════════════════════════════════════════════
+//  El botón «atrás» del celular
+//  Antes salía de la app, porque la app cambia de pantalla sin
+//  cambiar de dirección y el navegador nunca se enteraba de que
+//  navegaste. Ahora cada pantalla deja una marca en el historial.
+//    · Si hay un cartel abierto → lo cierra.
+//    · Si estás en otra pantalla → vuelve a la anterior.
+//    · Recién en el inicio → sale.
+// ══════════════════════════════════════════════════════════════
+(function(){
+  if(!window.history || !history.pushState) return;
+
+  var INICIO = 'p-home';
+  var volviendo = false;   // mientras el navegador retrocede, no apilamos
+  var profundidad = 0;     // cuántas marcas nuestras hay apiladas
+
+  function pantallaActiva(){
+    var p = document.querySelector('.pantalla.activa');
+    return p ? p.id : INICIO;
+  }
+  function carteles(){
+    return Array.prototype.slice.call(document.querySelectorAll('.velo.on'));
+  }
+  function marcar(id){
+    try{ history.pushState({df:1, id:id}, ''); profundidad++; }catch(e){}
+  }
+
+  try{ history.replaceState({df:1, id: pantallaActiva()}, ''); }catch(e){}
+
+  // Envolvemos ir() para que cada cambio de pantalla quede en el historial
+  var irOriginal = window.ir;
+  if(typeof irOriginal === 'function'){
+    window.ir = function(id){
+      var antes = pantallaActiva();
+      var r = irOriginal.apply(this, arguments);
+      if(!volviendo && pantallaActiva() !== antes) marcar(pantallaActiva());
+      return r;
+    };
+  }
+
+  window.addEventListener('popstate', function(e){
+    volviendo = true;
+    try{
+      profundidad = Math.max(0, profundidad - 1);
+
+      // 1) Si hay carteles abiertos, el «atrás» los cierra y nada más.
+      var abiertos = carteles();
+      if(abiertos.length){
+        abiertos.forEach(function(v){ v.classList.remove('on'); });
+        marcar(pantallaActiva());   // devolvemos la marca que acabamos de gastar
+        return;
+      }
+
+      // 2) Si no, volvemos a la pantalla que guarda el historial.
+      var st = e.state;
+      var destino = (st && st.df && st.id) ? st.id : INICIO;
+      if(document.getElementById(destino) && typeof irOriginal === 'function'){
+        irOriginal(destino);
+      }
+    } finally {
+      setTimeout(function(){ volviendo = false; }, 0);
+    }
+  });
+
+  // Para los botones «Volver» de la pantalla: si hay historial nuestro,
+  // retrocedemos de verdad en vez de apilar otra marca encima.
+  window.volverAtras = function(){
+    if(profundidad > 0){ history.back(); }
+    else if(typeof window.ir === 'function'){ window.ir(INICIO); }
+  };
+})();
+</script>
 </body>
 </html>
