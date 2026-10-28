@@ -355,6 +355,37 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .confirmar-feria-btn.confirmado{background:#DFF5EC;border-color:#00A878}
 /* Panel del organizador logueado */
 .panel-org{padding:0 0 24px}
+/* Ferias cargadas a mano, en la portada. Solo información: no se tocan. */
+.fm-lista{display:flex;flex-direction:column;gap:10px;margin:0 18px 20px}
+.fm-item{
+  position:relative;display:flex;gap:11px;align-items:flex-start;
+  background:var(--blanco);border:2px dashed var(--tinta);border-radius:14px;
+  padding:12px 13px
+}
+.fm-num{
+  position:absolute;top:-9px;left:-9px;width:23px;height:23px;border-radius:50%;
+  background:var(--tinta);color:#FFF8EC;border:2px solid #FFF8EC;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:12px
+}
+.fm-dia{
+  flex:0 0 auto;width:48px;border:2px solid var(--tinta);border-radius:11px;
+  background:#FFD84D;text-align:center;padding:5px 0;line-height:1.1
+}
+.fm-dia small{display:block;font-size:10px;font-weight:800;text-transform:uppercase}
+.fm-dia b{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:21px}
+.fm-info{flex:1;min-width:0}
+.fm-info h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;line-height:1.2}
+.fm-info p{font-size:12px;color:#7A6A55;font-weight:700;margin-top:3px;line-height:1.35}
+.fm-cuantos{
+  margin-top:8px;background:#FFF8EC;border:1.5px solid var(--tinta);border-radius:11px;
+  padding:5px 10px;font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.4
+}
+.fm-cuantos b{color:var(--tinta)}
+/* Feria publicada sin nadie confirmado todavía: se lista igual */
+.fm-cuando{
+  margin-top:8px;font-size:12px;font-weight:800;color:#7A6A55;line-height:1.4
+}
 .org-feria-card{
   margin:0 18px 12px;background:var(--blanco);border:2px solid var(--tinta);
   border-radius:14px;box-shadow:4px 4px 0 rgba(43,33,24,.9);overflow:hidden
@@ -537,6 +568,8 @@ nav button.on span{filter:none;opacity:1}
   <div style="padding:0 18px 20px">
     <button class="btn-prox" onclick="ir('p-ferias')">📅 Ver próximas ferias <span style="float:right">→</span></button>
   </div>
+  <!-- Ferias que carga Javier a mano desde el flyer. Solo información. -->
+  <div id="ferias-manuales"></div>
   <div class="seccion" style="padding-bottom:6px;padding-top:8px"><h2>Todos los puestos <span id="badge-vivo" style="display:none;font-family:Nunito;font-size:10.5px;font-weight:800;background:#DFF5EC;color:#007453;border:2px solid var(--tinta);border-radius:999px;padding:2px 9px;vertical-align:middle">🟢 rubros en vivo</span></h2></div>
   <div class="chips" id="chips-rubros"></div>
   <div class="grilla" id="grilla-puestos"></div>
@@ -1144,6 +1177,8 @@ let RUBROS = {
 const rubroDe = clave => RUBROS[clave] || {nombre:clave, emoji:"🎪", color:"#E91E8C", clase:"rc1"};
 
 let FERIAS = [];   // se llenan desde Supabase (sin datos de ejemplo)
+// Cuántos puestos confirmaron en cada feria. Solo el número, nunca quiénes.
+let CONFIRMAN = {};
 
 let FERIANTES = [];   // se llenan desde Supabase (sin datos de ejemplo)
 
@@ -1413,7 +1448,7 @@ async function cargarPerfil(userId, token){
       }catch(e){ console.warn('No se pudo leer la vigencia del plan:', e); }
       // Asistencias ya confirmadas, para que el botón quede verde al volver al panel
       try{
-        const hoyISO = new Date().toISOString().slice(0,10);
+        const hoyISO = fechaLocal(new Date());
         const ra = await fetch(`${SUPABASE_URL}/rest/v1/asistencias?puesto_id=eq.${p.id}&fecha=gte.${hoyISO}&select=feria_id,fecha`, {
           headers: sbHeaders(token)
         });
@@ -1902,7 +1937,7 @@ function renderPanelOrganizador(cont){
 async function cargarFechasOrganizador(){
   if(!usuario || usuario.rol !== 'organizador' || !(usuario.feriaOrg||[]).length) return;
   const ids = usuario.feriaOrg.map(f=>f.id).join(',');
-  const hoy = new Date().toISOString().slice(0,10);
+  const hoy = fechaLocal(new Date());
   try{
     const r = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=id,feria_id,fecha,flyer_url&feria_id=in.(${ids})&fecha=gte.${hoy}&order=fecha.asc`, {
       headers: sbHeaders(tokenActual)
@@ -3427,10 +3462,84 @@ function proximaFechaConFlyer(fe){
   return conFlyer.length ? conFlyer[0] : null;
 }
 
+// Cómo nombrar la fecha: hoy, mañana, este finde, o el día y el número.
+function cuandoEs(fechaStr){
+  const [a,m,d] = fechaStr.split('-').map(Number);
+  const f = new Date(a, m-1, d);
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const dias = Math.round((f - hoy) / 86400000);
+  if(dias === 0) return 'Hoy';
+  if(dias === 1) return 'Mañana';
+  // El sábado y el domingo que vienen. Si hoy es sábado, "este finde"
+  // es hoy y mañana; si es domingo, es hoy.
+  const sab = new Date(hoy); sab.setDate(hoy.getDate() + ((6 - hoy.getDay() + 7) % 7));
+  const dom = new Date(sab); dom.setDate(sab.getDate() + 1);
+  if(fechaLocal(f) === fechaLocal(sab) || fechaLocal(f) === fechaLocal(dom)) return 'Para este finde';
+  return `Para el ${DIAS_LARGOS[f.getDay()]} ${d}/${m}`;
+}
+
+// La fecha que le corresponde a cada feria: la próxima que esté
+// publicada, y si no hay ninguna, la que tenga cargada como próxima.
+function diaDeFeria(fe){
+  return (fe.fechas && fe.fechas[0]) ? fe.fechas[0] : (fe.proxima || null);
+}
+
+// La lista de la portada, entre "Ver próximas ferias" y "Todos los
+// puestos". Es solo información: no se toca, no lleva a ningún lado.
+//
+// ESTO ES TEMPORAL. Es el parche para mostrar las ferias mientras
+// todavía no hay organizadores dados de alta. Entran SOLO las que carga
+// Javier a mano desde el flyer que le pasan por privado, o sea las que
+// no tienen organizador. Las que da de alta su propio organizador ya
+// tienen su lugar definitivo en la solapa Ferias, con flyer y botón de
+// seguir, así que no se repiten acá.
+//
+// El día que no queden ferias sin organizador, esta lista desaparece
+// sola de la portada y no hay nada que desarmar.
+//
+// Una feria recién cargada todavía no tiene a nadie confirmado y aun
+// así se lista: en ese caso no se muestra el renglón del conteo, porque
+// decir "0 puestos" juega en contra.
+//
+// Nunca dice QUÉ puestos van, solo cuántos.
+function renderFeriasManuales(){
+  const cont = document.getElementById('ferias-manuales');
+  if(!cont) return;
+
+  const lista = FERIAS
+    .filter(fe => !fe.conOrganizador && diaDeFeria(fe))
+    .sort((a,b) => diaDeFeria(a) < diaDeFeria(b) ? -1 : 1);
+
+  if(!lista.length){ cont.innerHTML = ''; return; }
+
+  cont.innerHTML = `
+    <div class="seccion" style="padding-bottom:6px"><h2>Dónde van a estar los puestos 🎪</h2></div>
+    <div class="fm-lista">` +
+    lista.map((fe,i) => {
+      const dia = diaDeFeria(fe);
+      const fc  = fechaCorta(dia);
+      const c   = CONFIRMAN[fe.id];
+      const n   = c ? c.cuantos : 0;
+      return `<div class="fm-item">
+        <div class="fm-num">${i+1}</div>
+        <div class="fm-dia"><small>${fc.dia}</small><b>${fc.num}</b></div>
+        <div class="fm-info">
+          <h3>${fe.nombre}</h3>
+          <p>${fe.lugar||''}</p>
+          ${n ? `<div class="fm-cuantos">👥 ${cuandoEs(dia)}, <b>${n} ${n===1?'puesto':'puestos'}</b> ${n===1?'va':'van'} a estar acá</div>`
+              : `<div class="fm-cuando">📅 ${cuandoEs(dia)}</div>`}
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
 function renderFerias(){
   // Separar en dos sectores: destacadas (pagan la vidriera) y el resto
-  const destacadas = FERIAS.filter(fe => (fe.fechasFull||[]).some(x=>x.destacada && x.flyer_url));
-  const normales   = FERIAS.filter(fe => !(fe.fechasFull||[]).some(x=>x.destacada && x.flyer_url));
+  // Arriba van solo las ferias que dio de alta su propio organizador.
+  // Las que carga Javier a mano desde un flyer van en la lista de abajo.
+  const propias    = FERIAS.filter(fe => fe.conOrganizador);
+  const destacadas = propias.filter(fe => (fe.fechasFull||[]).some(x=>x.destacada && x.flyer_url));
+  const normales   = propias.filter(fe => !(fe.fechasFull||[]).some(x=>x.destacada && x.flyer_url));
 
   const cont = document.getElementById('lista-ferias');
   let html = '';
@@ -3661,6 +3770,11 @@ function suscribirGeneral(){
 
 // ================== SUPABASE EN VIVO ==================
 const DIAS_ES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+function fechaLocal(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function fechaCorta(iso){
   if(!iso) return {dia:"—", num:"🎪", texto:""};
   const d = new Date(iso+"T12:00:00");
@@ -3684,7 +3798,7 @@ async function cargarRubrosEnVivo(){
 async function cargarFeriaYPuestosEnVivo(){
   const cab = {apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`};
   try{
-    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url&order=proxima_fecha.asc.nullslast`,{headers:cab});
+    const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,horario,frecuencia,proxima_fecha,logo_url,organizador_id&order=proxima_fecha.asc.nullslast`,{headers:cab});
     const ferias = rf.ok ? await rf.json() : [];
     const sel = "id,nombre,slug,creado_en,bio,foto_url,whatsapp,plan,redes,categorias,rubros(clave),productos(nombre,descripcion,precio,fotos,visible,orden,categoria,stock,precio_anterior,oferta_hasta),puesto_feria(frecuencia,ferias(id,nombre,lugar,horario,frecuencia)),puesto_insignia(vigente,insignias(emoji,nombre,detalle,regla)),asistencias(fecha,feria_id)";
     const rp = await fetch(`${SUPABASE_URL}/rest/v1/puestos?select=${encodeURIComponent(sel)}&publicado=eq.true`,{headers:cab});
@@ -3692,9 +3806,9 @@ async function cargarFeriaYPuestosEnVivo(){
     const rfl = await fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id,imagen_url&estado=eq.activo`,{headers:cab});
     const flyers = rfl.ok ? await rfl.json() : [];
     // Fechas públicas: solo los próximos 30 días
-    const hoyISO = new Date().toISOString().slice(0,10);
+    const hoyISO = fechaLocal(new Date());
     const en30 = new Date(); en30.setDate(en30.getDate()+30);
-    const rfe = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=feria_id,fecha,flyer_url,destacada&fecha=gte.${hoyISO}&fecha=lte.${en30.toISOString().slice(0,10)}&order=fecha.asc`,{headers:cab});
+    const rfe = await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?select=feria_id,fecha,flyer_url,destacada&fecha=gte.${hoyISO}&fecha=lte.${fechaLocal(en30)}&order=fecha.asc`,{headers:cab});
     const fechasPub = rfe.ok ? await rfe.json() : [];
     if(!puestos.length){ console.warn("Sin puestos publicados en la base."); }
     {
@@ -3702,7 +3816,7 @@ async function cargarFeriaYPuestosEnVivo(){
         const fc=fechaCorta(f.proxima_fecha);
         const misFechas = fechasPub.filter(x=>x.feria_id===f.id);
         const fpub = misFechas.map(x=>x.fecha);
-        return {id:f.id, nombre:f.nombre, logo:f.logo_url||null, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, fechasFull:misFechas, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
+        return {id:f.id, nombre:f.nombre, proxima:f.proxima_fecha||null, conOrganizador:!!f.organizador_id, logo:f.logo_url||null, lugar:(f.lugar||"")+(f.horario?" · "+f.horario:""), frec:f.frecuencia||"", dia:fc.dia, num:fc.num, fd:"fd1", fechas:fpub, fechasFull:misFechas, ordenFecha:f.proxima_fecha?new Date(f.proxima_fecha).getTime():9e15};
       });
     }
     const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
@@ -3726,6 +3840,22 @@ async function cargarFeriaYPuestosEnVivo(){
         confirmado:asis?{nombre:feriaAsis?feriaAsis.nombre:"",texto:fechaCorta(asis.fecha).texto}:null
       };
     });
+    // Cuántos puestos confirmaron asistencia en cada feria, para el
+    // cartel del final de la solapa Ferias. La consulta de arriba pide
+    // publicado=eq.true, así que los puestos ocultos no entran. Se cuenta
+    // por puesto distinto: dos confirmaciones del mismo no son dos puestos.
+    CONFIRMAN = {};
+    FERIAS.forEach(fe=>{
+      const dia = (fe.fechas && fe.fechas[0]) ? fe.fechas[0] : fe.proxima;
+      if(!dia) return;
+      const quienes = new Set();
+      puestos.forEach(p=>{
+        (p.asistencias||[]).forEach(a=>{
+          if(a.feria_id===fe.id && a.fecha===dia) quienes.add(p.id);
+        });
+      });
+      if(quienes.size) CONFIRMAN[fe.id] = { fecha:dia, cuantos:quienes.size };
+    });
     // El carrusel de la home = fechas DESTACADAS próximas, con su flyer real
     FLYERS = [];
     FERIAS.forEach(fe=>{
@@ -3734,7 +3864,7 @@ async function cargarFeriaYPuestosEnVivo(){
       });
     });
     FLYERS.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
-    renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+    renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
     // Contador real de Puestos Fundadores 🌱 (cuenta las insignias en vivo)
     (function(){
       const n = FERIANTES.filter(f=>(f.pinesDB||[]).some(p=>(p.nombre||"").toLowerCase().includes("fundador"))).length;
@@ -4658,7 +4788,7 @@ function datosOferta(precioAhora){
   let hasta = null;
   if(dias){
     const f = new Date(); f.setDate(f.getDate() + dias);
-    hasta = f.toISOString().slice(0,10);
+    hasta = fechaLocal(f);
   }
   return { precio_anterior: antes, oferta_hasta: hasta };
 }
@@ -5424,7 +5554,7 @@ window.addEventListener('hashchange', abrirPuestoDelLink);
 // ================== INIT ==================
 restaurarSeguimientosLocal();
 aplicarBloqueoInscripciones();
-renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderCarrusel();
+renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
   abrirPuestoDelLink();
