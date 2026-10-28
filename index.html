@@ -1261,6 +1261,25 @@ async function irAPagar(plan, meses, btn){
 }
 
 // Aviso al volver de Mercado Pago
+// Cuando el link del mail vence o ya se usó, Supabase devuelve a la app
+// con "#error=..." en la dirección. Antes no se avisaba nada: la persona
+// quedaba sin sesión, el panel la dejaba llenar formularios, y al guardar
+// le salía "no hay conexión", que no era cierto.
+function avisoLinkVencido(){
+  const h = location.hash || '';
+  if(!h.includes('error')) return false;
+  const p = new URLSearchParams(h.replace(/^#/, ''));
+  const codigo = p.get('error_code') || '';
+  const vencido = codigo.includes('expired') || (p.get('error_description') || '').toLowerCase().includes('expired');
+  const texto = vencido
+    ? 'El link del mail ya venció. Entrá con tu mail y contraseña, o pedinos uno nuevo.'
+    : 'Ese link ya no sirve. Entrá con tu mail y contraseña, o pedinos uno nuevo.';
+  try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  setTimeout(()=>{ mostrarToast('⚠️ ' + texto); }, 600);
+  setTimeout(()=>{ if(!usuario && typeof abrirLogin === 'function') abrirLogin(); }, 2200);
+  return true;
+}
+
 function avisoVueltaDePago(){
   const h = location.hash || '';
   if(!h.includes('pago=')) return;
@@ -1305,6 +1324,15 @@ function cajaPlan(u){
     ${btn('pro','Cargar días de Plan Pro ⭐','var(--fucsia)',false)}
     ${regla}
   </div>`;
+}
+
+// Si no hay sesión, la base rechaza la operación y el navegador lo
+// reporta como falla de red. Antes eso se traducía a "no hay conexión",
+// que mandaba a mirar el wifi en vez del problema real.
+function exigirSesion(){
+  if(!tokenActual || !usuario){
+    throw new Error('Se cerró tu sesión. Cerrá esta ventana, tocá el círculo de arriba a la derecha y volvé a entrar con tu mail y tu contraseña. No se te borró nada de lo que escribiste.');
+  }
 }
 
 function sbHeaders(token){
@@ -2940,12 +2968,34 @@ async function toggleAsistencia(feriaId, feriaName){
   // Confirmar: guardar en Supabase
   if(!usuario || !usuario.puestoId){ return; }
   try{
-    const hoy = new Date();
-    // Próximo sábado o domingo
-    const diasHastaFinde = [6,0].map(d=> { const diff = (d - hoy.getDay() + 7)%7; return diff===0?7:diff; });
-    const proxFecha = new Date(hoy);
-    proxFecha.setDate(hoy.getDate() + Math.min(...diasHastaFinde));
-    const fechaStr = proxFecha.toISOString().split("T")[0];
+    // La fecha que vale es LA DE LA FERIA, no "el finde que viene".
+    // Antes se calculaba el próximo sábado o domingo y se guardaba eso
+    // aunque la feria fuera dentro de tres semanas. Resultado: el aviso
+    // le llegaba al seguidor con una fecha en la que no había feria.
+    //
+    // Y se armaba con toISOString(), que pasa a hora de Londres:
+    // confirmando después de las 21, allá ya era el día siguiente y
+    // quedaba guardado un día de más.
+    const comoFecha = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    let fechaStr = null;
+    try{
+      const rf = await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${feriaId}&select=proxima_fecha`, {
+        headers: sbHeaders(tokenActual)
+      });
+      if(rf.ok){
+        const [ff] = await rf.json();
+        if(ff && ff.proxima_fecha) fechaStr = ff.proxima_fecha;
+      }
+    }catch(e){ /* sin fecha de feria, caemos al próximo finde */ }
+
+    if(!fechaStr){
+      const hoy = new Date();
+      const diasHastaFinde = [6,0].map(d=> { const diff = (d - hoy.getDay() + 7)%7; return diff===0?7:diff; });
+      const proxFecha = new Date(hoy);
+      proxFecha.setDate(hoy.getDate() + Math.min(...diasHastaFinde));
+      fechaStr = comoFecha(proxFecha);
+    }
 
     await fetch(`${SUPABASE_URL}/rest/v1/asistencias`, {
       method:"POST",
@@ -3905,6 +3955,7 @@ async function pedir(url, opciones, queEstabaHaciendo){
 }
 
 async function subirFoto(file, carpeta){
+  exigirSesion();
   const MAX_MB = 8;
   if(file.size > MAX_MB * 1024 * 1024){
     throw new Error(`La foto pesa ${(file.size/1024/1024).toFixed(1)} MB. Probá con una más liviana (máximo ${MAX_MB} MB).`);
@@ -3925,6 +3976,8 @@ async function subirFoto(file, carpeta){
 
 async function guardarInfoPuesto(){
   const btn = document.querySelector('#edic-0 .edic-btn-guardar');
+  try{ exigirSesion(); }
+  catch(e){ mostrarToast('⚠️ ' + e.message); return; }
   btn.textContent = '⏳ Guardando...'; btn.disabled = true;
   try{
     let fotoUrl = usuario.puestoFoto || usuario.puestoEmoji || '🎪';
@@ -4180,6 +4233,9 @@ async function guardarProducto(){
     if(!antes){ err.textContent='Ingresá el precio anterior de la oferta'; err.classList.add('on'); return; }
     if(antes <= Number(precio)){ err.textContent='El precio anterior tiene que ser mayor al precio de ahora'; err.classList.add('on'); return; }
   }
+
+  try{ exigirSesion(); }
+  catch(e){ err.textContent = e.message; err.classList.add('on'); return; }
 
   const id = document.getElementById('prod-id').value;
   const guardarBtn = document.querySelector('#velo-producto .m-fucsia');
@@ -5373,6 +5429,7 @@ cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
   abrirPuestoDelLink();
 });
+avisoLinkVencido();
 recuperarSesionLocal();
 detectarTokenInvitacion();
 avisoVueltaDePago();
