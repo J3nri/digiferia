@@ -382,6 +382,12 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
   padding:5px 10px;font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.4
 }
 .fm-cuantos b{color:var(--tinta)}
+/* "Suele estar en": solo nombres, sin dirección ni horario */
+.suele{margin:0 18px 18px;background:var(--blanco);border:2px dashed var(--tinta);
+       border-radius:14px;padding:13px 15px}
+.suele .et{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#B3A48C}
+.suele .nom{font-size:15px;font-weight:800;color:#2B2118;margin-top:5px;line-height:1.45}
+.suele .ac{font-size:12px;color:#7A6A55;font-weight:700;margin-top:7px;line-height:1.35}
 /* Feria publicada sin nadie confirmado todavía: se lista igual */
 .fm-cuando{
   margin-top:8px;font-size:12px;font-weight:800;color:#7A6A55;line-height:1.4
@@ -488,7 +494,7 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .agenda-item{display:flex;align-items:center;gap:10px;background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;padding:10px 14px;margin-bottom:10px}
 .agenda-item .ic{font-size:20px}
 .agenda-item b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14.5px;display:block}
-.agenda-item small{font-size:12.5px;color:#7A6A55;font-weight:700}
+.agenda-item small{display:block;font-size:12.5px;color:#7A6A55;font-weight:700;line-height:1.35}
 .grilla-prod{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 18px}
 .prod{background:var(--blanco);border:2px solid var(--tinta);border-radius:14px;overflow:hidden}
 .prod .foto{height:92px;font-size:36px}
@@ -621,8 +627,11 @@ nav button.on span{filter:none;opacity:1}
       <div><button class="btn-seguir" id="btn-seguir-puesto" onclick="seguirActual(event)">🔔 Seguir este puesto</button></div>
     </div>
   </div>
-  <div class="seccion" style="padding-bottom:10px"><h2>📅 ¿Dónde encontrarlo?</h2></div>
+  <div class="seccion" style="padding-bottom:10px" id="perfil-donde-tit"><h2>📅 ¿Dónde encontrarlo?</h2></div>
   <div class="agenda" id="perfil-agenda"></div>
+  <!-- Las ferias que declaró al inscribirse. Solo los nombres: no son
+       una promesa de que vaya, así que no van con dirección ni horario. -->
+  <div id="perfil-suele"></div>
   <div class="seccion" style="padding-bottom:10px"><h2>Sus productos</h2></div>
   <div class="cats-wrap"><div class="chips" id="perfil-cats" style="display:none"></div></div>
   <div class="grilla-prod" id="perfil-productos"></div>
@@ -3250,8 +3259,6 @@ function nombreFeriaConfirmada(f){
 
 function cardPuesto(f){
   const r = rubroDe(f.rubro);
-  const primera = nombreFeriaDe(f, 0);
-  const extra = f.ferias.length - 1;
   const badge = f.confirmado
     ? `<div><span class="este-finde">🔥 ${nombreFeriaConfirmada(f).replace("Feria de ","").replace("Feria del ","")} · ${f.confirmado.texto}</span></div>` : "";
   const sello = f.plan==="pro" ? `<span class="sello-destacado">⭐ Destacado</span>` : "";
@@ -3265,7 +3272,6 @@ function cardPuesto(f){
     <div class="pinfo">
       <div class="pnombre">${f.nombre}</div>
       <div class="prubro">${r.nombre}</div>
-      <div class="pferia">📍 ${primera}${extra>0?`<br><span class="mas-ferias">+${extra} feria${extra>1?"s":""} más</span>`:""}</div>
       ${badge}
     </div>
   </div>`;
@@ -3320,7 +3326,7 @@ function verPerfil(id){
   document.getElementById('perfil-emoji').textContent = f.emoji;
   document.getElementById('perfil-nombre').textContent = f.nombre;
   document.getElementById('perfil-badges').innerHTML =
-    `<span class="badge">${r.emoji} ${r.nombre}</span><span class="badge" style="background:#DFF5EC">🎪 ${f.ferias.length} feria${f.ferias.length>1?"s":""}</span>`
+    `<span class="badge">${r.emoji} ${r.nombre}</span>`
     + (f.confirmado ? `<span class="este-finde" style="margin-top:0">🔥 Este finde: ${nombreFeriaConfirmada(f)} · ${f.confirmado.texto}</span>` : "");
   const listaPines = f.pinesDB && f.pinesDB.length ? f.pinesDB : (f.pines||[]).map(k=>PINES[k]).filter(Boolean);
   document.getElementById('perfil-pines').innerHTML = listaPines.map(p=>{
@@ -3338,13 +3344,42 @@ function verPerfil(id){
   document.getElementById('perfil-redes').innerHTML = f.redes ? Object.entries(f.redes).map(([k,v])=>{
     const c = REDES_CFG[k]; return c ? `<a class="red ${c.clase}" href="${c.url(v)}" target="_blank" rel="noopener">${c.icono}</a>` : "";
   }).join("") : "";
-  const agenda = f.feriasDetalle
-    ? f.feriasDetalle.map(fd=>({nombre:fd.nombre, frec:fd.frec, lugar:fd.lugar, horario:fd.horario}))
-    : f.ferias.map(fid=>{ const fe=feriaPorId(fid); return fe?{nombre:fe.nombre,frec:fe.frec,lugar:fe.lugar,horario:fe.horario}:null; }).filter(Boolean);
-  document.getElementById('perfil-agenda').innerHTML = agenda.map(a=>{
-    const cuando = [a.frec, a.horario].filter(Boolean).join(" · ");
+  // ── Dónde encontrarlo ──
+  // Arriba, SOLO las ferias que el puesto confirmó, con su fecha: eso es
+  // lo único que podemos afirmarle a un cliente.
+  // Abajo, en texto pelado, las que declaró al inscribirse. Esas pueden
+  // ser solo "suelo ir", no un lugar reservado, así que no llevan
+  // dirección ni horario: nadie tiene que salir de su casa por ese dato.
+  const detallePorId = {};
+  (f.feriasDetalle||[]).forEach(fd=>{ detallePorId[fd.id] = fd; });
+
+  const confirmadas = (f.confirmadas||[]).map(c=>{
+    const fd = detallePorId[c.feriaId] || feriaPorId(c.feriaId);
+    if(!fd) return null;
+    return { id:c.feriaId, nombre:fd.nombre, lugar:fd.lugar||"", horario:fd.horario||"", fecha:c.fecha };
+  }).filter(Boolean);
+
+  document.getElementById('perfil-agenda').innerHTML = confirmadas.map(a=>{
+    const cuando = [fechaLargaCorta(a.fecha), a.horario].filter(Boolean).join(" · ");
     return `<div class="agenda-item"><div class="ic">📍</div><div><b>${a.nombre}</b>${a.lugar?`<small>${a.lugar}</small>`:""}${cuando?`<small>${cuando}</small>`:""}</div></div>`;
   }).join("");
+
+  // Las declaradas que NO están ya arriba como confirmadas
+  const yaArriba = new Set(confirmadas.map(x=>x.id));
+  const suele = (f.feriasDetalle||[]).filter(fd=>!yaArriba.has(fd.id)).map(fd=>fd.nombre);
+  const cajaSuele = document.getElementById('perfil-suele');
+  if(cajaSuele){
+    cajaSuele.innerHTML = suele.length ? `<div class="suele">
+        <div class="et">Suele estar en</div>
+        <div class="nom">${suele.join(" · ")}</div>
+        <div class="ac">${confirmadas.length
+            ? 'Nos lo contó al sumarse. Lo confirmado para estos días está arriba.'
+            : 'Nos lo contó al sumarse. Todavía no confirmó ninguna fecha, así que escribile antes de ir.'}</div>
+      </div>` : '';
+  }
+  // Si no hay nada que mostrar, tampoco el título
+  const tit = document.getElementById('perfil-donde-tit');
+  if(tit) tit.style.display = (confirmadas.length || suele.length) ? '' : 'none';
   // Guardar referencia al feriante actual para el carrito
   window.perfilActual = f;
   const esPro = f.plan === 'pro';
@@ -3548,7 +3583,7 @@ function renderFerias(){
   if(destacadas.length){
     html += `<div style="padding:0 18px 4px"><h2 style="display:flex;justify-content:space-between;align-items:baseline">Ferias destacadas 🎉 <small style="font-size:11px;font-weight:800;color:#B3A48C;text-transform:uppercase;letter-spacing:.5px">Espacio pago</small></h2></div>`;
     html += destacadas.map(fe=>{
-      const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
+      const n = (CONFIRMAN[fe.id] ? CONFIRMAN[fe.id].cuantos : 0);
       const fx = (fe.fechasFull||[]).find(x=>x.destacada && x.flyer_url) || proximaFechaConFlyer(fe);
       const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
       return `<div class="flyer fijo fl1" style="margin:0 18px 16px" onclick="verFlyerGrande('${fx.flyer_url}','${nombreEsc}','${fechaCorta(fx.fecha).texto}')">
@@ -3558,7 +3593,7 @@ function renderFerias(){
           <div style="flex:1;min-width:0">
             <span class="flyer-fecha">📅 ${fechaCorta(fx.fecha).texto}</span>
             <h3 style="margin-top:4px">${fe.nombre}</h3>
-            <div class="flyer-lugar">📍 ${(fe.lugar||'').split("·")[0].trim()} · 🎪 ${n} puestos</div>
+            <div class="flyer-lugar">📍 ${(fe.lugar||'').split("·")[0].trim()} · 🎪 ${n} confirmado${n===1?"":"s"}</div>
             <div style="font-size:11px;font-weight:800;color:#B3572B;margin-top:6px">👆 Tocá para ver el flyer</div>
           </div>
         </div>
@@ -3570,7 +3605,7 @@ function renderFerias(){
   if(normales.length){
     if(destacadas.length) html += `<div style="padding:14px 18px 4px"><h2>Otras ferias programadas 📅</h2></div>`;
     html += normales.map(fe=>{
-      const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
+      const n = (CONFIRMAN[fe.id] ? CONFIRMAN[fe.id].cuantos : 0);
       const fx = proximaFechaConFlyer(fe);
       const tocable = fx ? `onclick="verFlyerGrande('${fx.flyer_url}','${(fe.nombre||'').replace(/'/g,"\\'")}','${fechaCorta(fx.fecha).texto}')" style="cursor:pointer"` : '';
       return `<div class="feria-item" ${tocable}>
@@ -3580,7 +3615,7 @@ function renderFerias(){
           <p>${fe.lugar}</p>
           <span class="frec">🔁 ${fe.frec}</span>
           ${(fe.fechas&&fe.fechas.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">${fe.fechas.map(x=>`<span style="font-size:11px;font-weight:800;background:#DFF5EC;border:1.5px solid var(--tinta);border-radius:999px;padding:2px 8px">📅 ${fechaCorta(x).texto}</span>`).join('')}</div>` : ''}
-          <div class="puestos-n">🎪 ${n} puestos en la Digi Feria</div>
+          <div class="puestos-n">🎪 ${n===0?"Todavía sin puestos confirmados":n+" puesto"+(n===1?"":"s")+" confirmado"+(n===1?"":"s")}</div>
         </div>
         <button class="seguir-mini ${siguiendo.has('feria:'+fe.id)?'on':''}" onclick="event.stopPropagation();seguir('feria','${fe.id}','${fe.nombre}',this)" style="align-self:flex-start">🔔</button>
       </div>`;
@@ -3620,7 +3655,7 @@ function renderCarrusel(){
   cont.innerHTML = FLYERS.map(fl=>{
     const fe = feriaPorId(fl.feriaId);
     if(!fe) return "";
-    const n = FERIANTES.filter(f=>f.ferias.includes(fe.id)).length;
+    const n = (CONFIRMAN[fe.id] ? CONFIRMAN[fe.id].cuantos : 0);
     const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
     return `<div class="flyer fl1" onclick="verFlyerGrande('${fl.flyerUrl}','${nombreEsc}','${fl.textoFecha}')">
       <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
@@ -3629,7 +3664,7 @@ function renderCarrusel(){
         <div style="flex:1;min-width:0">
           <span class="flyer-fecha">📅 ${fl.textoFecha}</span>
           <h3 style="margin-top:4px">${fe.nombre}</h3>
-          <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n} puestos</div>
+          <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n} confirmado${n===1?"":"s"}</div>
           <div style="font-size:11px;font-weight:800;color:#B3572B;margin-top:6px">👆 Tocá para ver el flyer</div>
         </div>
       </div>
@@ -3775,6 +3810,14 @@ function fechaLocal(d){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// "Sábado 7/11" — para la ficha del puesto, donde conviene la fecha entera.
+function fechaLargaCorta(iso){
+  if(!iso) return "";
+  const [a,m,d] = iso.split('-').map(Number);
+  const f = new Date(a, m-1, d);
+  return `${DIAS_LARGOS[f.getDay()]} ${d}/${m}`;
+}
+
 function fechaCorta(iso){
   if(!iso) return {dia:"—", num:"🎪", texto:""};
   const d = new Date(iso+"T12:00:00");
@@ -3821,7 +3864,11 @@ async function cargarFeriaYPuestosEnVivo(){
     }
     const hoy=new Date(); const en7=new Date(); en7.setDate(hoy.getDate()+7);
     FERIANTES = puestos.map(p=>{
-      const asis = (p.asistencias||[]).map(a=>({...a,d:new Date(a.fecha+"T12:00:00")})).filter(a=>a.d>=new Date(hoy.toDateString())&&a.d<=en7).sort((a,b)=>a.d-b.d)[0];
+      // Todas las confirmaciones de hoy en adelante, para la ficha del puesto.
+      const asisTodas = (p.asistencias||[]).map(a=>({...a,d:new Date(a.fecha+"T12:00:00")}))
+        .filter(a=>a.d>=new Date(hoy.toDateString())).sort((a,b)=>a.d-b.d);
+      // La más próxima dentro de 7 días es la que enciende el 🔥 de "este finde".
+      const asis = asisTodas.filter(a=>a.d<=en7)[0];
       const fdet = (p.puesto_feria||[]).filter(x=>x.ferias).map(x=>({id:x.ferias.id,nombre:x.ferias.nombre,lugar:x.ferias.lugar||"",horario:x.ferias.horario||"",frec:x.frecuencia||x.ferias.frecuencia||""}));
       const feriaAsis = asis ? fdet.find(x=>x.id===asis.feria_id) : null;
       const esUrl = p.foto_url&&p.foto_url.startsWith("http");
@@ -3834,6 +3881,7 @@ async function cargarFeriaYPuestosEnVivo(){
         whatsapp:p.whatsapp||null,
         redes:(p.redes&&Object.keys(p.redes).length)?p.redes:null,
         ferias:fdet.map(x=>x.id), feriasDetalle:fdet,
+        confirmadas: asisTodas.map(a=>({feriaId:a.feria_id, fecha:a.fecha})),
         categorias: Array.isArray(p.categorias) ? p.categorias : [],
         productos:(p.productos||[]).filter(x=>x.visible!==false && (x.stock===null||x.stock===undefined||x.stock>0)).sort((a,b)=>(a.orden||0)-(b.orden||0)).map(x=>({n:x.nombre,p:"$"+Number(x.precio).toLocaleString("es-AR"),desc:x.descripcion||"",cat:(x.categoria||"").trim(),stock:(x.stock===null||x.stock===undefined)?1:x.stock,precioNum:Number(x.precio),antes:ofertaViva(x)?Number(x.precio_anterior):null,ofertaHasta:ofertaViva(x)?x.oferta_hasta:null,foto:(x.fotos&&x.fotos[0]&&x.fotos[0].startsWith("http"))?x.fotos[0]:null,e:(x.fotos&&x.fotos[0]&&!x.fotos[0].startsWith("http"))?x.fotos[0]:"🛍️",fotos:(x.fotos||[]).filter(f=>f&&f.startsWith("http"))})),
         pinesDB:(p.puesto_insignia||[]).filter(x=>x.vigente!==false&&x.insignias).map(x=>x.insignias),
