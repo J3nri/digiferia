@@ -753,11 +753,18 @@ function cardPuesto(p){
   const feriasHtml = ferias_vinc.map(f=>`<span class="ferias-chip">📍 ${f}</span>`).join("");
   const email = p.email_contacto || '';
   const nombrePersona = p.nombre_persona || '';
+  // El mensaje tiene que decir la DIRECCIÓN, no solo que hay un mail.
+  // Una feriante entró por el link del mail, se quedó logueada, y el
+  // lunes volvió a tocar ese mismo link porque era lo único que tenía:
+  // nunca supo que la app vivía en digiferia.ar.
   const msgBienvenida = encodeURIComponent(
     `¡Hola${nombrePersona ? ' ' + nombrePersona : ''}! 🎪 Tu puesto *${p.nombre}* ya está ` +
-    `publicado en *La Digi Feria*.\n\nTe mandamos un email${email ? ' a *' + email + '*' : ''} con el ` +
-    `link para crear tu contraseña y entrar a tu panel. ¡Revisá tu bandeja de ` +
-    `entrada, y fijate también en correo no deseado! 🌱`);
+    `publicado en *La Digi Feria*.\n\n` +
+    `Guardate esta dirección: *digiferia.ar*\nEs por donde vas a entrar siempre.\n\n` +
+    `Te mandamos un email${email ? ' a *' + email + '*' : ''} con un link para crear tu ` +
+    `contraseña. Ojo que *ese link sirve una sola vez*: después entrás desde ` +
+    `digiferia.ar con tu mail y esa contraseña.\n\n` +
+    `Si no ves el mail, fijate en correo no deseado 🌱`);
   const plan = p.plan || 'gratis';
   const permanente = p.plan_permanente === true;
   const diasRest = p.plan_hasta ? Math.ceil((new Date(p.plan_hasta+'T12:00:00') - new Date())/86400000) : null;
