@@ -103,15 +103,22 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .aviso-apertura small{font-size:12.5px;color:#5C4F3E;font-weight:700;display:block;margin-top:5px;line-height:1.45}
 .flyer.tu-feria{background:var(--blanco);display:flex;flex-direction:column}
 .flyer.fijo{min-width:auto;margin:0 18px 18px;cursor:pointer}
-.destacados-row{display:flex;gap:10px;overflow-x:auto;padding:2px 18px 10px;scroll-snap-type:x proximity;scrollbar-width:none}
-.destacados-row::-webkit-scrollbar{display:none}
-/* Exactamente 3 tarjetas enteras por pantalla: el ancho sale de dividir
-   el espacio disponible en tres, descontando los dos espacios del medio.
-   Ninguna queda cortada; las 2 que faltan aparecen al correr con el dedo. */
+/* Las tres filas se corren JUNTAS: el que tiene el desplazamiento es el
+   contenedor, no cada fila. Adentro va una pista del ancho de las 5
+   tarjetas, con las filas una debajo de la otra. */
+#destacados-filas{overflow-x:auto;padding:2px 18px 10px;scrollbar-width:none;cursor:grab}
+#destacados-filas::-webkit-scrollbar{display:none}
+#destacados-filas .pista{display:flex;flex-direction:column;gap:10px;width:max-content}
+.destacados-row{display:flex;gap:10px}
+/* Exactamente 3 tarjetas enteras por pantalla. El ancho no puede salir de
+   un porcentaje: adentro de una pista "a lo ancho del contenido" el
+   porcentaje no tiene contra qué medirse. Se calcula en medirDestacados()
+   y se guarda acá. */
 .destacados-row .puesto{
-  min-width:calc((100% - 20px) / 3);
-  max-width:calc((100% - 20px) / 3);
-  scroll-snap-align:start
+  width:var(--dest-ancho, 110px);
+  min-width:var(--dest-ancho, 110px);
+  max-width:var(--dest-ancho, 110px);
+  flex:0 0 auto
 }
 .destacados-row .puesto .foto{height:64px;font-size:27px;background-size:cover}
 /* Los destacados conservan su tamaño original; el achique del 25% es solo para la grilla */
@@ -3567,7 +3574,10 @@ function renderDestacados(){
   const filas = [];
   for(let i = 0; i < lista.length; i += POR_FILA) filas.push(lista.slice(i, i + POR_FILA));
   document.getElementById('destacados-filas').innerHTML =
-    filas.map(gr => `<div class="destacados-row">${gr.map(cardPuesto).join("")}</div>`).join("");
+    `<div class="pista">` +
+    filas.map(gr => `<div class="destacados-row">${gr.map(cardPuesto).join("")}</div>`).join("") +
+    `</div>`;
+  medirDestacados();
   const lbl = document.getElementById('label-destacados');
   if(lbl) lbl.style.display = lista.length ? "" : "none";
 }
@@ -4234,14 +4244,27 @@ function arrastrable(el){
 }
 ['chips-rubros','carrusel-flyers','perfil-cats','chips-cat-panel'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
 
-// Las filas de destacados se crean y se rehacen cada vez que llegan datos
-// nuevos, así que hay que volver a engancharles el arrastre con el mouse.
+// Cuánto mide cada tarjeta para que entren 3 justas en lo que se ve.
+// Se calcula a mano porque adentro de la pista los porcentajes no sirven.
+function medirDestacados(){
+  const cont = document.getElementById('destacados-filas');
+  if(!cont) return;
+  const est = getComputedStyle(cont);
+  const sep = parseFloat(getComputedStyle(cont.querySelector('.destacados-row') || cont).gap) || 10;
+  const visible = cont.clientWidth - parseFloat(est.paddingLeft) - parseFloat(est.paddingRight);
+  if(visible <= 0) return;
+  cont.style.setProperty('--dest-ancho', ((visible - sep * 2) / 3) + 'px');
+}
+window.addEventListener('resize', medirDestacados);
+
+// El arrastre con el mouse va sobre el contenedor, que es el que ahora
+// se mueve. Antes se enganchaba a cada fila por separado.
 function arrastrarFilasDestacados(){
-  document.querySelectorAll('#destacados-filas .destacados-row').forEach(el=>{
-    if(el.dataset.arrastrable) return;
-    el.dataset.arrastrable = '1';
-    arrastrable(el);
-  });
+  const cont = document.getElementById('destacados-filas');
+  if(cont && !cont.dataset.arrastrable){
+    cont.dataset.arrastrable = '1';
+    arrastrable(cont);
+  }
 }
 
 // ================== NUEVA CONTRASEÑA (invitación por email) ==================
