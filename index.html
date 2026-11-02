@@ -103,14 +103,30 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
 .aviso-apertura small{font-size:12.5px;color:#5C4F3E;font-weight:700;display:block;margin-top:5px;line-height:1.45}
 .flyer.tu-feria{background:var(--blanco);display:flex;flex-direction:column}
 .flyer.fijo{min-width:auto;margin:0 18px 18px;cursor:pointer}
-.destacados-row{display:flex;gap:14px;overflow-x:auto;padding:2px 18px 18px;scroll-snap-type:x proximity;scrollbar-width:none}
+.destacados-row{display:flex;gap:10px;overflow-x:auto;padding:2px 18px 10px;scroll-snap-type:x proximity;scrollbar-width:none}
 .destacados-row::-webkit-scrollbar{display:none}
-.destacados-row .puesto{min-width:42%;scroll-snap-align:start}
-.destacados-row .puesto .foto{height:95px;font-size:40px;background-size:cover}
+/* Exactamente 3 tarjetas enteras por pantalla: el ancho sale de dividir
+   el espacio disponible en tres, descontando los dos espacios del medio.
+   Ninguna queda cortada; las 2 que faltan aparecen al correr con el dedo. */
+.destacados-row .puesto{
+  min-width:calc((100% - 20px) / 3);
+  max-width:calc((100% - 20px) / 3);
+  scroll-snap-align:start
+}
+.destacados-row .puesto .foto{height:64px;font-size:27px;background-size:cover}
 /* Los destacados conservan su tamaño original; el achique del 25% es solo para la grilla */
-.destacados-row .puesto .toldo{height:14px}
-.destacados-row .puesto .pinfo{padding:8px 11px 11px}
-.destacados-row .puesto .pnombre{font-size:15.5px}
+.destacados-row .puesto .toldo{height:10px}
+.destacados-row .puesto .pinfo{padding:6px 7px 8px}
+.destacados-row .puesto .pnombre{
+  font-size:10.5px;line-height:1.18;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;overflow-wrap:anywhere;min-height:25px
+}
+.destacados-row .puesto .prubro{font-size:8.5px;letter-spacing:0}
+.destacados-row .puesto .sello-destacado{display:none}
+.destacados-row .puesto .este-finde{font-size:9px;padding:3px 5px;line-height:1.2}
+/* Separación entre una fila y la siguiente */
+.destacados-row + .destacados-row{padding-top:0}
 .destacados-row .puesto .prubro{font-size:12px;letter-spacing:.4px;margin-top:3px}
 .destacados-row .puesto .pferia{font-size:12px;margin-top:5px;line-height:1.5}
 .destacados-row .puesto .mas-ferias{font-size:11px;padding:1px 8px;margin-top:4px}
@@ -382,6 +398,60 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
   padding:5px 10px;font-size:12px;font-weight:800;color:#5C4F3E;line-height:1.4
 }
 .fm-cuantos b{color:var(--tinta)}
+/* Carga en lote: una foto por producto */
+.lote-pant{width:100%;max-width:480px;margin:0 auto;min-height:100vh;background:var(--fondo)}
+.lote-top{display:flex;align-items:center;justify-content:space-between;
+  padding:15px 18px;border-bottom:2px solid var(--tinta);background:var(--blanco);
+  position:sticky;top:0;z-index:2}
+.lote-top b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px}
+.lote-x{background:none;border:0;font-size:20px;cursor:pointer;color:#5C4F3E;padding:0 4px}
+.lote-cuerpo{padding:16px 18px 40px}
+.lote-info{font-size:13.5px;color:#5C4F3E;font-weight:700;line-height:1.5}
+.lote-barra{height:10px;background:#EFE3CC;border:2px solid var(--tinta);
+  border-radius:999px;overflow:hidden;margin-top:12px}
+.lote-barra i{display:block;height:100%;background:var(--verde);width:0;transition:width .25s}
+.lote-item{display:flex;gap:10px;align-items:flex-start;background:var(--blanco);
+  border:2px solid var(--tinta);border-radius:14px;padding:10px;margin-top:10px}
+.lote-item .mini{width:62px;height:62px;border-radius:10px;border:2px solid var(--tinta);
+  background-size:cover;background-position:center;flex:0 0 auto}
+.lote-item .campos{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.lote-item input{width:100%;border:2px solid var(--tinta);border-radius:9px;padding:8px 10px;
+  font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;outline:none;background:#FFFCF4}
+.lote-item .fila2{display:flex;gap:6px}
+.lote-item .fila2 label{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lote-item .fila2 label span{font-size:10px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.3px;color:#B3A48C;padding-left:2px}
+.lote-guardar{width:100%;margin-top:16px;font-family:'Fredoka',sans-serif;font-weight:600;
+  font-size:17px;padding:15px;border-radius:14px;border:2px solid var(--tinta);
+  background:var(--fucsia);color:#fff;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
+.lote-guardar:disabled{opacity:.5;cursor:default}
+/* Pantalla que explica para qué sirve cada link y cada QR */
+.dif-pant{width:100%;max-width:480px;margin:0 auto;min-height:100vh;background:var(--fondo)}
+.dif-top{padding:14px 18px 4px}
+.dif-volver{background:none;border:0;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:14px;color:var(--fucsia);cursor:pointer;padding:6px 0}
+.dif-cuerpo{padding:0 18px 40px}
+.dif-cuerpo .ico-gde{font-size:46px;line-height:1}
+.dif-cuerpo h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:25px;
+  line-height:1.2;margin-top:8px}
+.dif-cuerpo .lead{font-size:15px;color:#5C4F3E;font-weight:700;margin-top:9px;line-height:1.5}
+.dif-para{margin-top:18px;background:var(--blanco);border:2px solid var(--tinta);
+  border-radius:16px;box-shadow:4px 4px 0 rgba(43,33,24,.9);padding:15px 16px}
+.dif-para .t{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px}
+.dif-para ul{margin:10px 0 0;padding:0;list-style:none}
+.dif-para li{display:flex;gap:9px;font-size:14px;color:#5C4F3E;font-weight:700;
+  line-height:1.45;margin-top:9px}
+.dif-para li span:first-child{flex:0 0 auto}
+.dif-para li span:last-child{flex:1 1 auto;min-width:0}
+.dif-ojo{margin-top:14px;background:#FFF8EC;border:2px dashed var(--tinta);
+  border-radius:14px;padding:12px 14px;font-size:13.5px;color:#5C4F3E;
+  font-weight:700;line-height:1.45}
+.dif-link{margin-top:14px;background:#FFFCF4;border:2px solid #E6D9BE;border-radius:12px;
+  padding:11px 13px;font-size:13px;font-weight:800;color:#2B2118;word-break:break-all}
+.dif-btn{width:100%;margin-top:18px;font-family:'Fredoka',sans-serif;font-weight:600;
+  font-size:17px;padding:15px;border-radius:14px;border:2px solid var(--tinta);
+  background:var(--fucsia);color:#fff;cursor:pointer;box-shadow:4px 4px 0 rgba(43,33,24,.9)}
+.dif-btn.gris{background:var(--blanco);color:#2B2118;margin-top:10px}
 /* "Suele estar en": solo nombres, sin dirección ni horario */
 .suele{margin:0 18px 18px;background:var(--blanco);border:2px dashed var(--tinta);
        border-radius:14px;padding:13px 15px}
@@ -562,7 +632,7 @@ nav button.on span{filter:none;opacity:1}
     <p class="sub" id="contador-puestos"></p>
   </div>
   <div class="carrusel-label" id="label-destacados"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
-  <div class="destacados-row" id="destacados-row"></div>
+  <div id="destacados-filas"></div>
   <div class="carrusel-wrap">
     <div class="carrusel-label">
       <h2>Ferias destacadas 🎉</h2>
@@ -1008,6 +1078,7 @@ nav button.on span{filter:none;opacity:1}
         <div class="barra-agregar">
           <div style="display:flex;gap:8px">
             <button class="edic-btn-agregar" style="flex:1;margin:0" onclick="abrirFormProducto()">+ Agregar</button>
+            <button onclick="elegirFotosLote()" title="Subir varias fotos y crear un producto con cada una" style="flex:1;padding:10px;background:var(--celeste);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer">📦 En lote</button>
             <button onclick="abrirStockRapido()" style="flex:1;padding:10px;background:var(--amarillo);border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📦 Stock</button>
           </div>
           <button id="btn-avisar-ofertas" onclick="avisarOfertas()" style="display:none;width:100%;margin-top:8px;padding:11px;background:var(--fucsia);color:#fff;border:2px solid var(--tinta);border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 rgba(43,33,24,.9)">📢 Avisar a mis seguidores</button>
@@ -1041,6 +1112,18 @@ nav button.on span{filter:none;opacity:1}
 </div>
 
 <!-- MODAL PRODUCTO -->
+<!-- CARGA EN LOTE: una foto = un producto -->
+<input type="file" id="lote-input" accept="image/*" multiple style="display:none" onchange="arrancarLote(this)">
+<div class="velo" id="velo-lote" style="align-items:flex-start;padding:0;overflow-y:auto">
+  <div class="lote-pant">
+    <div class="lote-top">
+      <b>📦 Cargar en lote</b>
+      <button class="lote-x" onclick="cerrarLote()">✕</button>
+    </div>
+    <div class="lote-cuerpo" id="lote-cuerpo"></div>
+  </div>
+</div>
+
 <div class="velo" id="velo-producto">
   <div class="modal" id="modal-producto">
     <h3 id="prod-modal-titulo" style="position:sticky;top:-20px;background:var(--fondo);padding:4px 0 8px;margin:-4px 0 0;z-index:2">➕ Nuevo producto</h3>
@@ -1098,6 +1181,16 @@ nav button.on span{filter:none;opacity:1}
 </div>
 
 <!-- MODAL CONFIRMACIÓN ASISTENCIA -->
+<!-- EXPLICACIÓN DE CADA HERRAMIENTA PARA DIFUNDIR -->
+<div class="velo" id="velo-difundir" style="align-items:flex-start;padding:0;overflow-y:auto">
+  <div class="dif-pant">
+    <div class="dif-top">
+      <button class="dif-volver" onclick="cerrarDifundir()">← Volver</button>
+    </div>
+    <div class="dif-cuerpo" id="dif-cuerpo"></div>
+  </div>
+</div>
+
 <div class="velo" id="velo-asistencia">
   <div class="modal">
     <h3>🔥 Confirmar asistencia</h3>
@@ -1826,17 +1919,17 @@ function renderPanelFeriante(cont){
       </div><!-- fin g-puesto -->
 
       <div class="pgrupo" id="g-difundir">
-      <div class="accion-row" onclick="copiarLinkPuesto()">
+      <div class="accion-row" onclick="abrirDifundir('link')">
         <div class="ic">🔗</div>
         <div><b>Compartir mi puesto</b><small>Tu link directo para clientes: copiá y compartí</small></div>
         <div class="flecha-r">→</div>
       </div>
-      <div class="accion-row" onclick="copiarLinkReferido()">
+      <div class="accion-row" onclick="abrirDifundir('referido')">
         <div class="ic">🤝</div>
         <div><b>Invitá feriantes y ganá</b><small>Por cada feriante que sumes y complete su primer mes: 30 días de upgrade de regalo</small></div>
         <div class="flecha-r">→</div>
       </div>
-      <div class="accion-row" onclick="imprimirQRPuesto()">
+      <div class="accion-row" onclick="abrirDifundir('qr')">
         <div class="ic">🖨️</div>
         <div><b>Imprimí tu QR</b><small>Descargá la tarjeta en PDF, plastificala y tenela en tu puesto de la feria</small></div>
         <div class="flecha-r">→</div>
@@ -1846,7 +1939,7 @@ function renderPanelFeriante(cont){
         <div><b>Mi catálogo en PDF</b><small>Todos tus productos con foto, listo para mandar por WhatsApp o imprimir</small></div>
         <div class="flecha-r">→</div>
       </div>
-      <div class="accion-row" onclick="imprimirQRDigiFeria()">
+      <div class="accion-row" onclick="abrirDifundir('qrferia')">
         <div class="ic">🎪</div>
         <div><b>Descargá el QR de La Digi Feria</b><small>Cartel A4 para imprimir y colgar en tu puesto: quien lo escanea entra a la feria online</small></div>
         <div class="flecha-r">→</div>
@@ -1927,7 +2020,7 @@ function renderPanelOrganizador(cont){
         <div><b>Ver estadísticas</b><small>Clicks en tu flyer este mes</small></div>
         <div class="flecha-r">→</div>
       </div>
-      <div class="accion-row" onclick="imprimirQRDigiFeria()">
+      <div class="accion-row" onclick="abrirDifundir('qrferia')">
         <div class="ic">🎪</div>
         <div><b>Descargá el QR de La Digi Feria</b><small>Cartel A4 para imprimir y colgar en tu puesto: quien lo escanea entra a la feria online</small></div>
         <div class="flecha-r">→</div>
@@ -3056,6 +3149,99 @@ async function toggleAsistencia(feriaId, feriaName){
   }
 }
 
+// ══════════ PANTALLAS DE "DIFUNDIR" ══════════
+// Cada herramienta (el link del puesto, el de invitación y los dos QR)
+// abre primero una pantalla que explica para qué sirve y cuándo conviene
+// usarla. Recién ahí aparece el botón de copiar o descargar.
+// Antes el toque copiaba de una, y nadie entendía qué había copiado.
+const DIFUNDIR = {
+  link: {
+    ico: '🔗',
+    titulo: 'Compartir mi puesto',
+    lead: 'Es la dirección de tu puesto en internet. La mandás y del otro lado se abre tu puesto con tus productos, tus precios y tu botón de WhatsApp.',
+    usos: [
+      ['💬','<b>Mandáselo a una clienta por WhatsApp</b> en vez de pasarle foto por foto. Mira todo sola, con los precios puestos.'],
+      ['📸','<b>Pegalo en tu Instagram</b>, en el renglón del perfil donde va el link. Queda fijo para todo el que entre.'],
+      ['🗣️','<b>Pasalo en los grupos</b> de tu barrio o de la feria cuando alguien pregunta qué vendés.']
+    ],
+    ojo: 'Es tuyo y no cambia nunca. Aunque cambies de feria o agregues productos, sigue siendo el mismo link.',
+    btn: '🔗 Copiar mi link',
+    accion: 'copiarLinkPuesto'
+  },
+  referido: {
+    ico: '🤝',
+    titulo: 'Invitá feriantes y ganá',
+    lead: 'Es un link con tu nombre adentro. Si alguien se suma a La Digi Feria entrando por ahí, queda registrado que lo trajiste vos.',
+    usos: [
+      ['🎁','<b>Por cada feriante que sumes</b> y complete su primer mes, te llevás 30 días de upgrade de regalo.'],
+      ['👥','<b>Mandáselo a compañeras de feria</b> que todavía no están. Es el mismo formulario de siempre, pero contado a tu favor.'],
+      ['♾️','<b>No tiene tope.</b> Cuantas más sumes, más días juntás.']
+    ],
+    ojo: 'Solo cuenta si entran por tu link. Si se anotan por su cuenta, el sistema no tiene cómo saber que las trajiste vos.',
+    btn: '🤝 Copiar mi link de invitación',
+    accion: 'copiarLinkReferido'
+  },
+  qr: {
+    ico: '🖨️',
+    titulo: 'Tu QR para imprimir',
+    lead: 'Es una tarjeta en PDF con el código de tu puesto. La imprimís, la plastificás y la tenés sobre la mesa en la feria.',
+    usos: [
+      ['📱','<b>La clienta apunta con la cámara</b> y se le abre tu puesto. No tiene que anotar nada ni bajar ninguna app.'],
+      ['🛍️','<b>Sirve cuando hay cola.</b> Mientras atendés a una, otra mira todo tu catálogo sola.'],
+      ['🏠','<b>La que se lo lleva te encuentra después.</b> El martes, desde su casa, entra y te escribe.']
+    ],
+    ojo: 'Imprimila en hoja blanca y plastificala o metela en un folio. Al aire libre el papel suelto se arruina en una tarde.',
+    btn: '🖨️ Descargar mi QR',
+    accion: 'imprimirQRPuesto'
+  },
+  qrferia: {
+    ico: '🎪',
+    titulo: 'El QR de La Digi Feria',
+    lead: 'Es un cartel A4 con el código de toda la feria online, no el de tu puesto. Quien lo escanea entra a ver todos los puestos.',
+    usos: [
+      ['🎪','<b>Colgalo en tu puesto</b> junto al tuyo. Suma gente a la feria entera, y esa gente también te ve a vos.'],
+      ['🤝','<b>Pedile a la organizadora</b> que lo ponga en la entrada de la feria física.'],
+      ['📣','<b>Sirve para difundir</b> en comercios del barrio que quieran dar una mano.']
+    ],
+    ojo: 'Este no lleva a tu puesto. Si querés que caigan directo en lo tuyo, usá el QR de arriba.',
+    btn: '🎪 Descargar el cartel',
+    accion: 'imprimirQRDigiFeria'
+  }
+};
+
+function abrirDifundir(tipo){
+  const d = DIFUNDIR[tipo];
+  if(!d) return;
+  const esLink = tipo === 'link';
+  document.getElementById('dif-cuerpo').innerHTML = `
+    <div class="ico-gde">${d.ico}</div>
+    <h2>${d.titulo}</h2>
+    <p class="lead">${d.lead}</p>
+    ${esLink ? `<div class="dif-link">${linkDeMiPuesto()}</div>` : ''}
+    <div class="dif-para">
+      <div class="t">¿Para qué te sirve?</div>
+      <ul>${d.usos.map(([e,t])=>`<li><span>${e}</span><span>${t}</span></li>`).join('')}</ul>
+    </div>
+    <div class="dif-ojo">💡 ${d.ojo}</div>
+    <button class="dif-btn" onclick="accionDifundir('${tipo}')">${d.btn}</button>
+    <button class="dif-btn gris" onclick="cerrarDifundir()">Volver</button>`;
+  document.getElementById('velo-difundir').classList.add('on');
+  document.getElementById('velo-difundir').scrollTop = 0;
+}
+
+function cerrarDifundir(){
+  document.getElementById('velo-difundir').classList.remove('on');
+}
+
+// Ejecuta la acción de verdad y cierra la pantalla.
+function accionDifundir(tipo){
+  const d = DIFUNDIR[tipo];
+  if(!d) return;
+  const fn = window[d.accion];
+  if(typeof fn === 'function') fn();
+  cerrarDifundir();
+}
+
 function cerrarAsistencia(){
   document.getElementById('velo-asistencia').classList.remove('on');
 }
@@ -3279,7 +3465,13 @@ function cardPuesto(f){
 
 function renderDestacados(){
   const lista = FERIANTES.filter(f=>f.plan==="pro").sort((a,b)=>((a.creadoEn?new Date(a.creadoEn).getTime():9e15))-((b.creadoEn?new Date(b.creadoEn).getTime():9e15)));
-  document.getElementById('destacados-row').innerHTML = lista.map(cardPuesto).join("");
+  // Una fila por cada 5 puestos. Cada fila se corre sola con el dedo:
+  // se ven 3 y pico, y los que faltan están a un deslizada.
+  const POR_FILA = 5;
+  const filas = [];
+  for(let i = 0; i < lista.length; i += POR_FILA) filas.push(lista.slice(i, i + POR_FILA));
+  document.getElementById('destacados-filas').innerHTML =
+    filas.map(gr => `<div class="destacados-row">${gr.map(cardPuesto).join("")}</div>`).join("");
   const lbl = document.getElementById('label-destacados');
   if(lbl) lbl.style.display = lista.length ? "" : "none";
 }
@@ -3832,7 +4024,7 @@ async function cargarRubrosEnVivo(){
     if(Array.isArray(datos)&&datos.length){
       RUBROS={};
       datos.forEach((d,i)=>{ RUBROS[d.clave]={nombre:d.nombre,emoji:d.emoji,color:d.color,cupo:d.cupo,clase:"rc"+(i%6+1)}; });
-      renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid();
+      renderChips(); renderGrilla(); renderDestacados(); arrastrarFilasDestacados(); renderRubrosGrid();
       const b=document.getElementById('badge-vivo'); if(b) b.style.display="inline-block";
     }
   }catch(e){ console.warn("Rubros locales."); }
@@ -3912,7 +4104,7 @@ async function cargarFeriaYPuestosEnVivo(){
       });
     });
     FLYERS.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
-    renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
+    renderChips(); renderGrilla(); renderDestacados(); arrastrarFilasDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
     // Contador real de Puestos Fundadores 🌱 (cuenta las insignias en vivo)
     (function(){
       const n = FERIANTES.filter(f=>(f.pinesDB||[]).some(p=>(p.nombre||"").toLowerCase().includes("fundador"))).length;
@@ -3941,7 +4133,17 @@ function arrastrable(el){
   el.addEventListener('click',e=>{if(seMovio){e.stopPropagation();e.preventDefault();seMovio=false;}},true);
   el.addEventListener('wheel',e=>{if(e.deltaY){e.preventDefault();el.scrollLeft+=e.deltaY;}},{passive:false});
 }
-['chips-rubros','destacados-row','carrusel-flyers','perfil-cats','chips-cat-panel'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
+['chips-rubros','carrusel-flyers','perfil-cats','chips-cat-panel'].forEach(id=>{const el=document.getElementById(id);if(el)arrastrable(el);});
+
+// Las filas de destacados se crean y se rehacen cada vez que llegan datos
+// nuevos, así que hay que volver a engancharles el arrastre con el mouse.
+function arrastrarFilasDestacados(){
+  document.querySelectorAll('#destacados-filas .destacados-row').forEach(el=>{
+    if(el.dataset.arrastrable) return;
+    el.dataset.arrastrable = '1';
+    arrastrable(el);
+  });
+}
 
 // ================== NUEVA CONTRASEÑA (invitación por email) ==================
 // Supabase pone el token en el hash: #access_token=xxx&type=invite
@@ -4274,6 +4476,147 @@ function renderProductosEdic(){
 }
 
 const MAX_PRODUCTOS = { gratis: 10, plus: 20, pro: 100 };
+
+// ══════════ CARGA EN LOTE: una foto = un producto ══════════
+// Cargar 30 productos de a uno son 30 formularios. Acá se eligen las
+// fotos todas juntas, se suben con una barra de progreso, y después se
+// completa nombre y precio en una sola lista.
+let loteFotos = [];   // [{url, preview}]
+
+function lugaresLibres(){
+  const tope = MAX_PRODUCTOS[usuario?.puestoPlan || 'gratis'] || 10;
+  return Math.max(0, tope - productosEdic.length);
+}
+
+function elegirFotosLote(){
+  try{ exigirSesion(); }catch(e){ mostrarToast(e.message); return; }
+  const libres = lugaresLibres();
+  if(libres <= 0){
+    const plan = usuario?.puestoPlan || 'gratis';
+    mostrarToast(`🛍️ Llegaste al tope de productos de tu plan ${plan}.`);
+    return;
+  }
+  document.getElementById('lote-input').click();
+}
+
+async function arrancarLote(input){
+  const todas = Array.from(input.files || []);
+  input.value = '';
+  if(!todas.length) return;
+
+  const libres = lugaresLibres();
+  const fotos  = todas.slice(0, libres);
+  const sobran = todas.length - fotos.length;
+
+  const cuerpo = document.getElementById('lote-cuerpo');
+  document.getElementById('velo-lote').classList.add('on');
+  document.getElementById('velo-lote').scrollTop = 0;
+
+  cuerpo.innerHTML = `
+    <p class="lote-info">Subiendo <b>${fotos.length}</b> foto${fotos.length===1?'':'s'}…
+      ${sobran ? `<br>Dejé ${sobran} afuera: en tu plan te quedan ${libres} lugares.` : ''}</p>
+    <div class="lote-barra"><i id="lote-progreso"></i></div>
+    <p class="lote-info" id="lote-paso" style="margin-top:8px">Preparando…</p>`;
+
+  loteFotos = [];
+  const fallidas = [];
+  for(let i = 0; i < fotos.length; i++){
+    document.getElementById('lote-paso').textContent = `Foto ${i+1} de ${fotos.length}…`;
+    document.getElementById('lote-progreso').style.width = Math.round(i / fotos.length * 100) + '%';
+    try{
+      const url = await subirFoto(fotos[i], 'productos');
+      loteFotos.push({ url, nombreArchivo: fotos[i].name });
+    }catch(e){
+      fallidas.push(fotos[i].name);
+    }
+  }
+  document.getElementById('lote-progreso').style.width = '100%';
+
+  if(!loteFotos.length){
+    cuerpo.innerHTML = `<p class="lote-info">😕 No se pudo subir ninguna foto. Fijate que pesen menos de 8 MB y probá de nuevo.</p>
+      <button class="lote-guardar" onclick="cerrarLote()">Cerrar</button>`;
+    return;
+  }
+  mostrarFormularioLote(fallidas);
+}
+
+function mostrarFormularioLote(fallidas){
+  const cuerpo = document.getElementById('lote-cuerpo');
+  cuerpo.innerHTML = `
+    <p class="lote-info">Listo: <b>${loteFotos.length}</b> foto${loteFotos.length===1?'':'s'} arriba.
+      Ponele nombre y precio a cada una. <b>Las que dejes vacías no se guardan.</b>
+      ${fallidas.length ? `<br>⚠️ No pudieron subirse: ${fallidas.join(', ')}` : ''}</p>
+    ${loteFotos.map((f,i)=>`
+      <div class="lote-item">
+        <div class="mini" style="background-image:url('${f.url}')"></div>
+        <div class="campos">
+          <input type="text" id="lote-n-${i}" placeholder="Nombre del producto" maxlength="80">
+          <div class="fila2">
+            <label><span>Precio</span><input type="number" id="lote-p-${i}" placeholder="0" min="0" inputmode="numeric"></label>
+            <label><span>Cuántos tenés</span><input type="number" id="lote-s-${i}" placeholder="1" min="0" inputmode="numeric" value="1"></label>
+          </div>
+        </div>
+      </div>`).join('')}
+    <button class="lote-guardar" id="lote-btn" onclick="guardarLote()">Guardar los que completé</button>`;
+}
+
+async function guardarLote(){
+  try{ exigirSesion(); }catch(e){ mostrarToast(e.message); return; }
+
+  const listos = [];
+  const incompletos = [];
+  loteFotos.forEach((f,i)=>{
+    const nom = (document.getElementById(`lote-n-${i}`)?.value || '').trim();
+    const pre = Number(document.getElementById(`lote-p-${i}`)?.value || 0);
+    const stk = parseInt(document.getElementById(`lote-s-${i}`)?.value, 10);
+    if(!nom && !pre) return;                      // vacío a propósito: se saltea
+    if(!nom || !(pre > 0)){ incompletos.push(i+1); return; }
+    listos.push({
+      puesto_id: usuario.puestoId,
+      nombre: nom,
+      descripcion: '',
+      precio: pre,
+      fotos: [f.url],
+      stock: isNaN(stk) ? 1 : Math.max(0, stk),
+      visible: true,
+      orden: productosEdic.length + listos.length
+    });
+  });
+
+  if(incompletos.length){
+    mostrarToast(`⚠️ A ${incompletos.length === 1 ? 'uno le' : 'algunos les'} falta el nombre o el precio (${incompletos.join(', ')}). Completalos o borrá lo que pusiste.`);
+    return;
+  }
+  if(!listos.length){
+    mostrarToast('No completaste ninguno todavía.');
+    return;
+  }
+
+  const btn = document.getElementById('lote-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+  try{
+    // Van todos en una sola orden: o entran todos o no entra ninguno.
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/productos`, {
+      method: 'POST',
+      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      body: JSON.stringify(listos)
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    cerrarLote();
+    mostrarToast(`✅ ${listos.length} producto${listos.length===1?'':'s'} agregado${listos.length===1?'':'s'}.`);
+    cargarProductosEdic();
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = 'Guardar los que completé'; }
+    mostrarToast('😕 No se pudieron guardar. Las fotos ya están subidas: probá tocar Guardar de nuevo.');
+  }
+}
+
+function cerrarLote(){
+  document.getElementById('velo-lote').classList.remove('on');
+  loteFotos = [];
+}
+
 function abrirFormProducto(id){
   // Tope de productos por plan (solo al crear uno nuevo, no al editar)
   if(!id){
@@ -5602,7 +5945,7 @@ window.addEventListener('hashchange', abrirPuestoDelLink);
 // ================== INIT ==================
 restaurarSeguimientosLocal();
 aplicarBloqueoInscripciones();
-renderChips(); renderGrilla(); renderDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
+renderChips(); renderGrilla(); renderDestacados(); arrastrarFilasDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
   abrirPuestoDelLink();

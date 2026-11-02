@@ -292,6 +292,20 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
   <div class="divisor"></div>
 
   <div class="seccion">
+    <h2>🤝 ¿Alguien te invitó?</h2>
+    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:12px;line-height:1.5">
+      Si venís de parte de un puesto que ya está en La Digi Feria, elegilo acá.
+      A esa persona le suma un premio y a vos no te cambia nada.
+    </p>
+    <div class="campo" id="c-invita">
+      <label>Puesto que te invitó <span style="font-weight:400;text-transform:none;font-size:11px">(opcional)</span></label>
+      <select id="f-invita">
+        <option value="">— Nadie, entré por mi cuenta —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="seccion">
     <h2>📅 ¿En qué ferias participás?</h2>
     <div class="ferias-lista" id="ferias-lista">
       <p style="font-size:14px;color:#9A8B76;font-weight:700">Cargando ferias...</p>
@@ -418,11 +432,12 @@ window.localidadElegida = "";
 
 async function cargarDatos(){
   try{
-    const [rr, rf, rfl, rp] = await Promise.all([
+    const [rr, rf, rfl, rp, rpad] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/rubros?select=id,nombre,emoji,clave&order=orden`, {headers:cab}),
       fetch(`${SUPABASE_URL}/rest/v1/ferias?estado=eq.activa&select=id,nombre,lugar,frecuencia&order=nombre`, {headers:cab}),
       fetch(`${SUPABASE_URL}/rest/v1/flyers?select=feria_id&estado=eq.activo`, {headers:cab}),
-      fetch(`${SUPABASE_URL}/rest/v1/puestos?select=rubro_id&publicado=eq.true`, {headers:cab})
+      fetch(`${SUPABASE_URL}/rest/v1/puestos?select=rubro_id&publicado=eq.true`, {headers:cab}),
+      fetch(`${SUPABASE_URL}/rest/v1/puestos?select=id,nombre,codigo_referido&publicado=eq.true&order=nombre`, {headers:cab})
     ]);
     const rubros = rr.ok ? await rr.json() : [];
     const ferias = rf.ok ? await rf.json() : [];
@@ -449,6 +464,27 @@ async function cargarDatos(){
       op.textContent = `${r.emoji} ${r.nombre}${cola}`;
       sel.appendChild(op);
     });
+
+    // Lista de quién pudo haberlo invitado: los puestos que ya están.
+    // Se elige el puesto, no un código: la mayoría todavía no generó el suyo,
+    // y escribirlo a mano es la forma más fácil de que el premio se pierda.
+    const padrinos = rpad.ok ? await rpad.json() : [];
+    const selInv = document.getElementById('f-invita');
+    if(selInv){
+      padrinos.forEach(p=>{
+        const op = document.createElement('option');
+        op.value = p.id;
+        op.textContent = p.nombre;
+        if(p.codigo_referido) op.dataset.codigo = p.codigo_referido;
+        selInv.appendChild(op);
+      });
+      // Si llegó por un link de invitación, ya viene elegido
+      if(window.refCodigo){
+        const match = padrinos.find(p =>
+          (p.codigo_referido||'').toUpperCase() === window.refCodigo.toUpperCase());
+        if(match) selInv.value = match.id;
+      }
+    }
 
     const lista = document.getElementById('ferias-lista');
     if(!ferias.length){
@@ -624,7 +660,8 @@ async function enviarFormulario(){
         redes,
         email_contacto: document.getElementById('f-email').value.trim(),
         nombre_persona: document.getElementById('f-nombre').value.trim(),
-        ref_codigo: window.refCodigo || null
+        ref_codigo: window.refCodigo || null,
+        ref_puesto_id: (document.getElementById('f-invita')||{}).value || null
       })
     });
     if(!pResp.ok) throw new Error('puestos ' + pResp.status + ': ' + await pResp.text());
