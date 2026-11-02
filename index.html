@@ -2177,10 +2177,9 @@ function compartirFechaOrg(feriaId, fecha){
 async function borrarFechaOrg(fechaId, textoFecha){
   if(!confirm(`¿Borrar la fecha ${textoFecha}? Los visitantes dejarán de verla.`)) return;
   try{
-    await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?id=eq.${fechaId}`, {
-      method: 'DELETE',
-      headers: sbHeaders(tokenActual)
-    });
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/fechas_feria?id=eq.${fechaId}`, {
+      method: 'DELETE'
+    }, 'el borrado de la fecha');
     mostrarToast('🗑️ Fecha borrada');
     cargarFechasOrganizador();
     cargarFeriaYPuestosEnVivo();
@@ -2201,11 +2200,11 @@ async function subirLogoFeria(input){
   mostrarToast('⏳ Subiendo logo…');
   try{
     const url = await subirFoto(file, 'ferias');
-    await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${logoFeriaId}`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${logoFeriaId}`, {
       method: 'PATCH',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ logo_url: url })
-    });
+    }, 'el logo de la feria');
     const f = (usuario.feriaOrg||[]).find(x=>x.id===logoFeriaId);
     if(f) f.logo = url;
     const el = document.getElementById('logo-feria-' + logoFeriaId);
@@ -2866,14 +2865,14 @@ async function tfAdherirse(programaId, btn){
   try{
     const ya = tfEstado.adhesiones[programaId];
     const r = ya
-      ? await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos?id=eq.${ya.id}`, {
+      ? await escribirEnBase(`${SUPABASE_URL}/rest/v1/tf_adheridos?id=eq.${ya.id}`, {
           method:'PATCH',
-          headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+          headers:{ Prefer:'return=representation' },
           body: JSON.stringify({ activo:true, baja_en:null, actualizado_en:new Date().toISOString() })
         })
-      : await fetch(`${SUPABASE_URL}/rest/v1/tf_adheridos`, {
+      : await escribirEnBase(`${SUPABASE_URL}/rest/v1/tf_adheridos`, {
           method:'POST',
-          headers:{ ...sbHeaders(tokenActual), Prefer:'return=representation' },
+          headers:{ Prefer:'return=representation' },
           body: JSON.stringify({
             programa_id: programaId,
             puesto_id: usuario.puestoId,
@@ -3082,11 +3081,11 @@ async function copiarLinkReferido(){
     cod = (usuario.puestoNombre||"MIPUESTO").toUpperCase().normalize("NFD")
       .replace(/[\u0300-\u036f]/g,"").replace(/[^A-Z0-9]/g,"").slice(0,16) || "MIPUESTO";
     try{
-      await fetch(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/puestos?id=eq.${usuario.puestoId}`, {
         method: "PATCH",
-        headers: { ...sbHeaders(tokenActual), Prefer: "return=minimal" },
+        headers: { Prefer: "return=minimal" },
         body: JSON.stringify({ codigo_referido: cod })
-      });
+      }, 'tu código de invitación');
       usuario.codigoReferido = cod;
     }catch(e){ console.warn("No se pudo guardar el código de referido", e); }
   }
@@ -3120,6 +3119,9 @@ function dispararAlerta(datos){
 function registrarEvento(puestoId, tipo){
   if(!puestoId) return;
   if(usuario && String(usuario.puestoId) === String(puestoId)) return; // el dueño no se cuenta
+  // A propósito sin control de error y sin await: es una estadística.
+  // Si no entra, no pasa nada; lo que no puede es trabar la pantalla ni
+  // hacerle creer a nadie que algo salió mal.
   fetch(`${SUPABASE_URL}/rest/v1/eventos_puesto`, {
     method: "POST",
     headers: { ...sbHeaders(), Prefer: "return=minimal" },
@@ -3228,11 +3230,11 @@ async function toggleAsistencia(feriaId, feriaName){
       fechaStr = comoFecha(proxFecha);
     }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/asistencias`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/asistencias`, {
       method:"POST",
-      headers:{ ...sbHeaders(tokenActual), Prefer:"resolution=merge-duplicates" },
+      headers:{ Prefer:"resolution=merge-duplicates" },
       body: JSON.stringify({ puesto_id: usuario.puestoId, feria_id: feriaId, fecha: fechaStr })
-    });
+    }, 'tu asistencia');
     asistenciasConfirmadas.set(feriaId, fechaStr);
     if(btn){ btn.classList.add('confirmado'); btn.innerHTML = `✅ ${feriaName} — Confirmado!`; }
     mostrarToast("🔥 ¡Asistencia confirmada! Tus seguidores van a recibir una notificación.");
@@ -3999,11 +4001,14 @@ async function sincronizarSeguimiento(fn, tipo, ref){
   const em = emailNotificaciones();
   if(!em) return;
   try{
-    await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    const rSeg = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
       method: 'POST',
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: em, p_tipo: tipo, p_ref: (tipo === 'general' ? null : ref) })
     });
+    // Va con la clave pública porque el visitante no tiene sesión, pero
+    // igual hay que mirar si entró: antes fallaba en silencio.
+    if(!rSeg.ok) throw new Error('No se pudo guardar tu correo (error ' + rSeg.status + ')');
     // Doble opt-in: si es la primera vez que este email se anota,
     // le pedimos que confirme. Sin confirmar no recibe ningún aviso.
     if(fn === 'seguir_publico') pedirConfirmacion(em);
@@ -4910,9 +4915,14 @@ async function guardarProducto(){
 
 async function borrarProducto(id){
   if(!confirm('¿Borrar este producto?')) return;
-  await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
-    method: 'DELETE', headers: sbHeaders(tokenActual)
-  });
+  try{
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
+      method: 'DELETE'
+    }, 'el borrado del producto');
+  }catch(e){
+    mostrarToast('😕 ' + e.message);
+    return;
+  }
   mostrarToast('🗑️ Producto borrado');
   cargarProductosEdic();
 }
@@ -5089,11 +5099,11 @@ async function renombrarCategoria(i){
     const lista = [...cats]; lista[i] = nuevo;
     await guardarListaCategorias(lista);
     // Los productos que estaban en la vieja pasan a la nueva
-    await fetch(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&categoria=eq.${encodeURIComponent(viejo)}`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&categoria=eq.${encodeURIComponent(viejo)}`, {
       method: 'PATCH',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ categoria: nuevo })
-    });
+    }, 'el nuevo nombre de la solapa');
     mostrarToast('✅ Solapa renombrada');
     cargarCategoriasEdic();
   }catch(e){ mostrarToast('❌ ' + e.message); }
@@ -5110,11 +5120,11 @@ async function borrarCategoria(i){
   try{
     await guardarListaCategorias(cats.filter((c,j)=>j!==i));
     if(cuantos){
-      await fetch(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&categoria=eq.${encodeURIComponent(nombre)}`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos?puesto_id=eq.${usuario.puestoId}&categoria=eq.${encodeURIComponent(nombre)}`, {
         method: 'PATCH',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ categoria: null })
-      });
+      }, 'el borrado de la solapa');
     }
     mostrarToast('🗑️ Solapa borrada');
     cargarCategoriasEdic();
@@ -5155,11 +5165,11 @@ async function guardarAsignaciones(){
       const nuevo = sel.value || null;
       const actual = prod?.categoria || null;
       if(nuevo === actual) continue;
-      await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${sel.dataset.id}`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos?id=eq.${sel.dataset.id}`, {
         method: 'PATCH',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ categoria: nuevo })
-      });
+      }, 'el cambio de solapa');
       if(prod) prod.categoria = nuevo;
       cambios++;
     }
@@ -5462,17 +5472,17 @@ async function toggleFeriaEdic(checkbox, feriaId){
   const label = checkbox.closest('.feria-check-edic');
   try{
     if(checkbox.checked){
-      await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/puesto_feria`, {
         method: 'POST',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'resolution=merge-duplicates' },
+        headers: { Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({ puesto_id: usuario.puestoId, feria_id: feriaId })
-      });
+      }, 'la feria');
       label.classList.add('on');
       mostrarToast('✅ Feria vinculada');
     } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/puesto_feria?puesto_id=eq.${usuario.puestoId}&feria_id=eq.${feriaId}`, {
-        method: 'DELETE', headers: sbHeaders(tokenActual)
-      });
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/puesto_feria?puesto_id=eq.${usuario.puestoId}&feria_id=eq.${feriaId}`, {
+        method: 'DELETE'
+      }, 'la desvinculación de la feria');
       label.classList.remove('on');
       mostrarToast('✅ Feria desvinculada');
     }
@@ -5619,18 +5629,18 @@ async function guardarFechaConFlyer(){
     const flyerUrl = await subirFoto(ffArchivo, 'ferias');
 
     // 2. Guardar la fecha con su flyer (upsert por feria+fecha)
-    await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?on_conflict=feria_id,fecha`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/fechas_feria?on_conflict=feria_id,fecha`, {
       method: 'POST',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'resolution=merge-duplicates,return=minimal' },
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify([{ feria_id: fechasFeriaId, fecha: ffFecha, flyer_url: flyerUrl }])
-    });
+    }, 'la fecha');
 
     // 3. Actualizar proxima_fecha si esta es más próxima
-    await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${fechasFeriaId}`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${fechasFeriaId}`, {
       method: 'PATCH',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ proxima_fecha: ffFecha })
-    });
+    }, 'la próxima fecha');
 
     cerrarFechaFlyer();
     cerrarFechas();
@@ -5657,19 +5667,19 @@ async function guardarFechas(){
   try{
     // Guardar TODAS las fechas seleccionadas en fechas_feria
     const inserts = [...fechasSeleccionadas].map(fecha=>({ feria_id: fechasFeriaId, fecha }));
-    await fetch(`${SUPABASE_URL}/rest/v1/fechas_feria?on_conflict=feria_id,fecha`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/fechas_feria?on_conflict=feria_id,fecha`, {
       method: 'POST',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
       body: JSON.stringify(inserts)
-    });
+    }, 'las fechas');
 
     // Actualizar proxima_fecha de la feria con la fecha más próxima
     const proxima = [...fechasSeleccionadas].sort()[0];
-    await fetch(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${fechasFeriaId}`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/ferias?id=eq.${fechasFeriaId}`, {
       method: 'PATCH',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ proxima_fecha: proxima })
-    });
+    }, 'la próxima fecha');
 
     cerrarFechas();
     mostrarToast(`✅ ${fechasSeleccionadas.size} fecha${fechasSeleccionadas.size>1?'s':''} confirmada${fechasSeleccionadas.size>1?'s':''}. ¡Los seguidores van a recibir una alerta!`);
@@ -5763,24 +5773,24 @@ async function guardarFlyer(){
 
     if(flyersExist.length){
       // Actualizar el flyer existente
-      await fetch(`${SUPABASE_URL}/rest/v1/flyers?feria_id=eq.${feriaId}&estado=eq.activo`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/flyers?feria_id=eq.${feriaId}&estado=eq.activo`, {
         method: 'PATCH',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ imagen_url: imgUrl })
-      });
+      }, 'el flyer');
     } else {
       // Crear nuevo flyer
-      await fetch(`${SUPABASE_URL}/rest/v1/flyers`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/flyers`, {
         method: 'POST',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({
           feria_id: feriaId,
           imagen_url: imgUrl,
           estado: 'activo',
-          vigencia_desde: new Date().toISOString().split('T')[0],
-          vigencia_hasta: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
+          vigencia_desde: fechaLocal(new Date()),
+          vigencia_hasta: fechaLocal(new Date(Date.now() + 30*24*60*60*1000))
         })
-      });
+      }, 'el flyer');
     }
 
     // 3. Actualizar UI local
