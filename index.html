@@ -1605,27 +1605,121 @@ async function cargarPerfil(userId, token){
   return { id: userId, email: perfil.email || "", rol, nombre: perfil.nombre || email.split("@")[0], ...puestoData, feriaOrg };
 }
 
-function guardarSesionLocal(token, user){
+function guardarSesionLocal(token, user, refresh){
   try{
     localStorage.setItem('df_token', token);
     localStorage.setItem('df_uid', user.id);
+    if(refresh) localStorage.setItem('df_refresh', refresh);
   }catch(e){}
 }
 function limpiarSesionLocal(){
-  try{ localStorage.removeItem('df_token'); localStorage.removeItem('df_uid'); }catch(e){}
+  try{
+    localStorage.removeItem('df_token');
+    localStorage.removeItem('df_uid');
+    localStorage.removeItem('df_refresh');
+  }catch(e){}
 }
+
+// ══════════ RENOVAR LA SESIÓN ══════════
+// El permiso que da Supabase al entrar dura una hora. Antes no se
+// renovaba nunca: el que se quedaba cargando productos más de una hora
+// perdía todo lo que guardaba a partir de ahí, y encima la app le decía
+// que había salido bien. Esto lo renueva antes de que venza.
+let refrescando = null;   // para no pedir dos renovaciones a la vez
+
+// Cuándo vence el permiso, leído del propio permiso.
+function venceEn(token){
+  try{
+    const cuerpo = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return cuerpo.exp ? cuerpo.exp * 1000 : 0;
+  }catch(e){ return 0; }
+}
+
+async function refrescarSesion(){
+  const rt = (()=>{ try{ return localStorage.getItem('df_refresh'); }catch(e){ return null; } })();
+  if(!rt) return false;
+  if(refrescando) return refrescando;
+  refrescando = (async()=>{
+    try{
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method:'POST',
+        headers:{ apikey: SUPABASE_KEY, 'Content-Type':'application/json' },
+        body: JSON.stringify({ refresh_token: rt })
+      });
+      if(!r.ok) return false;
+      const d = await r.json();
+      if(!d.access_token) return false;
+      tokenActual = d.access_token;
+      try{
+        localStorage.setItem('df_token', d.access_token);
+        if(d.refresh_token) localStorage.setItem('df_refresh', d.refresh_token);
+      }catch(e){}
+      return true;
+    }catch(e){ return false; }
+    finally{ refrescando = null; }
+  })();
+  return refrescando;
+}
+
+// Se llama antes de cada guardado. Si al permiso le quedan menos de
+// dos minutos, lo renueva primero.
+// Escribe en la base de forma honesta: renueva la sesión antes, reintenta
+// una vez si justo venció, y si la base rechaza, AVISA. Antes se hacía
+// el fetch sin mirar el resultado y se mostraba "✅ guardado" igual.
+async function escribirEnBase(url, opciones, queEra){
+  await sesionAlDia();
+  const armar = () => ({
+    ...opciones,
+    headers: { ...sbHeaders(tokenActual), ...(opciones.headers || {}) }
+  });
+  let r = await fetch(url, armar());
+  if(r.status === 401 || r.status === 403){
+    // Justo venció entre el control y el envío: renovamos y vamos de nuevo
+    if(await refrescarSesion()) r = await fetch(url, armar());
+  }
+  if(!r.ok){
+    const detalle = await r.text().catch(()=> '');
+    if(r.status === 401 || r.status === 403){
+      throw new Error('Se cerró tu sesión. Cerrá esta ventana, volvé a entrar con tu mail y contraseña, y cargalo de nuevo.');
+    }
+    throw new Error(`No se pudo guardar ${queEra} (error ${r.status}). ${detalle.slice(0,120)}`);
+  }
+  return r;
+}
+
+async function sesionAlDia(){
+  if(!tokenActual) return false;
+  const vence = venceEn(tokenActual);
+  if(vence && vence - Date.now() > 120000) return true;
+  return await refrescarSesion();
+}
+
+// Y además se renueva sola cada 45 minutos mientras la pestaña esté abierta,
+// para que el que está cargando productos no se quede a pie.
+setInterval(()=>{ if(tokenActual) sesionAlDia(); }, 45*60*1000);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && tokenActual) sesionAlDia();
+});
 async function recuperarSesionLocal(){
   try{
     const token = localStorage.getItem('df_token');
     const uid   = localStorage.getItem('df_uid');
     if(!token || !uid) return;
     // Verificar que el token sigue siendo válido
+    let vivo = token;
     const rv = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers:{ apikey: SUPABASE_KEY, Authorization:`Bearer ${token}` }
     });
-    if(!rv.ok) throw new Error("token expirado");
-    tokenActual = token;
-    usuario = await cargarPerfil(uid, token);
+    if(!rv.ok){
+      // Venció mientras no estaba. Si tenemos con qué, lo renovamos
+      // en lugar de echarla: así no tiene que escribir la clave de nuevo.
+      tokenActual = token;
+      const ok = await refrescarSesion();
+      if(!ok) throw new Error("token expirado");
+      vivo = tokenActual;
+    }
+    tokenActual = vivo;
+    usuario = await cargarPerfil(uid, tokenActual);
     actualizarUI();
   }catch(e){
     limpiarSesionLocal();
@@ -1664,7 +1758,7 @@ async function hacerLogin(){
     const data = await iniciarSesionSupabase(email, pass);
     tokenActual = data.access_token;
     usuario = await cargarPerfil(data.user.id, tokenActual);
-    guardarSesionLocal(tokenActual, usuario);
+    guardarSesionLocal(tokenActual, usuario, data.refresh_token);
     cerrarLogin();
     actualizarUI();
     // Si estaba en Mi Puesto, mostrar panel
@@ -4154,8 +4248,11 @@ function detectarTokenInvitacion(){
   const token = params.get('access_token');
   const type  = params.get('type'); // 'invite' o 'recovery'
   if(token && (type === 'invite' || type === 'recovery')){
-    // Guardar token temporalmente para usarlo al crear la contraseña
-    window._inviteToken = token;
+    // Guardar token temporalmente para usarlo al crear la contraseña.
+    // El refresh viene en el mismo link: sin él, la sesión le vence a la
+    // hora y después no hay con qué renovarla.
+    window._inviteToken   = token;
+    window._inviteRefresh = params.get('refresh_token') || null;
     // Limpiar el hash de la URL (no lo muestre en la barra)
     history.replaceState(null, '', window.location.pathname);
     // Abrir modal de nueva contraseña
@@ -4198,7 +4295,7 @@ async function guardarNuevaPass(){
     // Contraseña guardada — ahora iniciar sesión completa
     tokenActual = window._inviteToken;
     usuario = await cargarPerfil(data.id, tokenActual);
-    guardarSesionLocal(tokenActual, usuario);
+    guardarSesionLocal(tokenActual, usuario, window._inviteRefresh || null);
     document.getElementById('velo-nueva-pass').classList.remove('on');
     actualizarUI();
     renderMiPuesto();
@@ -4597,18 +4694,17 @@ async function guardarLote(){
 
   try{
     // Van todos en una sola orden: o entran todos o no entra ninguno.
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/productos`, {
+    await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos`, {
       method: 'POST',
-      headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+      headers: { Prefer: 'return=minimal' },
       body: JSON.stringify(listos)
-    });
-    if(!r.ok) throw new Error('HTTP ' + r.status);
+    }, 'los productos');
     cerrarLote();
     mostrarToast(`✅ ${listos.length} producto${listos.length===1?'':'s'} agregado${listos.length===1?'':'s'}.`);
     cargarProductosEdic();
   }catch(e){
     if(btn){ btn.disabled = false; btn.textContent = 'Guardar los que completé'; }
-    mostrarToast('😕 No se pudieron guardar. Las fotos ya están subidas: probá tocar Guardar de nuevo.');
+    mostrarToast('😕 ' + (e.message || 'No se pudieron guardar') + ' Las fotos ya están subidas.');
   }
 }
 
@@ -4788,17 +4884,17 @@ async function guardarProducto(){
     };
 
     if(id){
-      await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, {
         method: 'PATCH',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify(body)
-      });
+      }, 'el producto');
     } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/productos`, {
+      await escribirEnBase(`${SUPABASE_URL}/rest/v1/productos`, {
         method: 'POST',
-        headers: { ...sbHeaders(tokenActual), Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify(body)
-      });
+      }, 'el producto');
     }
 
     cerrarFormProducto();
