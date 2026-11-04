@@ -184,20 +184,16 @@ header{background:var(--blanco);border-bottom:2px solid var(--tinta);padding:14p
 
     <div class="campo" id="c-localidad">
       <label>¿De qué zona sos?</label>
-      <select id="f-partido" onchange="cargarLocalidades()" style="width:100%;margin-bottom:10px">
-        <option value="">Elegí tu partido…</option>
-        <option value="Avellaneda">Avellaneda</option>
-        <option value="Berazategui">Berazategui</option>
-        <option value="Florencio Varela">Florencio Varela</option>
-        <option value="Lanús">Lanús</option>
-        <option value="Lomas de Zamora">Lomas de Zamora</option>
-        <option value="Quilmes">Quilmes</option>
-        <option value="Otro">Otro partido…</option>
+      <!-- Por ahora La Digi Feria está solo en el partido de Berazategui.
+           El partido queda fijo y oculto; se elige únicamente la localidad. -->
+      <select id="f-partido" onchange="cargarLocalidades()" style="display:none">
+        <option value="Berazategui" selected>Berazategui</option>
       </select>
-      <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%;display:none">
+      <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%">
         <option value="">Elegí tu localidad…</option>
       </select>
-      <input type="text" id="f-localidad-otra" placeholder="Escribí tu localidad y partido" style="display:none;margin-top:10px">
+      <input type="text" id="f-localidad-otra" placeholder="Escribí tu localidad del partido de Berazategui" style="display:none;margin-top:10px">
+      <div class="hint">Por ahora La Digi Feria está solo en el partido de Berazategui.</div>
       <span class="msg-error">Por favor elegí tu localidad</span>
     </div>
 
@@ -527,13 +523,11 @@ function actualizarRubro(){
   if(aviso) aviso.classList.toggle('on', !!lleno);
 }
 
+// Solo partido de Berazategui. Si algún día se abre otra zona,
+// se agrega acá y se vuelven a poner las opciones en el desplegable
+// de partido, que hoy está fijo en Berazategui y oculto.
 const LOCALIDADES = {
-  "Avellaneda": ["Avellaneda","Crucecita","Dock Sud","Gerli","Piñeyro","Sarandí","Villa Domínico","Wilde"],
-  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"],
-  "Florencio Varela": ["Florencio Varela","Bosques","Gobernador Costa","Ingeniero Allan","La Capilla","Villa San Luis","Villa Vatteone","Zeballos"],
-  "Lanús": ["Lanús Este","Lanús Oeste","Gerli","Monte Chingolo","Remedios de Escalada","Valentín Alsina","Villa Caraza","Villa Diamante"],
-  "Lomas de Zamora": ["Lomas de Zamora","Banfield","Ingeniero Budge","Llavallol","Temperley","Turdera","Villa Albertina","Villa Centenario","Villa Fiorito","Villa Independencia"],
-  "Quilmes": ["Quilmes","Quilmes Oeste","Bernal","Bernal Oeste","Don Bosco","Ezpeleta","Ezpeleta Oeste","San Francisco Solano","Villa La Florida"]
+  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"]
 };
 
 function cargarLocalidades(){
@@ -582,6 +576,10 @@ document.getElementById('f-localidad-otra').addEventListener('input', function()
   // Si eligió un partido de la lista, lo agregamos; si es "Otro", lo dejamos tal cual
   window.localidadElegida = (partido && partido !== 'Otro') ? `${txt}, ${partido}` : txt;
 });
+
+// El partido es siempre Berazategui, así que cargamos sus localidades
+// apenas abre la página y el visitante elige una sola cosa.
+cargarLocalidades();
 
 function validar(){
   let ok = true;

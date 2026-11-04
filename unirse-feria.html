@@ -195,20 +195,16 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
 
     <div class="campo">
       <label>¿De qué zona es la feria? <span class="req">*</span></label>
-      <select id="f-partido" onchange="cargarLocalidades()" style="width:100%;margin-bottom:10px">
-        <option value="">Elegí el partido…</option>
-        <option value="Avellaneda">Avellaneda</option>
-        <option value="Berazategui">Berazategui</option>
-        <option value="Florencio Varela">Florencio Varela</option>
-        <option value="Lanús">Lanús</option>
-        <option value="Lomas de Zamora">Lomas de Zamora</option>
-        <option value="Quilmes">Quilmes</option>
-        <option value="Otro">Otro partido…</option>
+      <!-- Por ahora La Digi Feria está solo en el partido de Berazategui.
+           El partido queda fijo y oculto; se elige únicamente la localidad. -->
+      <select id="f-partido" onchange="cargarLocalidades()" style="display:none">
+        <option value="Berazategui" selected>Berazategui</option>
       </select>
-      <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%;display:none">
+      <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%">
         <option value="">Elegí la localidad…</option>
       </select>
-      <input type="text" id="f-localidad-otra" placeholder="Escribí la localidad y el partido" style="display:none;margin-top:10px">
+      <input type="text" id="f-localidad-otra" placeholder="Escribí la localidad del partido de Berazategui" style="display:none;margin-top:10px">
+      <div class="hint">Por ahora La Digi Feria está solo en el partido de Berazategui.</div>
       <!-- input oculto que conserva el valor final para validación y envío -->
       <input type="hidden" id="f-localidad">
     </div>
@@ -344,7 +340,7 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
 
     <!-- ── PLANES ── -->
     <div class="seccion-titulo">💎 Espacio publicitario</div>
-    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:14px;line-height:1.5">Tu feria existe gratis en la app. Para que te encuentren y te sigan, está el plan destacado.</p>
+    <p style="font-size:13.5px;color:#5C4F3E;font-weight:700;margin-bottom:14px;line-height:1.5">Tu feria existe gratis en la app, y tus seguidores reciben el aviso cada vez que confirmás fecha. El plan destacado es para que además te vean primero.</p>
 
     <div class="plan-card plan-base">
       <div class="plan-head">
@@ -355,10 +351,10 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
         <li>✅ Página de tu feria en la app</li>
         <li>✅ Aparece en el calendario de ferias</li>
         <li>✅ Los feriantes pueden vincularse a tu feria</li>
+        <li>✅ Aviso por email a tus seguidores cuando confirmás fecha</li>
         <li>❌ Sin flyer en el carrusel de la home</li>
-        <li>❌ Sin alertas a seguidores</li>
-        <li>❌ Sin notificaciones de fechas</li>
         <li>❌ Sin lugar en la sección de destacadas</li>
+        <li>❌ Sin estadísticas de clicks</li>
       </ul>
     </div>
 
@@ -371,9 +367,7 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
       <ul class="plan-items">
         <li>✅ Todo lo de presencia básica</li>
         <li>✅ <b>Flyer en el carrusel de la home ⭐</b></li>
-        <li>✅ <b>Alertas por email a todos tus seguidores</b></li>
-        <li>✅ <b>Notificación automática cuando confirmás fecha</b></li>
-        <li>✅ Tu feria arriba, en la sección de ferias destacadas</li>
+        <li>✅ <b>Tu feria arriba, en la sección de ferias destacadas</b></li>
         <li>✅ Estadísticas de clicks en tu flyer</li>
         <li>✅ Mismo precio, sea tu feria semanal, quincenal o mensual</li>
         <li>✅ Sin débitos automáticos: cargás días cuando querés</li>
@@ -459,13 +453,11 @@ function previewFoto(input){
 }
 
 // ── Validación ──
+// Solo partido de Berazategui. Si algún día se abre otra zona,
+// se agrega acá y se vuelven a poner las opciones en el desplegable
+// de partido, que hoy está fijo en Berazategui y oculto.
 const LOCALIDADES = {
-  "Avellaneda": ["Avellaneda","Crucecita","Dock Sud","Gerli","Piñeyro","Sarandí","Villa Domínico","Wilde"],
-  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"],
-  "Florencio Varela": ["Florencio Varela","Bosques","Gobernador Costa","Ingeniero Allan","La Capilla","Villa San Luis","Villa Vatteone","Zeballos"],
-  "Lanús": ["Lanús Este","Lanús Oeste","Gerli","Monte Chingolo","Remedios de Escalada","Valentín Alsina","Villa Caraza","Villa Diamante"],
-  "Lomas de Zamora": ["Lomas de Zamora","Banfield","Ingeniero Budge","Llavallol","Temperley","Turdera","Villa Albertina","Villa Centenario","Villa Fiorito","Villa Independencia"],
-  "Quilmes": ["Quilmes","Quilmes Oeste","Bernal","Bernal Oeste","Don Bosco","Ezpeleta","Ezpeleta Oeste","San Francisco Solano","Villa La Florida"]
+  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"]
 };
 
 function cargarLocalidades(){
@@ -512,6 +504,10 @@ document.getElementById('f-localidad-otra').addEventListener('input', function()
   hidden.value = (partido && partido !== 'Otro') ? `${txt}, ${partido}` : txt;
 });
 
+// El partido es siempre Berazategui, así que cargamos sus localidades
+// apenas abre la página y el organizador elige una sola cosa.
+cargarLocalidades();
+
 function validar(){
   let ok = true;
   const campos = ['f-nombre','f-descripcion','f-lugar','f-horario','f-contacto-nombre','f-email','f-wsp','f-puestos'];
@@ -520,11 +516,13 @@ function validar(){
     if(!el.value.trim()){ el.classList.add('error'); ok=false; }
     else el.classList.remove('error');
   });
-  // Localidad: el valor real está en el input oculto f-localidad; el error se marca en el select de partido (visible)
+  // Localidad: el valor real está en el input oculto f-localidad; el error se
+  // marca en el select de localidad, que ahora es el visible (el de partido
+  // quedó fijo en Berazategui y oculto).
   const locVal = document.getElementById('f-localidad').value.trim();
-  const partidoSel = document.getElementById('f-partido');
-  if(!locVal){ partidoSel.classList.add('error'); ok=false; }
-  else partidoSel.classList.remove('error');
+  const locSel = document.getElementById('f-localidad-sel');
+  if(!locVal){ locSel.classList.add('error'); ok=false; }
+  else locSel.classList.remove('error');
   const frec = document.querySelector('.frec-chip.on');
   if(!frec){ document.getElementById('frec-grid').style.outline='2px solid var(--fucsia)'; ok=false; }
   else document.getElementById('frec-grid').style.outline='';
