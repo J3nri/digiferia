@@ -203,7 +203,7 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
       <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%">
         <option value="">Elegí la localidad…</option>
       </select>
-      <div class="hint">Por ahora La Digi Feria está solo en el partido de Berazategui.</div>
+      <div class="hint">Las ferias de La Digi Feria se hacen en la zona de Berazategui.</div>
       <!-- input oculto que conserva el valor final para validación y envío -->
       <input type="hidden" id="f-localidad">
     </div>
@@ -455,9 +455,28 @@ function previewFoto(input){
 // Solo partido de Berazategui. Si algún día se abre otra zona,
 // se agrega acá y se vuelven a poner las opciones en el desplegable
 // de partido, que hoy está fijo en Berazategui y oculto.
-const LOCALIDADES = {
-  "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"]
-};
+// DÓNDE SE PUEDE HACER UNA FERIA. Lista más corta que la del feriante,
+// a propósito: de dónde está la feria depende que el visitante pueda ir
+// de verdad, y ese cruce entre puestos es lo único que hace funcionar
+// esto. El Pato y Pereyra quedan afuera —son de Berazategui pero lejos
+// del resto—, y Villa Elisa también, que es de La Plata.
+// Bosques sí entra, aunque sea de Florencio Varela: queda de este lado
+// de la Av. Centenario (Ruta Prov. 36). Marítimo también, que es parte
+// de Hudson pero se lo nombra aparte.
+// El partido va pegado a cada localidad: si no, Bosques quedaba
+// guardado como "Bosques, Berazategui", que no es cierto.
+const LOCALIDADES = [
+  ["Berazategui",                      "Berazategui"],
+  ["Berazategui Oeste",                "Berazategui"],
+  ["Bosques",                          "Florencio Varela"],
+  ["Gutiérrez (Juan María Gutiérrez)", "Berazategui"],
+  ["Hudson (Guillermo Enrique Hudson)","Berazategui"],
+  ["Marítimo",                         "Berazategui"],
+  ["Plátanos",                         "Berazategui"],
+  ["Ranelagh",                         "Berazategui"],
+  ["Sourigues",                        "Berazategui"],
+  ["Villa España",                     "Berazategui"]
+];
 
 // Solo se puede elegir una de las once localidades de Berazategui.
 // Se sacó la salida de texto libre ("No está mi localidad"): una feria
@@ -469,16 +488,16 @@ function cargarLocalidades(){
   const hidden = document.getElementById('f-localidad');
   hidden.value = "";
 
-  if(!partido || !LOCALIDADES[partido]){ selLoc.style.display = 'none'; return; }
+  // El partido ya no decide la lista: la lista es una sola.
   selLoc.innerHTML = '<option value="">Elegí la localidad…</option>'
-    + LOCALIDADES[partido].map(l=>`<option value="${l}">${l}</option>`).join('');
+    + LOCALIDADES.map(function(x){ return '<option value="'+x[0]+'">'+x[0]+'</option>'; }).join("");
   selLoc.style.display = 'block';
 }
 
 function elegirLocalidad(){
-  const partido = document.getElementById('f-partido').value;
   const loc = document.getElementById('f-localidad-sel').value;
-  document.getElementById('f-localidad').value = loc ? `${loc}, ${partido}` : "";
+  const fila = LOCALIDADES.find(function(x){ return x[0] === loc; });
+  document.getElementById('f-localidad').value = fila ? (fila[0] + ", " + fila[1]) : "";
 }
 
 // El partido es siempre Berazategui, así que cargamos sus localidades
