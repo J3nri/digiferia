@@ -75,6 +75,60 @@ h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;margin-bottom
   cursor:pointer;position:relative;background:var(--blanco)
 }
 .flyer .banderines{height:16px}
+
+/* ── TABLERO DE VISITAS (pie de la portada) ─────────────────────────
+   Panel de arribos de aeropuerto: una tarjeta oscura por dígito, con la
+   ranura en el medio. El degradado parte la tarjeta en dos mitades y el
+   ::after dibuja la línea, que es lo que da el efecto de solapa. */
+.tablero-wrap{margin:30px 18px 34px;text-align:center}
+.tablero-rot{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:10.5px;
+  letter-spacing:2.6px;text-transform:uppercase;color:#9A8B76;margin-bottom:11px;
+}
+.tablero{display:flex;justify-content:center;gap:5px}
+.digito{
+  position:relative;width:38px;height:54px;border-radius:6px;overflow:hidden;
+  background:linear-gradient(#332A23 0 50%, #1A1410 50% 100%);
+  border:2px solid var(--tinta);box-shadow:3px 3px 0 rgba(43,33,24,.45);
+}
+.digito span{
+  display:block;line-height:50px;text-align:center;
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:30px;color:#FFF3DC;
+}
+.digito::after{
+  content:"";position:absolute;left:0;right:0;top:50%;
+  height:2px;background:rgba(0,0,0,.6);
+}
+.tablero-pie{font-size:11.5px;font-weight:800;color:#9A8B76;margin-top:10px}
+@keyframes solapa{
+  0%  {transform:translateY(-105%);opacity:.2}
+  65% {transform:translateY(7%)}
+  100%{transform:translateY(0);opacity:1}
+}
+.digito span.gira{animation:solapa .2s ease-out}
+@media (prefers-reduced-motion:reduce){ .digito span.gira{animation:none} }
+
+/* ── Recuadro de FERIA DESTACADA en la portada ──────────────────────
+   Mide 82px de alto: la mitad de los 164px que mide hoy una tarjeta de
+   feriante destacado. La cuenta es 2 de borde + 8 de banderines + 70 de
+   cuerpo + 2 de borde. Y dentro del cuerpo: 8 + 54 de contenido + 8.
+   Va acotado a #carrusel-flyers a propósito: las clases .flyer-body y
+   .flyer-fecha también las usan los carteles de «Sumá tu puesto» y
+   «Sumá tu feria», y la solapa de Ferias. Esas no se tocan. */
+#carrusel-flyers .flyer .banderines{height:8px}
+#carrusel-flyers .flyer-body{padding:8px 10px;display:flex;gap:10px;align-items:center;height:70px}
+#carrusel-flyers .flyer-body h3{font-size:15px;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#carrusel-flyers .flyer-fecha{font-size:10.5px;padding:0 8px;margin-bottom:2px;border-width:1.5px}
+#carrusel-flyers .flyer-lugar{font-size:10px;margin-top:2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#carrusel-flyers .mini-flyer{
+  width:89px;height:50px;border-radius:8px;
+  box-shadow:2px 2px 0 rgba(43,33,24,.5);position:relative;
+}
+#carrusel-flyers .mini-flyer::after{
+  content:"🔍";position:absolute;right:-5px;bottom:-5px;
+  width:18px;height:18px;border-radius:50%;background:var(--amarillo);
+  border:2px solid var(--tinta);font-size:9px;line-height:14px;text-align:center;
+}
 .flyer-body{padding:16px 18px 18px;position:relative}
 .flyer-body h3{font-family:'Fredoka',sans-serif;font-weight:700;font-size:21px;line-height:1.1}
 .flyer-body .flecha{position:absolute;right:16px;bottom:16px;font-size:20px}
@@ -638,8 +692,6 @@ nav button.on span{filter:none;opacity:1}
     <h1>Las ferias de tu barrio, esta semana 🎪</h1>
     <p class="sub" id="contador-puestos"></p>
   </div>
-  <div class="carrusel-label" id="label-destacados"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
-  <div id="destacados-filas"></div>
   <div class="carrusel-wrap">
     <div class="carrusel-label">
       <h2>Ferias destacadas 🎉</h2>
@@ -648,6 +700,8 @@ nav button.on span{filter:none;opacity:1}
     <div class="carrusel" id="carrusel-flyers"></div>
     <div class="puntos" id="carrusel-puntos"></div>
   </div>
+  <div class="carrusel-label" id="label-destacados"><h2>Puestos destacados ⭐</h2><small>Espacio pago</small></div>
+  <div id="destacados-filas"></div>
   <div style="padding:0 18px 20px">
     <button class="btn-prox" onclick="ir('p-ferias')">📅 Ver próximas ferias <span style="float:right">→</span></button>
   </div>
@@ -686,6 +740,13 @@ nav button.on span{filter:none;opacity:1}
       <p style="font-size:12.5px;color:#7A6A55;font-weight:600;line-height:1.45;margin-top:6px">Publicás las fechas, subís el flyer, y cada feriante trae a su propia gente.</p>
       <span class="flyer-fecha" style="background:var(--amarillo)">✨ Sumá tu feria</span>
     </div>
+  </div>
+
+  <!-- Tablero de visitas. Se oculta solo si la base no contesta. -->
+  <div class="tablero-wrap" id="tablero-wrap" style="display:none">
+    <div class="tablero-rot">Visitas a los puestos</div>
+    <div class="tablero" id="tablero-visitas" aria-live="polite"></div>
+    <div class="tablero-pie">desde julio de 2026</div>
   </div>
 </section>
 
@@ -3945,6 +4006,58 @@ function cerrarVerFlyer(ev){
   document.getElementById('velo-ver-flyer').classList.remove('on');
 }
 
+// ── TABLERO DE VISITAS ──────────────────────────────────────────
+// Pide el total a total_visitas(), que es lo único que un visitante
+// anónimo puede saber de los eventos: un número, sin puestos ni fechas.
+// Si falla, el tablero no aparece. Nunca se muestra un número inventado.
+async function pintarTablero(){
+  const caja = document.getElementById('tablero-wrap');
+  const cont = document.getElementById('tablero-visitas');
+  if(!caja || !cont) return;
+
+  let total = 0;
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/total_visitas`, {
+      method : 'POST',
+      headers: { apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`,
+                 'Content-Type':'application/json' },
+      body   : '{}'
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    total = parseInt(await r.json(), 10);
+    if(!Number.isFinite(total) || total <= 0) return;
+  }catch(e){
+    console.warn('No se pudo traer el total de visitas:', e);
+    return;                       // la caja queda oculta
+  }
+
+  // Siempre al menos 3 tarjetas, para que no quede un tablero flaco.
+  const texto = String(total).padStart(3, '0');
+  cont.innerHTML = texto.split('')
+    .map(()=>'<div class="digito"><span>0</span></div>').join('');
+  caja.style.display = 'block';
+
+  // Cada dígito gira unas cuantas vueltas y frena en el suyo. El de más
+  // a la derecha gira un poco más lento, como en los paneles de verdad.
+  cont.querySelectorAll('.digito span').forEach((cel, i) => {
+    const fin   = +texto[i];
+    const vueltas = 9 + i * 3;
+    let n = 0;
+    const reloj = setInterval(() => {
+      if(n >= vueltas){
+        clearInterval(reloj);
+        cel.textContent = fin;
+      }else{
+        cel.textContent = n % 10;
+      }
+      cel.classList.remove('gira');
+      void cel.offsetWidth;        // reinicia la animación
+      cel.classList.add('gira');
+      n++;
+    }, 60);
+  });
+}
+
 function renderCarrusel(){
   const wrap = document.querySelector('.carrusel-wrap');
   if(!FLYERS.length){ if(wrap) wrap.style.display="none"; return; }
@@ -3957,13 +4070,12 @@ function renderCarrusel(){
     const nombreEsc = (fe.nombre||'').replace(/'/g,"\\'");
     return `<div class="flyer fl1" onclick="verFlyerGrande('${fl.flyerUrl}','${nombreEsc}','${fl.textoFecha}')">
       <div class="banderines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="flyer-body" style="display:flex;gap:12px;align-items:center">
+      <div class="flyer-body">
         <div class="mini-flyer" style="background-image:url('${fl.flyerUrl}')"></div>
         <div style="flex:1;min-width:0">
           <span class="flyer-fecha">📅 ${fl.textoFecha}</span>
-          <h3 style="margin-top:4px">${fe.nombre}</h3>
-          <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n} confirmado${n===1?"":"s"}</div>
-          <div style="font-size:11px;font-weight:800;color:#B3572B;margin-top:6px">👆 Tocá para ver el flyer</div>
+          <h3>${fe.nombre}</h3>
+          <div class="flyer-lugar">📍 ${fe.lugar.split("·")[0].trim()} · 🎪 ${n}</div>
         </div>
       </div>
     </div>`;
@@ -6074,6 +6186,7 @@ window.addEventListener('hashchange', abrirPuestoDelLink);
 // ================== INIT ==================
 restaurarSeguimientosLocal();
 aplicarBloqueoInscripciones();
+pintarTablero();
 renderChips(); renderGrilla(); renderDestacados(); arrastrarFilasDestacados(); renderRubrosGrid(); renderFerias(); renderFeriasManuales(); renderCarrusel();
 cargarRubrosEnVivo().then(cargarFeriaYPuestosEnVivo).then(()=>{
   // Link profundo: digiferia.ar/#puesto=<slug>
