@@ -203,7 +203,6 @@ header{background:var(--blanco);border-bottom:1px solid #F0E4CE;position:sticky;
       <select id="f-localidad-sel" onchange="elegirLocalidad()" style="width:100%">
         <option value="">Elegí la localidad…</option>
       </select>
-      <input type="text" id="f-localidad-otra" placeholder="Escribí la localidad del partido de Berazategui" style="display:none;margin-top:10px">
       <div class="hint">Por ahora La Digi Feria está solo en el partido de Berazategui.</div>
       <!-- input oculto que conserva el valor final para validación y envío -->
       <input type="hidden" id="f-localidad">
@@ -460,49 +459,27 @@ const LOCALIDADES = {
   "Berazategui": ["Berazategui","Berazategui Oeste","El Pato","Gutiérrez (Juan María Gutiérrez)","Hudson (Guillermo Enrique Hudson)","Pereyra","Plátanos","Ranelagh","Sourigues","Villa Elisa","Villa España"]
 };
 
+// Solo se puede elegir una de las once localidades de Berazategui.
+// Se sacó la salida de texto libre ("No está mi localidad"): una feria
+// de Lanús la usó para entrar igual, y quedó guardada como
+// "Lanús Éste, Berazategui", que no era cierto.
 function cargarLocalidades(){
   const partido = document.getElementById('f-partido').value;
   const selLoc = document.getElementById('f-localidad-sel');
-  const otra = document.getElementById('f-localidad-otra');
   const hidden = document.getElementById('f-localidad');
   hidden.value = "";
 
-  if(partido === 'Otro'){
-    selLoc.style.display = 'none';
-    otra.style.display = 'block';
-    otra.placeholder = 'Escribí la localidad y el partido';
-    return;
-  }
-  otra.style.display = 'none';
   if(!partido || !LOCALIDADES[partido]){ selLoc.style.display = 'none'; return; }
   selLoc.innerHTML = '<option value="">Elegí la localidad…</option>'
-    + LOCALIDADES[partido].map(l=>`<option value="${l}">${l}</option>`).join('')
-    + '<option value="__otra__">No está mi localidad…</option>';
+    + LOCALIDADES[partido].map(l=>`<option value="${l}">${l}</option>`).join('');
   selLoc.style.display = 'block';
 }
 
 function elegirLocalidad(){
   const partido = document.getElementById('f-partido').value;
   const loc = document.getElementById('f-localidad-sel').value;
-  const otra = document.getElementById('f-localidad-otra');
-  const hidden = document.getElementById('f-localidad');
-  if(loc === '__otra__'){
-    otra.style.display = 'block';
-    otra.placeholder = `La localidad en ${partido}`;
-    hidden.value = "";
-    return;
-  }
-  otra.style.display = 'none';
-  hidden.value = loc ? `${loc}, ${partido}` : "";
+  document.getElementById('f-localidad').value = loc ? `${loc}, ${partido}` : "";
 }
-
-document.getElementById('f-localidad-otra').addEventListener('input', function(){
-  const partido = document.getElementById('f-partido').value;
-  const txt = this.value.trim();
-  const hidden = document.getElementById('f-localidad');
-  if(!txt){ hidden.value = ""; return; }
-  hidden.value = (partido && partido !== 'Otro') ? `${txt}, ${partido}` : txt;
-});
 
 // El partido es siempre Berazategui, así que cargamos sus localidades
 // apenas abre la página y el organizador elige una sola cosa.
